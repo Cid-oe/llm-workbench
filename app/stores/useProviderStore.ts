@@ -8,6 +8,7 @@ import {
 } from '~/lib/crypto'
 import { DEPRECATED_MODEL_MAP, migrateModelId, PROVIDER_MODELS } from '~/lib/providerModels'
 import { sessionStore } from '~/lib/sessionStore'
+import { useSecurityStore } from './useSecurityStore'
 
 export { DEPRECATED_MODEL_MAP, PROVIDER_MODELS }
 
@@ -108,7 +109,10 @@ export const useProviderStore = defineStore('provider', {
         this.ollamaUrl = value
         return
       }
-      if (field) (this as Record<string, string>)[field] = value
+      if (field === 'openaiKey') this.openaiKey = value
+      else if (field === 'anthropicKey') this.anthropicKey = value
+      else if (field === 'geminiKey') this.geminiKey = value
+      else if (field === 'groqKey') this.groqKey = value
 
       const security = useSecurityStore()
       if (security.getCryptoKey()) {

@@ -1,0 +1,14 @@
+{
+  "name": "LLM Playground OS",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "forwardPorts": [3000],
+  "postCreateCommand": "cp -n .env.example .env && npm ci",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Vue.volar",
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  }
+}

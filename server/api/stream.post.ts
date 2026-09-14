@@ -1,14 +1,22 @@
-import type { StreamRequest } from '~/types/llm'
+import { logger } from '~/lib/logger'
+import { recordStreamError, recordStreamRequest } from '~/lib/runtimeMetrics'
 import { buildProviderRequest, parseProviderError } from '~/lib/streamProviders'
+import { validateStreamRequest } from '~/lib/validateStreamRequest'
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody<StreamRequest>(event)
+  const body = await readBody(event)
+  const parsed = validateStreamRequest(body)
 
-  if (!body?.provider || !body?.model) {
-    throw createError({ statusCode: 400, message: 'Missing provider or model' })
+  if (!parsed.ok) {
+    logger.warn('stream_validation_failed', { error: parsed.error })
+    throw createError({ statusCode: 400, message: parsed.error })
   }
 
-  const providerRequest = buildProviderRequest(body)
+  const request = parsed.value
+  recordStreamRequest()
+  logger.info('stream_proxy_start', { provider: request.provider, model: request.model })
+
+  const providerRequest = buildProviderRequest(request)
 
   try {
     const upstream = await fetch(providerRequest.url, {
@@ -18,9 +26,17 @@ export default defineEventHandler(async (event) => {
     })
 
     if (!upstream.ok) {
+      recordStreamError()
+      const message = await parseProviderError(upstream)
+      logger.error('stream_upstream_error', {
+        provider: request.provider,
+        model: request.model,
+        status: upstream.status,
+        error: message,
+      })
       throw createError({
         statusCode: upstream.status,
-        message: await parseProviderError(upstream),
+        message,
       })
     }
 
@@ -36,7 +52,9 @@ export default defineEventHandler(async (event) => {
   }
   catch (err: unknown) {
     if (err && typeof err === 'object' && 'statusCode' in err) throw err
+    recordStreamError()
     const message = err instanceof Error ? err.message : 'Upstream request failed'
+    logger.error('stream_proxy_failed', { provider: request.provider, model: request.model, error: message })
     throw createError({ statusCode: 502, message })
   }
 })

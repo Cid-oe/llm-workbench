@@ -1,4 +1,5 @@
 import type { StreamRequest } from '~/types/llm'
+import { logger } from '~/lib/logger'
 import {
   buildProviderRequest,
   corsHint,
@@ -6,6 +7,7 @@ import {
   parseProviderError,
   type StreamFormat,
 } from '~/lib/streamProviders'
+import { validateStreamRequest } from '~/lib/validateStreamRequest'
 
 export interface StreamCallbacks {
   onChunk: (text: string) => void
@@ -29,8 +31,15 @@ export async function streamCompletionDirect(
   const startTime = performance.now()
   let firstTokenReceived = false
 
+  const parsed = validateStreamRequest(request)
+  if (!parsed.ok) {
+    logger.warn('stream_direct_invalid', { error: parsed.error })
+    callbacks.onError(parsed.error)
+    return
+  }
+
   try {
-    const providerRequest = buildProviderRequest(request)
+    const providerRequest = buildProviderRequest(parsed.value)
     const response = await fetch(providerRequest.url, {
       method: 'POST',
       headers: providerRequest.headers,
@@ -39,7 +48,14 @@ export async function streamCompletionDirect(
     })
 
     if (!response.ok) {
-      callbacks.onError(await parseProviderError(response))
+      const message = await parseProviderError(response)
+      logger.error('stream_direct_http_error', {
+        provider: request.provider,
+        model: request.model,
+        status: response.status,
+        error: message,
+      })
+      callbacks.onError(message)
       return
     }
 
@@ -64,11 +80,15 @@ export async function streamCompletionDirect(
     if (signal?.aborted) return
 
     if (err instanceof TypeError) {
-      callbacks.onError(`Network error: ${corsHint(request.provider)}`)
+      const message = `Network error: ${corsHint(request.provider)}`
+      logger.error('stream_direct_network_error', { provider: request.provider, model: request.model, error: message })
+      callbacks.onError(message)
       return
     }
 
-    callbacks.onError(err instanceof Error ? err.message : 'Stream failed')
+    const message = err instanceof Error ? err.message : 'Stream failed'
+    logger.error('stream_direct_failed', { provider: request.provider, model: request.model, error: message })
+    callbacks.onError(message)
   }
 }
 
@@ -80,6 +100,13 @@ export async function streamCompletionViaProxy(
 ): Promise<void> {
   const startTime = performance.now()
   let firstTokenReceived = false
+
+  const parsed = validateStreamRequest(request)
+  if (!parsed.ok) {
+    logger.warn('stream_proxy_invalid', { error: parsed.error })
+    callbacks.onError(parsed.error)
+    return
+  }
 
   try {
     const response = await fetch(endpoint, {

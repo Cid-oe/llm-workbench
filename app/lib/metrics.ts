@@ -46,7 +46,7 @@ export function modelLabel(modelId: string): string {
 }
 
 export function colorForIndex(index: number): string {
-  return CHART_COLORS[index % CHART_COLORS.length]
+  return CHART_COLORS[index % CHART_COLORS.length] ?? '#4ade80'
 }
 
 export function aggregateFromHistory(history: ExecutionHistoryEntry[]): ModelMetricAggregate[] {

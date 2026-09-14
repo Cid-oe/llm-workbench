@@ -1,8 +1,8 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'default' })
-
 import { Bookmark, Clock, Trash2 } from '@lucide/vue'
 import { formatDateTime } from '~/lib/formatDate'
+
+definePageMeta({ layout: 'default' })
 
 const promptStore = usePromptStore()
 

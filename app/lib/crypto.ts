@@ -19,19 +19,19 @@ function toBase64(bytes: Uint8Array): string {
   return btoa(Array.from(bytes, b => String.fromCharCode(b)).join(''))
 }
 
-function fromBase64(b64: string): Uint8Array {
-  return Uint8Array.from(atob(b64), c => c.charCodeAt(0))
+function fromBase64(b64: string): Uint8Array<ArrayBuffer> {
+  return Uint8Array.from(atob(b64), c => c.charCodeAt(0)) as Uint8Array<ArrayBuffer>
 }
 
 export function generateSalt(): string {
   return toBase64(crypto.getRandomValues(new Uint8Array(SALT_BYTES)))
 }
 
-export function parseSalt(salt: string): Uint8Array {
+export function parseSalt(salt: string): Uint8Array<ArrayBuffer> {
   return fromBase64(salt)
 }
 
-export async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
+export async function deriveKey(password: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
   const enc = new TextEncoder()
   const keyMaterial = await crypto.subtle.importKey(
     'raw',

@@ -46,9 +46,9 @@ export const usePromptStore = defineStore('prompt', {
 
     updateResponse(slotId: string, patch: Partial<ModelResponse>) {
       const idx = this.responses.findIndex(r => r.slotId === slotId)
-      if (idx !== -1) {
-        this.responses[idx] = { ...this.responses[idx], ...patch }
-      }
+      const current = idx === -1 ? undefined : this.responses[idx]
+      if (!current) return
+      this.responses[idx] = { ...current, ...patch }
     },
 
     addToHistory(responses: ModelResponse[], models: ExecutionHistoryEntry['models']) {

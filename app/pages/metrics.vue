@@ -1,6 +1,4 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'default' })
-
 import { Activity, DollarSign, Timer, Zap } from '@lucide/vue'
 import {
   aggregateFromHistory,
@@ -10,6 +8,8 @@ import {
   toChartData,
   type ModelMetricAggregate,
 } from '~/lib/metrics'
+
+definePageMeta({ layout: 'default' })
 
 const promptStore = usePromptStore()
 const { formatCost, formatLatency } = useCostCalculator()

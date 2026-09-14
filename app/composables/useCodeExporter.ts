@@ -7,8 +7,18 @@ interface ExportOptions {
   model: string
   systemPrompt: string
   userPrompt: string
+  /** Ignored in generated snippets — keys must come from the environment. */
   apiKey?: string
   ollamaUrl?: string
+}
+
+export function envVarName(provider: Exclude<ProviderId, 'ollama'>): string {
+  switch (provider) {
+    case 'openai': return 'OPENAI_API_KEY'
+    case 'anthropic': return 'ANTHROPIC_API_KEY'
+    case 'gemini': return 'GEMINI_API_KEY'
+    case 'groq': return 'GROQ_API_KEY'
+  }
 }
 
 export function useCodeExporter() {
@@ -56,11 +66,11 @@ while (true) {
   }
 
   const baseUrl = getBaseUrl(opts.provider, opts.model)
-  const headers = getHeaders(opts)
+  const headers = formatJsHeaders(opts.provider)
 
   return `const response = await fetch('${baseUrl}', {
   method: 'POST',
-  headers: ${JSON.stringify(headers, null, 2).replace(/\n/g, '\n  ')},
+  headers: ${headers},
   body: JSON.stringify({
     model: '${opts.model}',
     messages: [
@@ -85,9 +95,10 @@ while (true) {
 
 function exportPython(opts: ExportOptions): string {
   if (opts.provider === 'openai') {
-    return `from openai import OpenAI
+    return `import os
+from openai import OpenAI
 
-client = OpenAI(api_key="${opts.apiKey ?? 'YOUR_API_KEY'}")
+client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
 stream = client.chat.completions.create(
     model="${opts.model}",
@@ -104,9 +115,10 @@ for chunk in stream:
   }
 
   if (opts.provider === 'anthropic') {
-    return `import anthropic
+    return `import os
+import anthropic
 
-client = anthropic.Anthropic(api_key="${opts.apiKey ?? 'YOUR_API_KEY'}")
+client = anthropic.Anthropic(api_key=os.environ['ANTHROPIC_API_KEY'])
 
 with client.messages.stream(
     model="${opts.model}",
@@ -119,10 +131,11 @@ with client.messages.stream(
   }
 
   if (opts.provider === 'groq') {
-    return `from openai import OpenAI
+    return `import os
+from openai import OpenAI
 
 client = OpenAI(
-    api_key="${opts.apiKey ?? 'YOUR_API_KEY'}",
+    api_key=os.environ['GROQ_API_KEY'],
     base_url="https://api.groq.com/openai/v1",
 )
 
@@ -141,9 +154,10 @@ for chunk in stream:
   }
 
   if (opts.provider === 'gemini') {
-    return `from google import genai
+    return `import os
+from google import genai
 
-client = genai.Client(api_key="${opts.apiKey ?? 'YOUR_API_KEY'}")
+client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
 
 stream = client.models.generate_content_stream(
     model="${opts.model}",
@@ -208,8 +222,7 @@ function exportCurl(opts: ExportOptions): string {
   }
 
   if (opts.provider === 'gemini') {
-    const apiKey = opts.apiKey ?? 'YOUR_API_KEY'
-    const url = `${getBaseUrl('gemini', opts.model)}&key=${apiKey}`
+    const url = `${getBaseUrl('gemini', opts.model)}&key=$GEMINI_API_KEY`
     return `curl "${url}" \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify({
@@ -219,10 +232,7 @@ function exportCurl(opts: ExportOptions): string {
   }
 
   const baseUrl = getBaseUrl(opts.provider, opts.model)
-  const headers = getHeaders(opts)
-  const headerFlags = Object.entries(headers)
-    .map(([k, v]) => `-H "${k}: ${v}"`)
-    .join(' \\\n  ')
+  const headerFlags = formatCurlHeaders(opts.provider)
 
   return `curl ${baseUrl} \\
   ${headerFlags} \\
@@ -255,7 +265,7 @@ function exportPhp(opts: ExportOptions): string {
 $ch = curl_init('${url}');
 curl_setopt_array($ch, [
     CURLOPT_POST => true,
-    CURLOPT_HTTPHEADER => ${phpHeadersArray(opts)},
+    CURLOPT_HTTPHEADER => ${phpHeadersArray(opts.provider)},
     CURLOPT_POSTFIELDS => '${body.replace(/'/g, "\\'")}',
     CURLOPT_RETURNTRANSFER => false,
     CURLOPT_WRITEFUNCTION => function ($ch, $data) {
@@ -278,30 +288,67 @@ function getBaseUrl(provider: ProviderId, model?: string): string {
   }
 }
 
-function getHeaders(opts: ExportOptions): Record<string, string> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+function formatJsHeaders(provider: Exclude<ProviderId, 'ollama'>): string {
+  const env = `process.env.${envVarName(provider)}`
+  const lines = [`    'Content-Type': 'application/json'`]
 
-  switch (opts.provider) {
+  switch (provider) {
     case 'openai':
-      headers.Authorization = `Bearer ${opts.apiKey ?? 'YOUR_API_KEY'}`
+    case 'groq':
+      lines.push(`    Authorization: 'Bearer ' + ${env}`)
       break
     case 'anthropic':
-      headers['x-api-key'] = opts.apiKey ?? 'YOUR_API_KEY'
-      headers['anthropic-version'] = '2023-06-01'
+      lines.push(`    'x-api-key': ${env}`)
+      lines.push(`    'anthropic-version': '2023-06-01'`)
       break
     case 'gemini':
-      headers['x-goog-api-key'] = opts.apiKey ?? 'YOUR_API_KEY'
-      break
-    case 'groq':
-      headers.Authorization = `Bearer ${opts.apiKey ?? 'YOUR_API_KEY'}`
+      lines.push(`    'x-goog-api-key': ${env}`)
       break
   }
 
-  return headers
+  return `{\n${lines.join(',\n')},\n  }`
 }
 
-function phpHeadersArray(opts: ExportOptions): string {
-  const headers = getHeaders(opts)
-  const lines = Object.entries(headers).map(([k, v]) => `    '${k}: ${v}'`)
-  return "[\n" + lines.join(",\n") + ",\n]"
+function formatCurlHeaders(provider: Exclude<ProviderId, 'ollama'>): string {
+  const env = `$${envVarName(provider)}`
+  const headers: string[] = ['-H "Content-Type: application/json"']
+
+  switch (provider) {
+    case 'openai':
+    case 'groq':
+      headers.push(`-H "Authorization: Bearer ${env}"`)
+      break
+    case 'anthropic':
+      headers.push(`-H "x-api-key: ${env}"`)
+      headers.push('-H "anthropic-version: 2023-06-01"')
+      break
+    case 'gemini':
+      headers.push(`-H "x-goog-api-key: ${env}"`)
+      break
+  }
+
+  return headers.join(' \\\n  ')
+}
+
+function phpHeadersArray(provider: ProviderId): string {
+  const lines = [`    'Content-Type: application/json'`]
+
+  if (provider !== 'ollama') {
+    const env = `getenv('${envVarName(provider)}')`
+    switch (provider) {
+      case 'openai':
+      case 'groq':
+        lines.push(`    'Authorization: Bearer ' . ${env}`)
+        break
+      case 'anthropic':
+        lines.push(`    'x-api-key: ' . ${env}`)
+        lines.push(`    'anthropic-version: 2023-06-01'`)
+        break
+      case 'gemini':
+        lines.push(`    'x-goog-api-key: ' . ${env}`)
+        break
+    }
+  }
+
+  return '[\n' + lines.join(',\n') + ',\n]'
 }

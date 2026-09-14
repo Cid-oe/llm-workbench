@@ -1,10 +1,10 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'default' })
-
 import { Code2, Play, Save, Square } from '@lucide/vue'
 import type { ExportLanguage } from '~/composables/useCodeExporter'
 import type { ModelResponse } from '~/types/llm'
 import { PROVIDER_MODELS } from '~/stores/useProviderStore'
+
+definePageMeta({ layout: 'default' })
 
 const promptStore = usePromptStore()
 const providerStore = useProviderStore()
@@ -26,7 +26,6 @@ const exportSnippet = computed(() => {
     model: slot.modelId,
     systemPrompt: promptStore.interpolatedSystemPrompt,
     userPrompt: promptStore.interpolatedUserPrompt,
-    apiKey: providerStore.getApiKey(slot.provider),
     ollamaUrl: providerStore.ollamaUrl,
   })
 })
@@ -71,6 +70,8 @@ async function runAll() {
     abortControllers.value.push(controller)
     const startTime = performance.now()
     let content = ''
+    const initial = initialResponses[index]
+    if (!initial) return
 
     promptStore.updateResponse(slot.slotId, { status: 'streaming' })
 
@@ -88,11 +89,11 @@ async function runAll() {
           content += text
           const model = PROVIDER_MODELS.find(m => m.id === slot.modelId)
           const outputTokens = estimateTokens(content)
-          const inputTokens = initialResponses[index].metrics.inputTokens
+          const inputTokens = initial.metrics.inputTokens
           promptStore.updateResponse(slot.slotId, {
             content,
             metrics: {
-              ...initialResponses[index].metrics,
+              ...initial.metrics,
               outputTokens,
               costUsd: calculateCost(model, inputTokens, outputTokens),
               latencyMs: performance.now() - startTime,
@@ -100,9 +101,11 @@ async function runAll() {
           })
         },
         onFirstToken: (ttftMs) => {
+          const current = promptStore.responses.find(r => r.slotId === slot.slotId)
+          if (!current) return
           promptStore.updateResponse(slot.slotId, {
             metrics: {
-              ...promptStore.responses.find(r => r.slotId === slot.slotId)!.metrics,
+              ...current.metrics,
               ttftMs,
             },
           })
@@ -110,11 +113,11 @@ async function runAll() {
         onDone: () => {
           const model = PROVIDER_MODELS.find(m => m.id === slot.modelId)
           const outputTokens = estimateTokens(content)
-          const inputTokens = initialResponses[index].metrics.inputTokens
+          const inputTokens = initial.metrics.inputTokens
           promptStore.updateResponse(slot.slotId, {
             status: 'done',
             metrics: {
-              ...initialResponses[index].metrics,
+              ...initial.metrics,
               outputTokens,
               costUsd: calculateCost(model, inputTokens, outputTokens),
               latencyMs: performance.now() - startTime,
@@ -126,7 +129,7 @@ async function runAll() {
             status: 'error',
             error,
             metrics: {
-              ...initialResponses[index].metrics,
+              ...initial.metrics,
               latencyMs: performance.now() - startTime,
             },
           })

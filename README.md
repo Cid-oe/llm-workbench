@@ -52,11 +52,37 @@ Store API keys locally with AES-256-GCM encryption and an optional master passwo
 ```bash
 git clone https://github.com/ale94lko/llm-playground-os.git
 cd llm-playground-os
+cp .env.example .env
 npm install
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+`.env.example` documents the supported variables:
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `NUXT_APP_BASE_URL` | `/` | Public path prefix. GitHub Pages uses `/llm-playground-os/`. |
+| `NUXT_DEVTOOLS` | `false` | Enable Nuxt DevTools. Set `true` locally if you want the overlay. |
+
+### Docker (one command)
+
+```bash
+docker compose up --build
+```
+
+The production server listens on [http://localhost:3000](http://localhost:3000) and exposes:
+
+- `GET /api/health` — liveness
+- `GET /api/metrics` — process uptime and stream counters
+- `POST /api/stream` — LLM stream proxy (no CORS)
+
+Optional local Ollama:
+
+```bash
+docker compose --profile ollama up --build
+```
 
 ### Configure providers
 
@@ -132,7 +158,9 @@ npm run build
 | State | Pinia + pinia-plugin-persistedstate |
 | Icons | Lucide Vue |
 | Streaming | Browser-direct (prod) + Nitro proxy (dev) |
-| Tests | Vitest |
+| Tests | Vitest + coverage (`@vitest/coverage-v8`) |
+| Lint | ESLint via `@nuxt/eslint` |
+| Observability | Structured JSON logs, `/api/health`, `/api/metrics` |
 
 ## Project Structure
 
@@ -145,10 +173,11 @@ app/
 │   ├── settings/        # API key manager, encrypted vault
 │   └── layout/          # Header with desktop nav + mobile menu
 ├── composables/         # LLM streaming, cost calculator, code exporter
-├── lib/                 # Crypto, metrics, stream providers, provider models
+├── lib/                 # Crypto, metrics, stream providers, provider models, logger, validation
 ├── pages/               # Playground, history, metrics, settings
 ├── stores/              # Provider & prompt state (persisted)
-└── server/api/          # Stream proxy (local dev / Node deployments)
+└── plugins/             # Vault bootstrap + client error tracking
+server/api/              # Stream proxy, health, and metrics (local dev / Node / Docker)
 docs/
 └── screenshots/         # README example images
 ```
@@ -156,11 +185,16 @@ docs/
 ## Development
 
 ```bash
+cp .env.example .env
 npm run dev          # Start dev server (uses /api/stream proxy)
 npm run build        # Production build (Node server)
 npm run generate     # Static export for GitHub Pages
+npm run lint         # ESLint
+npm run typecheck    # vue-tsc via Nuxt
 npm test             # Run unit tests
+npm run test:coverage
 npm run test:watch   # Watch mode
+docker compose up --build
 ```
 
 ## Security
@@ -171,14 +205,16 @@ Keys also live in sessionStorage for the current browser session. Locking the va
 
 > **Note:** In production (GitHub Pages), API keys are sent directly from your browser to the LLM provider. This is intentional for a local-first playground, but never share your machine or browser session with untrusted parties.
 
+The **code exporter** never embeds stored API keys. Generated JavaScript, Python, cURL, and PHP snippets always read credentials from the environment (`process.env.OPENAI_API_KEY`, `os.environ['OPENAI_API_KEY']`, `$OPENAI_API_KEY`, `getenv('OPENAI_API_KEY')`).
+
 ## Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](.github/CONTRIBUTING.md) and open an issue first to discuss what you'd like to change.
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) and open an issue first to discuss what you'd like to change.
 
 1. Fork the repo
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Run tests (`npm test`)
-4. Commit your changes
+3. Run `npm run lint`, `npm run typecheck`, and `npm test`
+4. Commit your changes in small, focused commits (tests with the feature)
 5. Push and open a Pull Request
 
 ## License

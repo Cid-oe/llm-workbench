@@ -17,6 +17,8 @@ Please delete options that are not relevant.
 
 Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration.
 
+- [ ] `npm run lint`
+- [ ] `npm run typecheck`
 - [ ] `npm test`
 - [ ] Manual testing in the playground
 

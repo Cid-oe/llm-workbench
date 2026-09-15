@@ -1,11 +1,11 @@
 # LLM Playground OS
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
+[![License: Source-Available (AI restricted)](https://img.shields.io/badge/License-Source--Available-blue.svg)](LICENSE)
 [![Health Score](https://github.com/ale94lko/llm-playground-os/blob/output/badge.svg)](https://github.com/ale94lko/repo-health-score)
 [![Nuxt](https://img.shields.io/badge/Nuxt-4-00DC82?logo=nuxt.js&logoColor=white)](https://nuxt.com)
 [![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org)
 
-Open-source **multi-LLM playground** for developers and AI enthusiasts. Design prompts with dynamic variables, run them in parallel against up to 4 models, and compare responses with real-time metrics — all **local-first** in your browser.
+Source-available **multi-LLM playground** for developers and AI enthusiasts. Design prompts with dynamic variables, run them in parallel against up to 4 models, and compare responses with real-time metrics — all **local-first** in your browser.
 
 **Live demo:** [https://ale94lko.github.io/llm-playground-os/](https://ale94lko.github.io/llm-playground-os/)
 
@@ -219,4 +219,4 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) and op
 
 ## License
 
-MIT © [Fidel Alejandro Fernandez Arias](LICENSE)
+**llm-playground-os** is source-available under the terms in [`LICENSE`](LICENSE): use, modification, and distribution are allowed, but using this software or its documentation to train, fine-tune, evaluate, or synthesize AI/ML/LLM systems requires a separate paid written agreement with the copyright holder.

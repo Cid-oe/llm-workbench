@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Switch from MIT to a source-available license with an AI-training restriction
+
 ### Added
 - ESLint (`@nuxt/eslint`) and `nuxt typecheck` gates on every push and pull request
 - Dedicated CI workflow with `npm audit --audit-level=high`, lint, typecheck, and coverage

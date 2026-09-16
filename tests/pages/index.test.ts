@@ -33,6 +33,14 @@ const uiStubs = {
   PlaygroundModelSelector: true,
   PlaygroundComparisonGrid: true,
   PlaygroundPromptVersionDiff: true,
+  PlaygroundBulkDatasetPanel: {
+    name: 'PlaygroundBulkDatasetPanel',
+    props: ['open', 'variables', 'canRun', 'isRunning', 'results', 'progressLabel'],
+    emits: ['close', 'start', 'stop', 'clear'],
+    template: `<div v-if="open" data-testid="bulk-panel">
+      <button type="button" @click="$emit('start', { rows: [{ topic: 'bulk-topic' }], mapping: { topic: 'topic' } })">Start Bulk</button>
+    </div>`,
+  },
 }
 
 describe('pages/index compare run path', () => {
@@ -159,5 +167,23 @@ user from file
     const diffBtn = wrapper.findAll('button').find(b => b.text().includes('Diff'))
     await diffBtn!.trigger('click')
     expect(wrapper.findComponent({ name: 'PlaygroundPromptVersionDiff' }).exists()).toBe(true)
+  })
+
+  it('runs a bulk dataset row with interpolated variables', async () => {
+    const { wrapper, promptStore } = mountPage()
+    promptStore.userPrompt = 'Explain {{topic}}'
+    promptStore.variables = { topic: 'default' }
+
+    const bulkBtn = wrapper.findAll('button').find(b => b.text().includes('Bulk'))
+    await bulkBtn!.trigger('click')
+    expect(wrapper.find('[data-testid="bulk-panel"]').exists()).toBe(true)
+
+    await wrapper.find('[data-testid="bulk-panel"] button').trigger('click')
+    await flushPromises()
+
+    expect(streamCompletion).toHaveBeenCalledTimes(1)
+    expect(streamCompletion.mock.calls[0]?.[0]?.userPrompt).toBe('Explain bulk-topic')
+    expect(wrapper.findComponent({ name: 'PlaygroundBulkDatasetPanel' }).props('results')).toHaveLength(1)
+    expect(wrapper.findComponent({ name: 'PlaygroundBulkDatasetPanel' }).props('results')[0].status).toBe('done')
   })
 })

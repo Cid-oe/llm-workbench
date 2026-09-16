@@ -1,5 +1,5 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import BulkDatasetPanel from '../../app/components/playground/BulkDatasetPanel.vue'
 
 const uiStubs = {

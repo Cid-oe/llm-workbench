@@ -20,6 +20,18 @@ docker compose up --build
 
 The app is then available at [http://localhost:3000](http://localhost:3000).
 
+### Fresh clone verification
+
+To validate a clean checkout (lockfile install → build → coverage) without relying on a dirty workspace:
+
+```bash
+npm run verify:fresh
+```
+
+Wrappers: `scripts/verify-fresh-clone.sh` (Unix) and `scripts/verify-fresh-clone.ps1` (Windows). See [docs/dev-notes.md](docs/dev-notes.md).
+
+**Unit tests do not need live providers or Ollama.** The default Vitest suite uses happy-dom and mocked `fetch` (no API keys, no local LLM server).
+
 ## Quality checks
 
 Run these before opening a pull request:

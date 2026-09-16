@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Weekly `npm outdated` freshness workflow (non-failing summary + artifact) ([#11](https://github.com/ale94lko/llm-playground-os/issues/11))
+- Unit tests for Nitro `/api/stream`, `/api/health`, and `/api/metrics` handlers ([#19](https://github.com/ale94lko/llm-playground-os/issues/19))
 
 ## [0.1.0] - 2026-09-16
 

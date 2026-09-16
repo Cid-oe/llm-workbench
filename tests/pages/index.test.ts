@@ -192,4 +192,56 @@ user from file
     expect(wrapper.findComponent({ name: 'PlaygroundBulkDatasetPanel' }).props('results')).toHaveLength(1)
     expect(wrapper.findComponent({ name: 'PlaygroundBulkDatasetPanel' }).props('results')[0].status).toBe('done')
   })
+
+  it('shows Stop while running and aborts the run', async () => {
+    let release!: () => void
+    streamCompletion.mockImplementation(() => new Promise<void>((resolve) => {
+      release = resolve
+    }))
+
+    const { wrapper, promptStore } = mountPage()
+    const runBtn = wrapper.findAll('button').find(b => b.text().includes('Run All'))
+    await runBtn!.trigger('click')
+    await flushPromises()
+
+    expect(promptStore.isRunning).toBe(true)
+    const stopBtn = wrapper.findAll('button').find(b => b.text().includes('Stop'))
+    expect(stopBtn).toBeTruthy()
+    await stopBtn!.trigger('click')
+    expect(promptStore.isRunning).toBe(false)
+    release()
+    await flushPromises()
+  })
+
+  it('saves a named prompt from the Save dialog', async () => {
+    const { wrapper, promptStore } = mountPage()
+    const saveBtn = wrapper.findAll('button').find(b => b.text() === 'Save' || b.text().includes('Save'))
+    await saveBtn!.trigger('click')
+    expect(wrapper.text()).toContain('Name')
+
+    const input = wrapper.find('input')
+    await input.setValue('My collection')
+    const dialogSaves = wrapper.findAll('button').filter(b => b.text() === 'Save')
+    await dialogSaves[dialogSaves.length - 1]!.trigger('click')
+    expect(promptStore.savedPrompts.some(p => p.name === 'My collection')).toBe(true)
+  })
+
+  it('opens the Export dialog code tab and copies the snippet', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    })
+
+    const { wrapper } = mountPage()
+    const exportBtn = wrapper.findAll('button').find(b => b.text().includes('Export'))
+    await exportBtn!.trigger('click')
+    expect(wrapper.text()).toContain('JavaScript')
+    expect(wrapper.text()).toContain('fetch(')
+
+    const copyBtn = wrapper.findAll('button').find(b => b.text() === 'Copy')
+    await copyBtn!.trigger('click')
+    await flushPromises()
+    expect(writeText).toHaveBeenCalled()
+  })
 })

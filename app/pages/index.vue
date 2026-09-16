@@ -1,9 +1,17 @@
 <script setup lang="ts">
-import { Code2, GitCompare, Play, Save, Square } from '@lucide/vue'
+import { Code2, GitCompare, Play, Save, Square, Table2 } from '@lucide/vue'
 import type { ExportLanguage } from '~/composables/useCodeExporter'
+import {
+  applyColumnMapping,
+  truncatePreview,
+  type BulkCaseResult,
+  type BulkModelResult,
+  type ColumnMapping,
+} from '~/lib/dataset'
 import { promptFileName } from '~/lib/promptFile'
 import { migrateModelId, PROVIDER_MODELS } from '~/lib/providerModels'
-import type { ModelResponse, PromptFileData } from '~/types/llm'
+import { interpolateVariables } from '~/lib/variables'
+import type { ModelResponse, PromptFileData, PromptVariables } from '~/types/llm'
 
 definePageMeta({ layout: 'default' })
 
@@ -20,8 +28,12 @@ const exportLang = ref<ExportLanguage>('javascript')
 const saveName = ref('')
 const showSave = ref(false)
 const showDiff = ref(false)
+const showBulk = ref(false)
 const importError = ref('')
 const promptFileInput = ref<HTMLInputElement | null>(null)
+const bulkResults = ref<BulkCaseResult[]>([])
+const bulkProgress = ref('')
+const bulkCancelled = ref(false)
 
 const primarySlot = computed(() => providerStore.selectedModels[0])
 
@@ -70,6 +82,109 @@ function createEmptyResponse(slotId: string, provider: ModelResponse['provider']
   }
 }
 
+async function runSlotStream(
+  slot: { slotId: string, provider: ModelResponse['provider'], modelId: string },
+  prompts: { systemPrompt: string, userPrompt: string },
+  options?: {
+    onUpdate?: (partial: Partial<ModelResponse> & { content?: string }) => void
+    updateStore?: boolean
+  },
+): Promise<{ content: string, status: ModelResponse['status'], latencyMs: number, error?: string }> {
+  const controller = new AbortController()
+  abortControllers.value.push(controller)
+  const startTime = performance.now()
+  let content = ''
+  let status: ModelResponse['status'] = 'streaming'
+  let errorMessage: string | undefined
+  const inputTokens = estimateTokens(prompts.systemPrompt + prompts.userPrompt)
+  const baseMetrics = {
+    latencyMs: 0,
+    ttftMs: null as number | null,
+    inputTokens,
+    outputTokens: 0,
+    costUsd: calculateCost(PROVIDER_MODELS.find(m => m.id === slot.modelId), inputTokens, 0),
+  }
+
+  if (options?.updateStore !== false) {
+    promptStore.updateResponse(slot.slotId, { status: 'streaming' })
+  }
+
+  await streamCompletion(
+    {
+      provider: slot.provider,
+      model: slot.modelId,
+      systemPrompt: prompts.systemPrompt,
+      userPrompt: prompts.userPrompt,
+      apiKey: providerStore.getApiKey(slot.provider),
+      ollamaUrl: providerStore.ollamaUrl,
+    },
+    {
+      onChunk: (text) => {
+        content += text
+        const model = PROVIDER_MODELS.find(m => m.id === slot.modelId)
+        const outputTokens = estimateTokens(content)
+        const metrics = {
+          ...baseMetrics,
+          outputTokens,
+          costUsd: calculateCost(model, inputTokens, outputTokens),
+          latencyMs: performance.now() - startTime,
+        }
+        options?.onUpdate?.({ content, metrics })
+        if (options?.updateStore !== false) {
+          promptStore.updateResponse(slot.slotId, { content, metrics })
+        }
+      },
+      onFirstToken: (ttftMs) => {
+        baseMetrics.ttftMs = ttftMs
+        if (options?.updateStore !== false) {
+          const current = promptStore.responses.find(r => r.slotId === slot.slotId)
+          if (!current) return
+          promptStore.updateResponse(slot.slotId, {
+            metrics: { ...current.metrics, ttftMs },
+          })
+        }
+      },
+      onDone: () => {
+        status = 'done'
+        const model = PROVIDER_MODELS.find(m => m.id === slot.modelId)
+        const outputTokens = estimateTokens(content)
+        const metrics = {
+          ...baseMetrics,
+          outputTokens,
+          costUsd: calculateCost(model, inputTokens, outputTokens),
+          latencyMs: performance.now() - startTime,
+        }
+        if (options?.updateStore !== false) {
+          promptStore.updateResponse(slot.slotId, { status: 'done', metrics })
+        }
+      },
+      onError: (error) => {
+        status = 'error'
+        errorMessage = error.message
+        const metrics = {
+          ...baseMetrics,
+          latencyMs: performance.now() - startTime,
+        }
+        if (options?.updateStore !== false) {
+          promptStore.updateResponse(slot.slotId, {
+            status: 'error',
+            error: error.message,
+            metrics,
+          })
+        }
+      },
+    },
+    controller.signal,
+  )
+
+  return {
+    content,
+    status,
+    latencyMs: performance.now() - startTime,
+    error: errorMessage,
+  }
+}
+
 async function runAll() {
   stopAll()
   promptStore.isRunning = true
@@ -80,81 +195,15 @@ async function runAll() {
   )
   promptStore.setResponses(initialResponses)
 
-  const promises = providerStore.selectedModels.map(async (slot, index) => {
-    const controller = new AbortController()
-    abortControllers.value.push(controller)
-    const startTime = performance.now()
-    let content = ''
-    const initial = initialResponses[index]
-    if (!initial) return
+  const prompts = {
+    systemPrompt: promptStore.interpolatedSystemPrompt,
+    userPrompt: promptStore.interpolatedUserPrompt,
+  }
 
-    promptStore.updateResponse(slot.slotId, { status: 'streaming' })
+  await Promise.allSettled(
+    providerStore.selectedModels.map(slot => runSlotStream(slot, prompts)),
+  )
 
-    await streamCompletion(
-      {
-        provider: slot.provider,
-        model: slot.modelId,
-        systemPrompt: promptStore.interpolatedSystemPrompt,
-        userPrompt: promptStore.interpolatedUserPrompt,
-        apiKey: providerStore.getApiKey(slot.provider),
-        ollamaUrl: providerStore.ollamaUrl,
-      },
-      {
-        onChunk: (text) => {
-          content += text
-          const model = PROVIDER_MODELS.find(m => m.id === slot.modelId)
-          const outputTokens = estimateTokens(content)
-          const inputTokens = initial.metrics.inputTokens
-          promptStore.updateResponse(slot.slotId, {
-            content,
-            metrics: {
-              ...initial.metrics,
-              outputTokens,
-              costUsd: calculateCost(model, inputTokens, outputTokens),
-              latencyMs: performance.now() - startTime,
-            },
-          })
-        },
-        onFirstToken: (ttftMs) => {
-          const current = promptStore.responses.find(r => r.slotId === slot.slotId)
-          if (!current) return
-          promptStore.updateResponse(slot.slotId, {
-            metrics: {
-              ...current.metrics,
-              ttftMs,
-            },
-          })
-        },
-        onDone: () => {
-          const model = PROVIDER_MODELS.find(m => m.id === slot.modelId)
-          const outputTokens = estimateTokens(content)
-          const inputTokens = initial.metrics.inputTokens
-          promptStore.updateResponse(slot.slotId, {
-            status: 'done',
-            metrics: {
-              ...initial.metrics,
-              outputTokens,
-              costUsd: calculateCost(model, inputTokens, outputTokens),
-              latencyMs: performance.now() - startTime,
-            },
-          })
-        },
-        onError: (error) => {
-          promptStore.updateResponse(slot.slotId, {
-            status: 'error',
-            error: error.message,
-            metrics: {
-              ...initial.metrics,
-              latencyMs: performance.now() - startTime,
-            },
-          })
-        },
-      },
-      controller.signal,
-    )
-  })
-
-  await Promise.allSettled(promises)
   promptStore.isRunning = false
   promptStore.addToHistory(
     promptStore.responses,
@@ -162,7 +211,70 @@ async function runAll() {
   )
 }
 
+async function runBulkDataset(payload: { rows: Record<string, string>[], mapping: ColumnMapping }) {
+  stopAll()
+  bulkCancelled.value = false
+  promptStore.isRunning = true
+  abortControllers.value = []
+  bulkResults.value = payload.rows.map((row, index) => ({
+    index,
+    variables: applyColumnMapping(row, payload.mapping, { ...promptStore.variables }),
+    status: 'pending',
+    models: [],
+  }))
+
+  for (let i = 0; i < payload.rows.length; i++) {
+    if (bulkCancelled.value) {
+      for (let j = i; j < bulkResults.value.length; j++) {
+        const pending = bulkResults.value[j]
+        if (pending) pending.status = 'cancelled'
+      }
+      break
+    }
+
+    const caseResult = bulkResults.value[i]
+    if (!caseResult) continue
+    caseResult.status = 'running'
+    bulkProgress.value = `Running row ${i + 1} of ${payload.rows.length}`
+
+    const vars: PromptVariables = caseResult.variables
+    const prompts = {
+      systemPrompt: interpolateVariables(promptStore.systemPrompt, vars),
+      userPrompt: interpolateVariables(promptStore.userPrompt, vars),
+    }
+
+    const modelResults = await Promise.all(
+      providerStore.selectedModels.map(async (slot): Promise<BulkModelResult> => {
+        const model = PROVIDER_MODELS.find(m => m.id === slot.modelId)
+        const result = await runSlotStream(slot, prompts, { updateStore: false })
+        const aborted = bulkCancelled.value || result.status === 'streaming' || result.status === 'idle'
+        return {
+          modelId: slot.modelId,
+          label: model?.label ?? slot.modelId,
+          status: result.status === 'done' ? 'done' : 'error',
+          latencyMs: result.latencyMs,
+          outputPreview: truncatePreview(result.content),
+          error: result.error ?? (aborted ? 'Cancelled' : undefined),
+        }
+      }),
+    )
+
+    caseResult.models = modelResults
+    caseResult.status = bulkCancelled.value
+      ? 'cancelled'
+      : modelResults.some(m => m.status === 'error')
+        ? 'error'
+        : 'done'
+  }
+
+  bulkProgress.value = bulkCancelled.value
+    ? 'Bulk run stopped'
+    : `Finished ${bulkResults.value.filter(r => r.status === 'done' || r.status === 'error').length} rows`
+  promptStore.isRunning = false
+}
+
 function stopAll() {
+  bulkCancelled.value = true
   abortControllers.value.forEach(c => c.abort())
   abortControllers.value = []
   promptStore.isRunning = false
@@ -249,6 +361,10 @@ const languages: { id: ExportLanguage; label: string }[] = [
         <UiButton variant="outline" size="sm" @click="showExport = true">
           <Code2 class="h-4 w-4" />
           Export
+        </UiButton>
+        <UiButton variant="outline" size="sm" @click="showBulk = true">
+          <Table2 class="h-4 w-4" />
+          Bulk
         </UiButton>
         <UiButton v-if="promptStore.isRunning" variant="destructive" @click="stopAll">
           <Square class="h-4 w-4" />
@@ -339,5 +455,18 @@ const languages: { id: ExportLanguage; label: string }[] = [
         <UiButton @click="handleSave">Save</UiButton>
       </div>
     </UiDialog>
+
+    <PlaygroundBulkDatasetPanel
+      :open="showBulk"
+      :variables="promptStore.detectedVariables"
+      :can-run="canRun"
+      :is-running="promptStore.isRunning"
+      :results="bulkResults"
+      :progress-label="bulkProgress"
+      @close="showBulk = false"
+      @start="runBulkDataset"
+      @stop="stopAll"
+      @clear="bulkResults = []; bulkProgress = ''"
+    />
   </div>
 </template>

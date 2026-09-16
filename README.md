@@ -125,11 +125,13 @@ The app is a **static SPA** (`ssr: false`) designed to run on GitHub Pages witho
 
 ### GitHub Pages (recommended)
 
-The repo includes a GitHub Actions workflow that builds and deploys automatically on every push to `main`.
+The repo deploys via GitHub Actions after **CI** succeeds on `main` (deploy does not re-run lint/tests on that path).
 
 1. Go to **Settings → Pages → Build and deployment**
 2. Set **Source** to **GitHub Actions**
-3. Push to `main` — the workflow `.github/workflows/deploy-pages.yml` handles the rest
+3. Push to `main` — `ci.yml` runs the quality gate; on success, `deploy-pages.yml` generates and publishes the site
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the CI ↔ deploy relationship.
 
 The site is published at:
 

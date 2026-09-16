@@ -38,6 +38,14 @@ npm run test:coverage
 
 CI runs lint, typecheck, tests with coverage, `npm audit --audit-level=high`, and **commitlint** on every pull request.
 
+### CI vs GitHub Pages deploy
+
+- **`CI`** (`.github/workflows/ci.yml`) is the single quality gate on pull requests and on pushes to `main` (audit, lint, typecheck, coverage).
+- **`Deploy to GitHub Pages`** (`.github/workflows/deploy-pages.yml`) does **not** re-run that gate on push to `main`. It starts via `workflow_run` after a successful **CI** run that was a **push to `main`**, checks out that exact commit, then only generates and publishes the static site.
+- Failed CI on `main` blocks deploy. Manual `workflow_dispatch` on the deploy workflow still runs the full quality steps before `npm run generate`, so a broken site cannot be published that way either.
+- Vitest uses `pool: 'threads'` with `isolate: false` to cut happy-dom startup cost; `tests/setup.ts` resets storage per test. Prefer not to rely on order-dependent global state.
+- Coverage thresholds enforce lines/functions/statements (≥60%) and branches (≥50%).
+
 ## Commit style (Conventional Commits)
 
 All commits **must** follow [Conventional Commits](https://www.conventionalcommits.org/):

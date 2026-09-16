@@ -46,6 +46,20 @@ CI runs lint, typecheck, tests with coverage, `npm audit --audit-level=high`, an
 - Vitest uses `pool: 'threads'` with `isolate: false` to cut happy-dom startup cost; `tests/setup.ts` resets storage per test. Prefer not to rely on order-dependent global state.
 - Coverage thresholds enforce lines/functions/statements (≥60%) and branches (≥50%).
 
+### Smoke E2E (static Pages output)
+
+Optional browser smoke against the static site (does **not** block PR merge):
+
+```bash
+npm run generate
+npx playwright install chromium   # first time only
+npm run test:e2e:smoke
+```
+
+- Workflow: `.github/workflows/smoke-e2e.yml` (nightly + `workflow_dispatch` + path-filtered PRs) uses `continue-on-error: true`.
+- Covers Compare home, Settings vault copy, and History empty state on `.output/public`.
+- Provider / local LLM hosts are aborted in the browser so the smoke never makes live model calls.
+
 ## Commit style (Conventional Commits)
 
 All commits **must** follow [Conventional Commits](https://www.conventionalcommits.org/):

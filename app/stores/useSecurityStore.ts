@@ -7,6 +7,7 @@ import {
   verifyPassword,
   saveSessionCryptoKey,
   loadSessionCryptoKey,
+  clearSessionCryptoKey,
   purgeLegacyPersistedCryptoKey,
   type ApiKeysPayload,
 } from '~/lib/crypto'
@@ -95,6 +96,8 @@ export const useSecurityStore = defineStore('security', {
       this._cryptoKey = key
       this.isUnlocked = true
 
+      // Drop the previous session key before writing the rotated one.
+      clearSessionCryptoKey()
       await saveSessionCryptoKey(key)
       await useProviderStore().encryptAndPersistKeys()
       return true

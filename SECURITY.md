@@ -37,4 +37,6 @@ We follow the principle of [Coordinated Vulnerability Disclosure](https://www.is
 
 ## Vault model (client-side)
 
-llm-workbench encrypts provider API keys in the browser with AES-256-GCM. The derived CryptoKey is stored only for the current tab session (`sessionStorage`) and is never persisted to `localStorage`. A cold start leaves the encrypted vault on disk until the user unlocks with their master password. See the README Security section for user-facing details.
+llm-workbench encrypts provider API keys in the browser with AES-256-GCM. The derived CryptoKey is stored only for the current tab session (`sessionStorage`) and is never persisted to `localStorage`. A cold start leaves the encrypted vault on disk until the user unlocks with their master password.
+
+Changing the master password (Settings → Change master password) re-derives the AES key, clears the prior session key via `clearSessionCryptoKey`, writes the new session key, and re-wraps the encrypted API-key payload. Locking the vault remains UI-only and does not clear session keys. See the README Security section for user-facing details.

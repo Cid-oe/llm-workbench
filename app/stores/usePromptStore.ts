@@ -1,4 +1,11 @@
 import { defineStore } from 'pinia'
+import {
+  createPromptBackup,
+  mergePromptBackup,
+  parsePromptBackup,
+  serializePromptBackup,
+  type PromptBackupMode,
+} from '~/lib/promptBackup'
 import { parsePromptFile, serializePromptFile } from '~/lib/promptFile'
 import { detectVariables, interpolateVariables, syncVariableKeys } from '~/lib/variables'
 import type {
@@ -208,6 +215,30 @@ export const usePromptStore = defineStore('prompt', {
       const data = parsePromptFile(markdown)
       this.applyPromptFile(data)
       return data
+    },
+
+    exportBackupJson(): string {
+      return serializePromptBackup(createPromptBackup(this.history, this.savedPrompts))
+    },
+
+    importBackupJson(raw: string, mode: PromptBackupMode): { history: number, savedPrompts: number } {
+      const payload = parsePromptBackup(raw)
+      if (mode === 'replace') {
+        this.history = payload.history.slice(0, 100)
+        this.savedPrompts = payload.savedPrompts
+      }
+      else {
+        const merged = mergePromptBackup(
+          { history: this.history, savedPrompts: this.savedPrompts },
+          payload,
+        )
+        this.history = merged.history
+        this.savedPrompts = merged.savedPrompts
+      }
+      return {
+        history: payload.history.length,
+        savedPrompts: payload.savedPrompts.length,
+      }
     },
   },
 

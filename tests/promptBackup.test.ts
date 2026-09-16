@@ -1,0 +1,93 @@
+import { describe, expect, it } from 'vitest'
+import {
+  PROMPT_BACKUP_VERSION,
+  createPromptBackup,
+  mergePromptBackup,
+  parsePromptBackup,
+  serializePromptBackup,
+} from '../app/lib/promptBackup'
+import type { ExecutionHistoryEntry, SavedPrompt } from '../app/types/llm'
+
+const historyEntry = (id: string, prompt = 'Hello'): ExecutionHistoryEntry => ({
+  id,
+  systemPrompt: 'Sys',
+  userPrompt: prompt,
+  variables: { topic: 'x', api_key: 'sk-should-not-export', openaiKey: 'nope' },
+  models: [{ slotId: 'slot-1', provider: 'openai', modelId: 'gpt-4o-mini' }],
+  responses: [{
+    slotId: 'slot-1',
+    provider: 'openai',
+    modelId: 'gpt-4o-mini',
+    content: 'Hi',
+    status: 'done',
+    metrics: { latencyMs: 10, ttftMs: 2, inputTokens: 1, outputTokens: 1, costUsd: 0 },
+  }],
+  createdAt: '2026-09-16T10:00:00.000Z',
+})
+
+const savedPrompt = (id: string, name: string): SavedPrompt => ({
+  id,
+  name,
+  systemPrompt: 'Sys',
+  userPrompt: 'User {{topic}}',
+  tags: ['demo'],
+  version: 1,
+  createdAt: '2026-09-16T09:00:00.000Z',
+  updatedAt: '2026-09-16T09:30:00.000Z',
+  variables: { topic: 'quantum', password: 'secret-value' },
+  model: 'gpt-4o-mini',
+  provider: 'openai',
+  generation: { temperature: 0.4, maxTokens: 256 },
+  revisions: [],
+})
+
+describe('promptBackup', () => {
+  it('serializes a versioned backup and strips secret variables', () => {
+    const payload = createPromptBackup(
+      [historyEntry('h1')],
+      [savedPrompt('s1', 'Demo')],
+      '2026-09-16T12:00:00.000Z',
+    )
+    const json = serializePromptBackup(payload)
+
+    expect(payload.version).toBe(PROMPT_BACKUP_VERSION)
+    expect(json).toContain('"version": 1')
+    expect(json).not.toContain('sk-should-not-export')
+    expect(json).not.toContain('openaiKey')
+    expect(json).not.toContain('secret-value')
+    expect(json).not.toContain('encryptedPayload')
+    expect(json).not.toContain('passwordVerifier')
+    expect(payload.history[0]?.variables).toEqual({ topic: 'x' })
+    expect(payload.savedPrompts[0]?.variables).toEqual({ topic: 'quantum' })
+  })
+
+  it('round-trips parse after serialize', () => {
+    const original = createPromptBackup([historyEntry('h1')], [savedPrompt('s1', 'Demo')])
+    const parsed = parsePromptBackup(serializePromptBackup(original))
+    expect(parsed.history).toHaveLength(1)
+    expect(parsed.savedPrompts).toHaveLength(1)
+    expect(parsed.history[0]?.id).toBe('h1')
+    expect(parsed.savedPrompts[0]?.name).toBe('Demo')
+    expect(parsed.savedPrompts[0]?.generation).toEqual({ temperature: 0.4, maxTokens: 256 })
+  })
+
+  it('rejects invalid JSON and unsupported versions', () => {
+    expect(() => parsePromptBackup('{')).toThrow(/invalid json/i)
+    expect(() => parsePromptBackup(JSON.stringify({ version: 99, history: [], savedPrompts: [] }))).toThrow(/unsupported/i)
+  })
+
+  it('merges by id without dropping local-only items', () => {
+    const current = {
+      history: [historyEntry('local-h')],
+      savedPrompts: [savedPrompt('local-s', 'Local')],
+    }
+    const incoming = createPromptBackup(
+      [historyEntry('import-h', 'Imported')],
+      [savedPrompt('local-s', 'Updated')],
+    )
+    const merged = mergePromptBackup(current, incoming)
+    expect(merged.history.map(h => h.id).sort()).toEqual(['import-h', 'local-h'])
+    expect(merged.savedPrompts).toHaveLength(1)
+    expect(merged.savedPrompts[0]?.name).toBe('Updated')
+  })
+})

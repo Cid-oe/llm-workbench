@@ -58,3 +58,37 @@ export function diffLines(before: string, after: string): DiffLine[] {
   }
   return out
 }
+
+/** Pair LCS hunks into left/right rows for a split (side-by-side) view. */
+export interface SplitDiffRow {
+  left: DiffLine | null
+  right: DiffLine | null
+}
+
+export function toSplitDiffRows(hunks: DiffLine[]): SplitDiffRow[] {
+  const rows: SplitDiffRow[] = []
+  let i = 0
+  while (i < hunks.length) {
+    const line = hunks[i]!
+    if (line.kind === 'equal') {
+      rows.push({ left: line, right: line })
+      i++
+      continue
+    }
+    if (line.kind === 'remove') {
+      const next = hunks[i + 1]
+      if (next?.kind === 'add') {
+        rows.push({ left: line, right: next })
+        i += 2
+      }
+      else {
+        rows.push({ left: line, right: null })
+        i++
+      }
+      continue
+    }
+    rows.push({ left: null, right: line })
+    i++
+  }
+  return rows
+}

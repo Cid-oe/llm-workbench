@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unused direct dependency `class-variance-authority` ([#11](https://github.com/ale94lko/llm-workbench/issues/11))
 
 ### Added
+- Side-by-side / unified response diff for completed Compare runs (lightweight line LCS) ([#25](https://github.com/ale94lko/llm-workbench/issues/25))
 - Export/import history and saved prompts as versioned JSON (merge or replace, no API keys) ([#24](https://github.com/ale94lko/llm-workbench/issues/24))
 - Discover local Ollama models via `/api/tags` with Refresh control and static fallback ([#23](https://github.com/ale94lko/llm-workbench/issues/23))
 - Per-run temperature and max tokens controls on Compare, wired through providers and code export ([#22](https://github.com/ale94lko/llm-workbench/issues/22))

@@ -100,7 +100,7 @@ export const useSecurityStore = defineStore('security', {
       return true
     },
 
-    /** Load keys into memory silently — playground works even when UI is locked */
+    /** Load keys into memory silently — Compare keeps working even when UI is locked */
     async bootstrapKeys(): Promise<void> {
       const provider = useProviderStore()
       const hasAnyKey = !!(

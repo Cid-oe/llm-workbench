@@ -34,7 +34,7 @@ const uiStubs = {
   PlaygroundComparisonGrid: true,
 }
 
-describe('pages/index playground run path', () => {
+describe('pages/index compare run path', () => {
   beforeEach(() => {
     streamCompletion.mockReset()
     streamCompletion.mockImplementation(async (_req, handlers) => {
@@ -64,7 +64,7 @@ describe('pages/index playground run path', () => {
     return { wrapper, promptStore: usePromptStore(), providerStore }
   }
 
-  it('renders playground heading and disabled run without keys', async () => {
+  it('renders compare heading and disabled run without keys', async () => {
     const pinia = createTestingPinia({ stubActions: false, createSpy: vi.fn })
     setActivePinia(pinia)
     useProviderStore().selectedModels = [
@@ -75,7 +75,7 @@ describe('pages/index playground run path', () => {
       global: { plugins: [pinia], stubs: uiStubs },
     })
 
-    expect(wrapper.text()).toContain('Playground')
+    expect(wrapper.text()).toContain('Compare')
     const runBtn = wrapper.findAll('button').find(b => b.text().includes('Run All'))
     expect(runBtn?.attributes('disabled')).toBeDefined()
   })

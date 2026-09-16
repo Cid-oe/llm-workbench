@@ -6,16 +6,16 @@ body:
   - type: markdown
     attributes:
       value: |
-        Have an idea to make LLM Playground OS better? We'd love to hear it!
+        Have an idea to make LLM Workbench better? We'd love to hear it!
 
-        Please **search [existing issues](https://github.com/ale94lko/llm-playground-os/issues)** first — someone may have already suggested it.
+        Please **search [existing issues](https://github.com/ale94lko/llm-workbench/issues)** first — someone may have already suggested it.
         ---
 
   - type: checkboxes
     id: conduct
     attributes:
       label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/ale94lko/llm-playground-os/blob/main/.github/CODE_OF_CONDUCT.md).
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/ale94lko/llm-workbench/blob/main/.github/CODE_OF_CONDUCT.md).
       options:
         - label: I agree to follow this project's Code of Conduct
           required: true
@@ -25,7 +25,7 @@ body:
     attributes:
       label: Which area would this improve?
       options:
-        - Playground (prompts, variables, parallel runs)
+        - Compare (prompts, variables, parallel runs)
         - Metrics & analytics
         - History & prompt library
         - Settings & security vault

@@ -36,14 +36,14 @@ function displayValue(provider: ProviderId, isUrl?: boolean): string {
         <div>
           <p class="text-sm font-medium">Local-first storage</p>
           <p class="text-xs text-muted-foreground mt-1">
-            API keys work in the playground even when the vault is locked. Locking only hides key values in Settings.
+            API keys work in Compare even when the vault is locked. Locking only hides key values in Settings.
           </p>
         </div>
       </div>
     </UiCard>
 
     <div v-if="keysHidden" class="rounded-md border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-      Keys are hidden. Unlock the vault to view or edit them — the playground keeps working.
+      Keys are hidden. Unlock the vault to view or edit them — Compare keeps working.
     </div>
 
     <div class="grid gap-4 md:grid-cols-2">

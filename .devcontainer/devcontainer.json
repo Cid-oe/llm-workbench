@@ -1,5 +1,5 @@
 {
-  "name": "LLM Playground OS",
+  "name": "LLM Workbench",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:24",
   "forwardPorts": [3000],
   "postCreateCommand": "cp -n .env.example .env && npm ci",

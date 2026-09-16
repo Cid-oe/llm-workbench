@@ -55,7 +55,7 @@ function handleLock() {
       <div>
         <p class="text-sm font-medium">Encrypted API key vault</p>
         <p class="text-xs text-muted-foreground mt-1">
-          Lock hides API keys from view in Settings. The playground keeps using them in the background.
+          Lock hides API keys from view in Settings. Compare keeps using them in the background.
         </p>
       </div>
     </div>

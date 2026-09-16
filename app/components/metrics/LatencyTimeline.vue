@@ -142,7 +142,7 @@ const yTicks = computed(() => {
     </p>
 
     <div v-if="!points.length" class="text-sm text-muted-foreground py-12 text-center">
-      Run comparisons in the Playground to see latency trends.
+      Run comparisons in Compare to see latency trends.
     </div>
 
     <div v-else class="overflow-x-auto">

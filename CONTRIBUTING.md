@@ -1,12 +1,12 @@
-# Contributing to LLM Playground OS
+# Contributing to LLM Workbench
 
 Thanks for helping improve this project. Please also read the [Code of Conduct](.github/CODE_OF_CONDUCT.md).
 
 ## Development setup
 
 ```bash
-git clone https://github.com/ale94lko/llm-playground-os.git
-cd llm-playground-os
+git clone https://github.com/ale94lko/llm-workbench.git
+cd llm-workbench
 cp .env.example .env
 npm install
 npm run dev
@@ -81,7 +81,7 @@ Pull request commits are checked by the `commitlint` CI job (Dependabot PRs are 
 
 ## Workflow
 
-1. Search [existing issues](https://github.com/ale94lko/llm-playground-os/issues) before opening a new one. Use an [issue form](https://github.com/ale94lko/llm-playground-os/issues/new/choose) when creating one.
+1. Search [existing issues](https://github.com/ale94lko/llm-workbench/issues) before opening a new one. Use an [issue form](https://github.com/ale94lko/llm-workbench/issues/new/choose) when creating one.
 2. Fork the repository and create a focused branch.
 3. Add or update tests for the behavior you change (same PR as the source change).
 4. Use Conventional Commit messages (`feat:`, `fix:`, `test:`, …).

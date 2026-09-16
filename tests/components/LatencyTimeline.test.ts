@@ -23,7 +23,7 @@ function mountTimeline(points: TimelinePoint[]) {
 describe('LatencyTimeline', () => {
   it('shows empty state when there are no points', () => {
     const wrapper = mountTimeline([])
-    expect(wrapper.text()).toContain('Run comparisons in the Playground')
+    expect(wrapper.text()).toContain('Run comparisons in Compare')
     expect(wrapper.find('svg').exists()).toBe(false)
   })
 

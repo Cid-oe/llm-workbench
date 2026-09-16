@@ -176,8 +176,8 @@ const languages: { id: ExportLanguage; label: string }[] = [
   <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 class="text-2xl font-bold">Playground</h1>
-        <p class="text-sm text-muted-foreground">Compare up to 4 LLM models in parallel</p>
+        <h1 class="text-2xl font-bold">Compare</h1>
+        <p class="text-sm text-muted-foreground">Run up to 4 LLM models in parallel</p>
       </div>
       <div class="flex flex-wrap gap-2">
         <UiButton variant="outline" size="sm" @click="showSave = true">

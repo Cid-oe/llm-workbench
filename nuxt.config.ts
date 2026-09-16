@@ -26,9 +26,9 @@ export default defineNuxtConfig({
   app: {
     baseURL,
     head: {
-      title: 'LLM Playground OS',
+      title: 'LLM Workbench',
       meta: [
-        { name: 'description', content: 'Open-source multi-LLM playground for developers' },
+        { name: 'description', content: 'Local-first multi-LLM workbench for prompt comparison' },
       ],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: `${baseURL}favicon.svg` },

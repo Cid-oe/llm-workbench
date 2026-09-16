@@ -48,6 +48,7 @@ const exportSnippet = computed(() => {
     systemPrompt: promptStore.interpolatedSystemPrompt,
     userPrompt: promptStore.interpolatedUserPrompt,
     ollamaUrl: providerStore.ollamaUrl,
+    lmStudioUrl: providerStore.lmStudioUrl,
     temperature: promptStore.generation.temperature,
     maxTokens: promptStore.generation.maxTokens,
   })
@@ -121,6 +122,7 @@ async function runSlotStream(
       userPrompt: prompts.userPrompt,
       apiKey: providerStore.getApiKey(slot.provider),
       ollamaUrl: providerStore.ollamaUrl,
+      lmStudioUrl: providerStore.lmStudioUrl,
       temperature: promptStore.generation.temperature,
       maxTokens: promptStore.generation.maxTokens,
     },

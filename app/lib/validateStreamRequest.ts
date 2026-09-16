@@ -1,7 +1,7 @@
 import type { ProviderId, StreamRequest } from '~/types/llm'
 import { resolveGenerationParams } from '~/lib/generation'
 
-export const PROVIDER_IDS = ['openai', 'anthropic', 'gemini', 'groq', 'ollama'] as const
+export const PROVIDER_IDS = ['openai', 'anthropic', 'gemini', 'groq', 'ollama', 'lmstudio'] as const
 
 export type ValidationResult =
   | { ok: true, value: StreamRequest }
@@ -62,6 +62,12 @@ export function validateStreamRequest(body: unknown): ValidationResult {
     }
   }
 
+  if (input.lmStudioUrl !== undefined) {
+    if (typeof input.lmStudioUrl !== 'string' || !isAllowedUrl(input.lmStudioUrl)) {
+      return { ok: false, error: 'Invalid lmStudioUrl' }
+    }
+  }
+
   const temperatureResult = optionalFiniteNumber(input.temperature, 'temperature')
   if (!temperatureResult.ok) return temperatureResult
 
@@ -82,6 +88,7 @@ export function validateStreamRequest(body: unknown): ValidationResult {
       userPrompt: input.userPrompt,
       apiKey: typeof input.apiKey === 'string' ? input.apiKey : undefined,
       ollamaUrl: typeof input.ollamaUrl === 'string' ? input.ollamaUrl : undefined,
+      lmStudioUrl: typeof input.lmStudioUrl === 'string' ? input.lmStudioUrl : undefined,
       temperature: generation.temperature,
       maxTokens: generation.maxTokens,
     },

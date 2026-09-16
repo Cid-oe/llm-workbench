@@ -113,4 +113,29 @@ describe('useProviderStore', () => {
     store.removeSlot(firstId)
     expect(store.selectedModels).toHaveLength(1)
   })
+
+  it('refreshOllamaModels populates discovered models on success', async () => {
+    const store = useProviderStore()
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ models: [{ name: 'phi3:latest' }] }),
+    }))
+
+    await store.refreshOllamaModels()
+
+    expect(store.discoveredOllamaModels?.map(m => m.id)).toEqual(['phi3:latest'])
+    expect(store.modelsByProvider.ollama.map(m => m.id)).toEqual(['phi3:latest'])
+    expect(store.ollamaDiscoverError).toBe('')
+    expect(store.getModel('phi3:latest')?.provider).toBe('ollama')
+  })
+
+  it('refreshOllamaModels keeps static fallback and surfaces an error when fetch fails', async () => {
+    const store = useProviderStore()
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
+
+    await store.refreshOllamaModels()
+
+    expect(store.modelsByProvider.ollama.map(m => m.id)).toEqual(['llama3.2', 'mistral'])
+    expect(store.ollamaDiscoverError).toMatch(/could not reach ollama/i)
+  })
 })

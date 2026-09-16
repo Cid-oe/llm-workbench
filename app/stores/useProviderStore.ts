@@ -7,6 +7,7 @@ import {
   type EncryptedPayload,
 } from '~/lib/crypto'
 import { DEPRECATED_MODEL_MAP, migrateModelId, PROVIDER_MODELS } from '~/lib/providerModels'
+import { discoverOllamaModels, staticOllamaModels } from '~/lib/ollamaModels'
 import { sessionStore } from '~/lib/sessionStore'
 import { useSecurityStore } from './useSecurityStore'
 
@@ -29,19 +30,26 @@ export const useProviderStore = defineStore('provider', {
     geminiKey: '',
     groqKey: '',
     streamProxyUrl: '',
+    discoveredOllamaModels: null as ProviderModel[] | null,
+    ollamaDiscoverError: '',
+    ollamaDiscovering: false,
   }),
 
   getters: {
-    modelsByProvider: () => {
-      return PROVIDER_MODELS.reduce<Record<ProviderId, ProviderModel[]>>((acc, model) => {
+    modelsByProvider(): Record<ProviderId, ProviderModel[]> {
+      const base = PROVIDER_MODELS.reduce<Record<ProviderId, ProviderModel[]>>((acc, model) => {
         if (!acc[model.provider]) acc[model.provider] = []
         acc[model.provider].push(model)
         return acc
       }, {} as Record<ProviderId, ProviderModel[]>)
+      base.ollama = this.discoveredOllamaModels ?? staticOllamaModels()
+      return base
     },
 
     getModel(): (modelId: string) => ProviderModel | undefined {
-      return (modelId: string) => PROVIDER_MODELS.find(m => m.id === modelId)
+      return (modelId: string) =>
+        PROVIDER_MODELS.find(m => m.id === modelId)
+        ?? this.discoveredOllamaModels?.find(m => m.id === modelId)
     },
 
     isProviderConfigured(): (provider: ProviderId) => boolean {
@@ -180,6 +188,19 @@ export const useProviderStore = defineStore('provider', {
     removeSlot(slotId: string) {
       if (this.selectedModels.length <= 1) return
       this.selectedModels = this.selectedModels.filter(s => s.slotId !== slotId)
+    },
+
+    async refreshOllamaModels(): Promise<void> {
+      this.ollamaDiscovering = true
+      this.ollamaDiscoverError = ''
+      try {
+        const result = await discoverOllamaModels(this.ollamaUrl)
+        this.discoveredOllamaModels = result.models
+        this.ollamaDiscoverError = result.error ?? ''
+      }
+      finally {
+        this.ollamaDiscovering = false
+      }
     },
   },
 

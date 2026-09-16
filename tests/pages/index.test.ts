@@ -3,6 +3,7 @@ import { createTestingPinia } from '@pinia/testing'
 import { setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import IndexPage from '../../app/pages/index.vue'
+import { StreamError } from '../../app/lib/errors'
 import { usePromptStore } from '../../app/stores/usePromptStore'
 import { useProviderStore } from '../../app/stores/useProviderStore'
 import { useCostCalculator } from '../../app/composables/useCostCalculator'
@@ -99,7 +100,7 @@ describe('pages/index playground run path', () => {
 
   it('records stream errors on the response', async () => {
     streamCompletion.mockImplementation(async (_req, handlers) => {
-      handlers.onError('boom')
+      handlers.onError(new StreamError({ message: 'boom', code: 'unknown', provider: 'openai' }))
     })
 
     const { wrapper, promptStore } = mountPage()

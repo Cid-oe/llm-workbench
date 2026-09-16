@@ -178,7 +178,7 @@ app/
 │   ├── settings/        # API key manager, encrypted vault
 │   └── layout/          # Header with desktop nav + mobile menu
 ├── composables/         # LLM streaming, cost calculator, code exporter
-├── lib/                 # Crypto, metrics, stream providers, provider models, logger, validation
+├── lib/                 # Crypto, errors, metrics, stream providers, provider models, logger, validation
 ├── pages/               # Playground, history, metrics, settings
 ├── stores/              # Provider & prompt state (persisted)
 └── plugins/             # Vault bootstrap + client error tracking
@@ -211,6 +211,8 @@ Keys also live in sessionStorage for the current browser session. Locking the va
 > **Note:** In production (GitHub Pages), API keys are sent directly from your browser to the LLM provider. This is intentional for a local-first playground, but never share your machine or browser session with untrusted parties.
 
 The **code exporter** never embeds stored API keys. Generated JavaScript, Python, cURL, and PHP snippets always read credentials from the environment (`process.env.OPENAI_API_KEY`, `os.environ['OPENAI_API_KEY']`, `$OPENAI_API_KEY`, `getenv('OPENAI_API_KEY')`).
+
+Client and stream failures use a typed `StreamError` (`app/lib/errors.ts`). Before anything is written by the structured logger (`app/lib/logger.ts`), sensitive fields (`apiKey`, `authorization`, `password`, `secret`, `token`, …) are redacted, and `StreamError.toLogFields()` only serializes safe summaries (never raw `cause` objects).
 
 ## Contributing
 

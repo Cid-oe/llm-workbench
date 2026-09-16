@@ -127,7 +127,7 @@ async function runAll() {
         onError: (error) => {
           promptStore.updateResponse(slot.slotId, {
             status: 'error',
-            error,
+            error: error.message,
             metrics: {
               ...initial.metrics,
               latencyMs: performance.now() - startTime,

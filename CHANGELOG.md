@@ -11,8 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Switch from MIT to a source-available license with an AI-training restriction
 - Document optional provider API keys in `.env.example` and the README env table ([#8](https://github.com/ale94lko/llm-playground-os/issues/8))
 - Raise Vitest coverage thresholds to 60% for lines, functions, and statements ([#9](https://github.com/ale94lko/llm-playground-os/issues/9))
+- Stream client `onError` callbacks now receive typed `StreamError` values instead of raw strings ([#10](https://github.com/ale94lko/llm-playground-os/issues/10))
 
 ### Added
+- Typed `StreamError` helper with log-safe serialization ([#10](https://github.com/ale94lko/llm-playground-os/issues/10))
 - Vue page/component tests for the playground run path, metrics page, and `LatencyTimeline` ([#9](https://github.com/ale94lko/llm-playground-os/issues/9))
 - ESLint (`@nuxt/eslint`) and `nuxt typecheck` gates on every push and pull request
 - Dedicated CI workflow with `npm audit --audit-level=high`, lint, typecheck, and coverage
@@ -28,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 - Code exporter now emits environment-variable placeholders (`process.env.*`, `os.environ[...]`, `$VAR`, `getenv(...)`) instead of interpolating API keys into snippets
+- Stream/client failures use typed `StreamError` with log-safe serialization; logger redaction documented in the README ([#10](https://github.com/ale94lko/llm-playground-os/issues/10))
 
 ### Changed
 - `NUXT_DEVTOOLS=false` actually disables DevTools (previously only `0` was treated as off)

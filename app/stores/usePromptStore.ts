@@ -20,6 +20,10 @@ import type {
   AssertionRule,
 } from '~/types/llm'
 import { createAssertionId } from '~/lib/assertions'
+import {
+  createToolSignatureId,
+  type ToolSignature,
+} from '~/lib/toolCall'
 
 function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
@@ -36,6 +40,7 @@ export const usePromptStore = defineStore('prompt', {
     savedPrompts: [] as SavedPrompt[],
     generation: { temperature: 0.7, maxTokens: 4096 } as GenerationParams,
     assertions: [] as AssertionRule[],
+    toolSignatures: [] as ToolSignature[],
   }),
 
   getters: {
@@ -139,6 +144,25 @@ export const usePromptStore = defineStore('prompt', {
 
     removeAssertion(id: string) {
       this.assertions = this.assertions.filter(a => a.id !== id)
+    },
+
+    addToolSignature(tool: Omit<ToolSignature, 'id'> & { id?: string }) {
+      this.toolSignatures.push({
+        ...tool,
+        id: tool.id ?? createToolSignatureId(),
+        name: tool.name.trim(),
+      })
+    },
+
+    updateToolSignature(id: string, patch: Partial<ToolSignature>) {
+      const idx = this.toolSignatures.findIndex(t => t.id === id)
+      const current = idx === -1 ? undefined : this.toolSignatures[idx]
+      if (!current) return
+      this.toolSignatures[idx] = { ...current, ...patch }
+    },
+
+    removeToolSignature(id: string) {
+      this.toolSignatures = this.toolSignatures.filter(t => t.id !== id)
     },
 
     savePrompt(name: string, tags: string[] = [], meta: { model?: string; provider?: ProviderId } = {}) {

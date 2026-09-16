@@ -2,18 +2,51 @@
 import { Check, Copy, Loader2 } from '@lucide/vue'
 import type { ModelResponse } from '~/types/llm'
 import { PROVIDER_MODELS } from '~/stores/useProviderStore'
+import { detectToolCalls, matchRegisteredTool } from '~/lib/toolCall'
 
 const props = defineProps<{ response: ModelResponse }>()
+const emit = defineEmits<{
+  continueWithTool: [payload: { slotId: string, toolName: string, mockResultJson: string, assistantContent: string }]
+}>()
 
+const promptStore = usePromptStore()
 const { formatCost, formatLatency } = useCostCalculator()
 
 const model = computed(() => PROVIDER_MODELS.find(m => m.id === props.response.modelId))
 const copied = ref(false)
+const mockJson = ref('{\n  "ok": true\n}')
+const selectedTool = ref('')
+
+const detectedCalls = computed(() =>
+  props.response.status === 'done' ? detectToolCalls(props.response.content) : [],
+)
+
+const matchedCalls = computed(() =>
+  detectedCalls.value.filter(call => matchRegisteredTool(call, promptStore.toolSignatures)),
+)
+
+watch(matchedCalls, (calls) => {
+  if (calls[0] && !selectedTool.value) {
+    selectedTool.value = calls[0].name
+    mockJson.value = '{\n  "ok": true,\n  "result": "mock"\n}'
+  }
+}, { immediate: true })
 
 async function copyResponse() {
   await navigator.clipboard.writeText(props.response.content)
   copied.value = true
   setTimeout(() => { copied.value = false }, 2000)
+}
+
+function continueTurn() {
+  const name = selectedTool.value || matchedCalls.value[0]?.name
+  if (!name) return
+  emit('continueWithTool', {
+    slotId: props.response.slotId,
+    toolName: name,
+    mockResultJson: mockJson.value,
+    assistantContent: props.response.content,
+  })
 }
 
 const statusVariant = computed(() => {
@@ -81,6 +114,31 @@ const statusVariant = computed(() => {
           <span class="text-muted-foreground">{{ result.message }}</span>
         </li>
       </ul>
+
+      <div
+        v-if="matchedCalls.length"
+        class="space-y-2 border-t border-border pt-3"
+      >
+        <p class="text-xs font-medium">Simulate tool result</p>
+        <p class="text-xs text-muted-foreground">
+          Detected {{ matchedCalls.map(c => c.name).join(', ') }}. Paste mock JSON and continue this slot.
+        </p>
+        <select
+          v-model="selectedTool"
+          class="h-9 w-full rounded-md border border-border bg-background px-2 text-sm"
+        >
+          <option v-for="call in matchedCalls" :key="call.name" :value="call.name">
+            {{ call.name }}
+          </option>
+        </select>
+        <textarea
+          v-model="mockJson"
+          class="w-full min-h-24 rounded-md border border-border bg-card px-3 py-2 text-xs font-mono"
+        />
+        <UiButton size="sm" :disabled="!selectedTool" @click="continueTurn">
+          Continue with mock
+        </UiButton>
+      </div>
     </div>
   </UiCard>
 </template>

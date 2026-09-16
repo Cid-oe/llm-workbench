@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Switch from MIT to a source-available license with an AI-training restriction
+- Document optional provider API keys in `.env.example` and the README env table ([#8](https://github.com/ale94lko/llm-playground-os/issues/8))
 
 ### Added
 - ESLint (`@nuxt/eslint`) and `nuxt typecheck` gates on every push and pull request
@@ -19,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Structured JSON logger with secret redaction and a client error-tracking plugin
 - Input validation for stream proxy and browser-direct requests
 - Docker image, `docker-compose.yml`, and a Dev Container for one-command startup
-- `.env.example` documenting `NUXT_APP_BASE_URL` and `NUXT_DEVTOOLS`
+- `.env.example` documenting `NUXT_APP_BASE_URL`, `NUXT_DEVTOOLS`, and optional provider API keys
 - Dependabot weekly updates for npm and GitHub Actions
 - Root `CONTRIBUTING.md`
 

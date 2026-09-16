@@ -65,7 +65,12 @@ Open [http://localhost:3000](http://localhost:3000).
 | :--- | :--- | :--- |
 | `NUXT_APP_BASE_URL` | `/` | Public path prefix. GitHub Pages uses `/llm-playground-os/`. |
 | `NUXT_DEVTOOLS` | `false` | Enable Nuxt DevTools. Set `true` locally if you want the overlay. |
+| `OPENAI_API_KEY` | _(empty)_ | Optional. Used by exporter snippets / local tooling. Get a key at [platform.openai.com](https://platform.openai.com/api-keys). |
+| `ANTHROPIC_API_KEY` | _(empty)_ | Optional. Same as above for Anthropic ([console.anthropic.com](https://console.anthropic.com/settings/keys)). |
+| `GEMINI_API_KEY` | _(empty)_ | Optional. Same as above for Google Gemini ([aistudio.google.com](https://aistudio.google.com/apikey)). |
+| `GROQ_API_KEY` | _(empty)_ | Optional. Same as above for Groq ([console.groq.com](https://console.groq.com/keys)). |
 
+The browser **Settings vault** is the primary place for API keys. Leave the provider env vars empty for a normal local run; `npm run dev` does not require them.
 ### Docker (one command)
 
 ```bash

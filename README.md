@@ -206,9 +206,11 @@ docker compose up --build
 
 ## Security
 
-API keys are encrypted client-side using **AES-256-GCM** with a key derived from your master password (PBKDF2, 100k iterations). Only the encrypted payload is persisted in localStorage.
+API keys are encrypted client-side using **AES-256-GCM** with a key derived from your master password (PBKDF2, 100k iterations). Only the encrypted payload (plus salt/verifier metadata) is persisted in localStorage.
 
-Keys also live in sessionStorage for the current browser session. Locking the vault **only hides key values in Settings** — the workbench keeps working with keys already loaded in memory.
+The derived AES CryptoKey is kept in memory and mirrored in **sessionStorage for the current browser tab session only**. It is **not** written to localStorage. After a cold browser restart you must unlock with the master password before decrypted API keys are available again.
+
+Locking the vault **only hides key values in Settings** — within an already-unlocked session, the workbench keeps working with keys already loaded in memory / sessionStorage.
 
 > **Note:** In production (GitHub Pages), API keys are sent directly from your browser to the LLM provider. This is intentional for a local-first workbench, but never share your machine or browser session with untrusted parties.
 

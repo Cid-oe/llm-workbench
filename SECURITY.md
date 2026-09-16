@@ -34,3 +34,7 @@ We prefer all communications to be in English or Spanish.
 ## Policy
 
 We follow the principle of [Coordinated Vulnerability Disclosure](https://www.iso.org/standard/72311.html).
+
+## Vault model (client-side)
+
+llm-workbench encrypts provider API keys in the browser with AES-256-GCM. The derived CryptoKey is stored only for the current tab session (`sessionStorage`) and is never persisted to `localStorage`. A cold start leaves the encrypted vault on disk until the user unlocks with their master password. See the README Security section for user-facing details.

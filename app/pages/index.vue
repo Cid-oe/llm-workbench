@@ -9,6 +9,7 @@ import {
   type ColumnMapping,
 } from '~/lib/dataset'
 import { markInFlightAsCancelled, shouldPersistRunHistory } from '~/lib/runHistory'
+import { evaluateAssertions, summarizeResponses } from '~/lib/assertions'
 import { promptFileName } from '~/lib/promptFile'
 import { migrateModelId, PROVIDER_MODELS } from '~/lib/providerModels'
 import { interpolateVariables } from '~/lib/variables'
@@ -226,12 +227,23 @@ async function runAll() {
   )
 
   promptStore.setResponses(markInFlightAsCancelled(promptStore.responses))
+
+  if (promptStore.assertions.length) {
+    for (const response of promptStore.responses) {
+      if (response.status !== 'done') continue
+      promptStore.updateResponse(response.slotId, {
+        assertionResults: evaluateAssertions(promptStore.assertions, response.content),
+      })
+    }
+  }
+
   promptStore.isRunning = false
 
   if (shouldPersistRunHistory(promptStore.responses)) {
     promptStore.addToHistory(
       promptStore.responses,
       providerStore.selectedModels.map(s => ({ ...s })),
+      summarizeResponses(promptStore.responses),
     )
   }
 }
@@ -414,6 +426,7 @@ const languages: { id: ExportLanguage; label: string }[] = [
         <PlaygroundPromptEditor />
         <PlaygroundVariablesInput />
         <PlaygroundGenerationControls />
+        <PlaygroundAssertionsPanel />
       </div>
       <PlaygroundModelSelector />
     </div>

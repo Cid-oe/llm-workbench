@@ -148,7 +148,21 @@ async function onBackupSelected(event: Event) {
       >
         <div class="flex items-start justify-between gap-4">
           <div class="min-w-0 flex-1">
-            <p class="text-sm font-medium truncate">{{ entry.userPrompt }}</p>
+            <div class="flex items-center gap-2 min-w-0">
+              <p class="text-sm font-medium truncate">{{ entry.userPrompt }}</p>
+              <UiBadge
+                v-if="entry.assertionSummary === 'pass'"
+                variant="success"
+              >
+                PASS
+              </UiBadge>
+              <UiBadge
+                v-else-if="entry.assertionSummary === 'fail'"
+                variant="error"
+              >
+                FAIL
+              </UiBadge>
+            </div>
             <p class="text-xs text-muted-foreground mt-1">
               {{ formatDateTime(entry.createdAt) }} · {{ entry.models.length }} model(s)
             </p>

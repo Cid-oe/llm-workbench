@@ -1,5 +1,7 @@
 import { isSecretFrontmatterKey } from '~/lib/promptFile'
 import type {
+  AssertionResult,
+  AssertionSummary,
   ExecutionHistoryEntry,
   GenerationParams,
   ModelResponse,
@@ -75,6 +77,24 @@ function scrubMetrics(raw: unknown): StreamMetrics {
   }
 }
 
+function scrubAssertionResults(raw: unknown): AssertionResult[] | undefined {
+  if (!Array.isArray(raw)) return undefined
+  const results: AssertionResult[] = []
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue
+    const row = item as Record<string, unknown>
+    if (typeof row.ruleId !== 'string' || typeof row.kind !== 'string') continue
+    if (typeof row.pass !== 'boolean' || typeof row.message !== 'string') continue
+    results.push({
+      ruleId: row.ruleId,
+      kind: row.kind as AssertionResult['kind'],
+      pass: row.pass,
+      message: row.message,
+    })
+  }
+  return results.length ? results : undefined
+}
+
 function scrubResponse(raw: unknown): ModelResponse | null {
   if (!raw || typeof raw !== 'object') return null
   const item = raw as Record<string, unknown>
@@ -91,6 +111,7 @@ function scrubResponse(raw: unknown): ModelResponse | null {
     status,
     metrics: scrubMetrics(item.metrics),
     error: typeof item.error === 'string' ? item.error : undefined,
+    assertionResults: scrubAssertionResults(item.assertionResults),
   }
 }
 
@@ -106,6 +127,11 @@ function scrubHistoryEntry(raw: unknown): ExecutionHistoryEntry | null {
   const responses = Array.isArray(item.responses)
     ? item.responses.map(scrubResponse).filter((r): r is ModelResponse => !!r)
     : []
+  const summary = item.assertionSummary
+  const assertionSummary: AssertionSummary | undefined
+    = summary === 'pass' || summary === 'fail' || summary === 'none'
+      ? summary
+      : undefined
   return {
     id: item.id,
     systemPrompt: item.systemPrompt,
@@ -114,6 +140,7 @@ function scrubHistoryEntry(raw: unknown): ExecutionHistoryEntry | null {
     models,
     responses,
     createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString(),
+    assertionSummary,
   }
 }
 

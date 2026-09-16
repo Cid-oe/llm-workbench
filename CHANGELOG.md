@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unused direct dependency `class-variance-authority` ([#11](https://github.com/ale94lko/llm-workbench/issues/11))
 
 ### Added
+- Declarative response assertions with PASS/FAIL badges on Compare and History ([#31](https://github.com/ale94lko/llm-workbench/issues/31))
 - Structured JSON preview (Raw / Structured tabs) on Compare response cards ([#32](https://github.com/ale94lko/llm-workbench/issues/32))
 - Optional Playwright smoke E2E on static `generate` output (nightly / non-blocking) ([#30](https://github.com/ale94lko/llm-workbench/issues/30))
 - Settings UI to change the vault master password; `clearSessionCryptoKey` used on password rotation ([#28](https://github.com/ale94lko/llm-workbench/issues/28))

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename repository and product branding from `llm-playground-os` / LLM Playground OS to **`llm-workbench` / LLM Workbench** (avoids demo/template naming for buyers and Pages base path `/llm-workbench/`)
 
 ### Fixed
+- Abort mid-stream marks slots as cancelled and skips misleading history entries ([#27](https://github.com/ale94lko/llm-workbench/issues/27))
 - Stop persisting the vault AES CryptoKey in `localStorage`; session-only key + cold-start unlock ([#21](https://github.com/ale94lko/llm-workbench/issues/21))
 - Derive vault AES keys as extractable so session/persisted key storage can export them ([#20](https://github.com/ale94lko/llm-workbench/issues/20))
 

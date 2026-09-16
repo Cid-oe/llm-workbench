@@ -8,6 +8,7 @@ import {
   type BulkModelResult,
   type ColumnMapping,
 } from '~/lib/dataset'
+import { markInFlightAsCancelled, shouldPersistRunHistory } from '~/lib/runHistory'
 import { promptFileName } from '~/lib/promptFile'
 import { migrateModelId, PROVIDER_MODELS } from '~/lib/providerModels'
 import { interpolateVariables } from '~/lib/variables'
@@ -181,6 +182,22 @@ async function runSlotStream(
     controller.signal,
   )
 
+  if (controller.signal.aborted && (status === 'streaming' || status === 'idle')) {
+    status = 'cancelled'
+    const metrics = {
+      ...baseMetrics,
+      outputTokens: estimateTokens(content),
+      latencyMs: performance.now() - startTime,
+    }
+    if (options?.updateStore !== false) {
+      promptStore.updateResponse(slot.slotId, {
+        status: 'cancelled',
+        content,
+        metrics,
+      })
+    }
+  }
+
   return {
     content,
     status,
@@ -208,11 +225,15 @@ async function runAll() {
     providerStore.selectedModels.map(slot => runSlotStream(slot, prompts)),
   )
 
+  promptStore.setResponses(markInFlightAsCancelled(promptStore.responses))
   promptStore.isRunning = false
-  promptStore.addToHistory(
-    promptStore.responses,
-    providerStore.selectedModels.map(s => ({ ...s })),
-  )
+
+  if (shouldPersistRunHistory(promptStore.responses)) {
+    promptStore.addToHistory(
+      promptStore.responses,
+      providerStore.selectedModels.map(s => ({ ...s })),
+    )
+  }
 }
 
 async function runBulkDataset(payload: { rows: Record<string, string>[], mapping: ColumnMapping }) {
@@ -251,11 +272,15 @@ async function runBulkDataset(payload: { rows: Record<string, string>[], mapping
       providerStore.selectedModels.map(async (slot): Promise<BulkModelResult> => {
         const model = PROVIDER_MODELS.find(m => m.id === slot.modelId)
         const result = await runSlotStream(slot, prompts, { updateStore: false })
-        const aborted = bulkCancelled.value || result.status === 'streaming' || result.status === 'idle'
+        const aborted = bulkCancelled.value || result.status === 'cancelled' || result.status === 'streaming' || result.status === 'idle'
         return {
           modelId: slot.modelId,
           label: model?.label ?? slot.modelId,
-          status: result.status === 'done' ? 'done' : 'error',
+          status: result.status === 'done'
+            ? 'done'
+            : result.status === 'cancelled'
+              ? 'cancelled'
+              : 'error',
           latencyMs: result.latencyMs,
           outputPreview: truncatePreview(result.content),
           error: result.error ?? (aborted ? 'Cancelled' : undefined),
@@ -281,6 +306,9 @@ function stopAll() {
   bulkCancelled.value = true
   abortControllers.value.forEach(c => c.abort())
   abortControllers.value = []
+  if (promptStore.responses.some(r => r.status === 'streaming' || r.status === 'idle')) {
+    promptStore.setResponses(markInFlightAsCancelled(promptStore.responses))
+  }
   promptStore.isRunning = false
 }
 

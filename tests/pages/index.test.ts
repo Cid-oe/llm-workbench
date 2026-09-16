@@ -200,6 +200,7 @@ user from file
     }))
 
     const { wrapper, promptStore } = mountPage()
+    const historyBefore = promptStore.history.length
     const runBtn = wrapper.findAll('button').find(b => b.text().includes('Run All'))
     await runBtn!.trigger('click')
     await flushPromises()
@@ -209,8 +210,13 @@ user from file
     expect(stopBtn).toBeTruthy()
     await stopBtn!.trigger('click')
     expect(promptStore.isRunning).toBe(false)
+    expect(promptStore.responses[0]?.status).toBe('cancelled')
     release()
     await flushPromises()
+
+    expect(promptStore.isRunning).toBe(false)
+    expect(promptStore.history.length).toBe(historyBefore)
+    expect(promptStore.responses[0]?.status).toBe('cancelled')
   })
 
   it('saves a named prompt from the Save dialog', async () => {

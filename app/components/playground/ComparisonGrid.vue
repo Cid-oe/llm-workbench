@@ -2,6 +2,9 @@
 import type { ModelResponse } from '~/types/llm'
 
 defineProps<{ responses: ModelResponse[] }>()
+const emit = defineEmits<{
+  continueWithTool: [payload: { slotId: string, toolName: string, mockResultJson: string, assistantContent: string }]
+}>()
 
 const gridClass = computed(() => {
   return (count: number) => {
@@ -22,6 +25,7 @@ const gridClass = computed(() => {
         v-for="response in responses"
         :key="response.slotId"
         :response="response"
+        @continue-with-tool="emit('continueWithTool', $event)"
       />
     </div>
     <PlaygroundResponseDiff :responses="responses" />

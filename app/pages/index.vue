@@ -10,6 +10,7 @@ import {
 } from '~/lib/dataset'
 import { markInFlightAsCancelled, shouldPersistRunHistory } from '~/lib/runHistory'
 import { evaluateAssertions, summarizeResponses } from '~/lib/assertions'
+import { buildToolFollowUpMessages, flattenMessagesForLegacyPrompt } from '~/lib/toolCall'
 import { promptFileName } from '~/lib/promptFile'
 import { migrateModelId, PROVIDER_MODELS } from '~/lib/providerModels'
 import { interpolateVariables } from '~/lib/variables'
@@ -250,6 +251,41 @@ async function runAll() {
   }
 }
 
+async function continueWithTool(payload: {
+  slotId: string
+  toolName: string
+  mockResultJson: string
+  assistantContent: string
+}) {
+  const slot = providerStore.selectedModels.find(s => s.slotId === payload.slotId)
+  if (!slot || promptStore.isRunning) return
+
+  const messages = buildToolFollowUpMessages({
+    systemPrompt: promptStore.interpolatedSystemPrompt,
+    userPrompt: promptStore.interpolatedUserPrompt,
+    assistantContent: payload.assistantContent,
+    toolName: payload.toolName,
+    mockResultJson: payload.mockResultJson,
+  })
+  const prompts = flattenMessagesForLegacyPrompt(messages)
+
+  promptStore.isRunning = true
+  abortControllers.value = []
+  await runSlotStream(slot, prompts)
+  promptStore.setResponses(markInFlightAsCancelled(promptStore.responses))
+
+  if (promptStore.assertions.length) {
+    const response = promptStore.responses.find(r => r.slotId === slot.slotId)
+    if (response?.status === 'done') {
+      promptStore.updateResponse(response.slotId, {
+        assertionResults: evaluateAssertions(promptStore.assertions, response.content),
+      })
+    }
+  }
+
+  promptStore.isRunning = false
+}
+
 async function runBulkDataset(payload: { rows: Record<string, string>[], mapping: ColumnMapping }) {
   stopAll()
   bulkCancelled.value = false
@@ -429,13 +465,17 @@ const languages: { id: ExportLanguage; label: string }[] = [
         <PlaygroundVariablesInput />
         <PlaygroundGenerationControls />
         <PlaygroundAssertionsPanel />
+        <PlaygroundToolMockPanel />
       </div>
       <PlaygroundModelSelector />
     </div>
 
     <div v-if="promptStore.responses.length">
       <h2 class="text-lg font-semibold mb-3">Responses</h2>
-      <PlaygroundComparisonGrid :responses="promptStore.responses" />
+      <PlaygroundComparisonGrid
+        :responses="promptStore.responses"
+        @continue-with-tool="continueWithTool"
+      />
     </div>
 
     <UiDialog :open="showExport" title="Export" size="lg" @close="showExport = false">

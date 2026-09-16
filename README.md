@@ -44,6 +44,8 @@ Store API keys locally with AES-256-GCM encryption and an optional master passwo
 - **Metrics dashboard** — Bar charts, latency timeline, and detailed comparison table
 - **Local-first API keys** — Encrypted with AES-256-GCM + master password before localStorage
 - **Code exporter** — Generate snippets for JavaScript, Python, cURL, and PHP
+- **`.prompt` files** — Export and import Git-friendly Markdown with YAML frontmatter (no API keys)
+- **Prompt version diff** — Highlight drift between the editor and a saved or history version
 - **History & library** — Save prompts with versioning and browse past executions
 - **Mobile-friendly** — Hamburger navigation menu on small screens
 

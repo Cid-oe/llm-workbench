@@ -1,12 +1,34 @@
 <script setup lang="ts">
-import { Bookmark, Clock, Trash2 } from '@lucide/vue'
+import { Bookmark, Clock, Download, Trash2 } from '@lucide/vue'
 import { formatDateTime } from '~/lib/formatDate'
+import { promptFileName, serializePromptFile } from '~/lib/promptFile'
+import type { SavedPrompt } from '~/types/llm'
 
 definePageMeta({ layout: 'default' })
 
 const promptStore = usePromptStore()
 
 const activeTab = ref<'history' | 'saved'>('history')
+
+function downloadSavedPrompt(prompt: SavedPrompt) {
+  const markdown = serializePromptFile({
+    name: prompt.name,
+    tags: prompt.tags,
+    model: prompt.model,
+    provider: prompt.provider,
+    generation: prompt.generation,
+    variables: { ...(prompt.variables ?? {}) },
+    systemPrompt: prompt.systemPrompt,
+    userPrompt: prompt.userPrompt,
+  })
+  const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = promptFileName(prompt.name)
+  a.click()
+  URL.revokeObjectURL(url)
+}
 </script>
 
 <template>
@@ -86,6 +108,10 @@ const activeTab = ref<'history' | 'saved'>('history')
             </div>
           </div>
           <div class="flex gap-2">
+            <UiButton variant="outline" size="sm" @click="downloadSavedPrompt(prompt)">
+              <Download class="h-4 w-4" />
+              .prompt
+            </UiButton>
             <UiButton variant="outline" size="sm" @click="promptStore.loadPrompt(prompt.id); navigateTo('/')">
               Load
             </UiButton>

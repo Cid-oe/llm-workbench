@@ -30,6 +30,7 @@ export default defineConfig({
         'app/pages/index.vue',
         'app/pages/metrics.vue',
         'app/components/metrics/LatencyTimeline.vue',
+        'app/components/playground/PromptVersionDiff.vue',
       ],
       thresholds: {
         lines: 60,

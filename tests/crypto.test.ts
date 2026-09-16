@@ -6,9 +6,10 @@ import {
   encryptJson,
   generateSalt,
   hashPassword,
-  loadPersistedCryptoKey,
+  hasLegacyPersistedCryptoKey,
   loadSessionCryptoKey,
   parseSalt,
+  purgeLegacyPersistedCryptoKey,
   saveSessionCryptoKey,
   verifyPassword,
   type ApiKeysPayload,
@@ -49,31 +50,53 @@ describe('crypto', () => {
     expect(a.data).not.toBe(b.data)
   })
 
-  it('persists and reloads the session crypto key from session and local storage', async () => {
+  it('persists the crypto key only in sessionStorage', async () => {
     const key = await deriveKey('session-pass', parseSalt(generateSalt()))
     await saveSessionCryptoKey(key)
+
+    expect(await loadSessionCryptoKey()).not.toBeNull()
+    expect(localStorage.getItem('llm-playground-vault-key')).toBeNull()
+    expect(hasLegacyPersistedCryptoKey()).toBe(false)
 
     const fromSession = await loadSessionCryptoKey()
-    const fromPersisted = await loadPersistedCryptoKey()
-    expect(fromSession).not.toBeNull()
-    expect(fromPersisted).not.toBeNull()
-
     const roundTrip = await encryptJson(fromSession!, sampleKeys)
-    await expect(decryptJson<ApiKeysPayload>(fromPersisted!, roundTrip)).resolves.toEqual(sampleKeys)
+    await expect(decryptJson<ApiKeysPayload>(fromSession!, roundTrip)).resolves.toEqual(sampleKeys)
   })
 
-  it('clearSessionCryptoKey removes both storages', async () => {
+  it('saveSessionCryptoKey purges a legacy localStorage vault key', async () => {
+    localStorage.setItem('llm-playground-vault-key', 'legacy-raw-key')
+    expect(hasLegacyPersistedCryptoKey()).toBe(true)
+
     const key = await deriveKey('session-pass', parseSalt(generateSalt()))
     await saveSessionCryptoKey(key)
+
+    expect(hasLegacyPersistedCryptoKey()).toBe(false)
+    expect(localStorage.getItem('llm-playground-vault-key')).toBeNull()
+  })
+
+  it('clearSessionCryptoKey removes session and legacy storage', async () => {
+    const key = await deriveKey('session-pass', parseSalt(generateSalt()))
+    await saveSessionCryptoKey(key)
+    localStorage.setItem('llm-playground-vault-key', 'stale')
     clearSessionCryptoKey()
 
     expect(await loadSessionCryptoKey()).toBeNull()
-    expect(await loadPersistedCryptoKey()).toBeNull()
+    expect(hasLegacyPersistedCryptoKey()).toBe(false)
   })
 
-  it('load helpers return null for missing or corrupt storage values', async () => {
+  it('purgeLegacyPersistedCryptoKey leaves sessionStorage intact', async () => {
+    const key = await deriveKey('session-pass', parseSalt(generateSalt()))
+    await saveSessionCryptoKey(key)
+    localStorage.setItem('llm-playground-vault-key', 'stale')
+
+    purgeLegacyPersistedCryptoKey()
+
+    expect(hasLegacyPersistedCryptoKey()).toBe(false)
+    expect(await loadSessionCryptoKey()).not.toBeNull()
+  })
+
+  it('loadSessionCryptoKey returns null for missing or corrupt values', async () => {
     expect(await loadSessionCryptoKey()).toBeNull()
-    expect(await loadPersistedCryptoKey()).toBeNull()
 
     sessionStorage.setItem('llm-playground-session-key', '%%%not-base64%%%')
     expect(await loadSessionCryptoKey()).toBeNull()

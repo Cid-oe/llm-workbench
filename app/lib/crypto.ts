@@ -44,7 +44,7 @@ export async function deriveKey(password: string, salt: Uint8Array<ArrayBuffer>)
     { name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
     keyMaterial,
     { name: 'AES-GCM', length: 256 },
-    // Extractable so the vault can persist the session key (session/local storage).
+    // Extractable so the vault can persist the key for the current browser tab session only.
     true,
     ['encrypt', 'decrypt'],
   )
@@ -80,25 +80,32 @@ export async function verifyPassword(password: string, salt: string, verifier: s
 }
 
 const SESSION_CRYPTO_KEY = 'llm-playground-session-key'
-const PERSISTED_CRYPTO_KEY = 'llm-playground-vault-key'
+/** Pre-#21 localStorage copy of the raw AES key — never written again; purged on save/clear. */
+const LEGACY_PERSISTED_CRYPTO_KEY = 'llm-playground-vault-key'
+
+function clearLegacyPersistedCryptoKey(): void {
+  if (import.meta.client) {
+    localStorage.removeItem(LEGACY_PERSISTED_CRYPTO_KEY)
+  }
+}
+
+/** Remove any pre-#21 raw AES key left in localStorage (never used for unlock). */
+export function purgeLegacyPersistedCryptoKey(): void {
+  clearLegacyPersistedCryptoKey()
+}
 
 export async function saveSessionCryptoKey(key: CryptoKey): Promise<void> {
   const raw = await crypto.subtle.exportKey('raw', key)
   const encoded = toBase64(new Uint8Array(raw))
   if (import.meta.client) {
     sessionStorage.setItem(SESSION_CRYPTO_KEY, encoded)
-    localStorage.setItem(PERSISTED_CRYPTO_KEY, encoded)
+    clearLegacyPersistedCryptoKey()
   }
 }
 
 export async function loadSessionCryptoKey(): Promise<CryptoKey | null> {
   if (!import.meta.client) return null
   return importRawKey(sessionStorage.getItem(SESSION_CRYPTO_KEY))
-}
-
-export async function loadPersistedCryptoKey(): Promise<CryptoKey | null> {
-  if (!import.meta.client) return null
-  return importRawKey(localStorage.getItem(PERSISTED_CRYPTO_KEY))
 }
 
 async function importRawKey(encoded: string | null): Promise<CryptoKey | null> {
@@ -121,6 +128,12 @@ async function importRawKey(encoded: string | null): Promise<CryptoKey | null> {
 export function clearSessionCryptoKey(): void {
   if (import.meta.client) {
     sessionStorage.removeItem(SESSION_CRYPTO_KEY)
-    localStorage.removeItem(PERSISTED_CRYPTO_KEY)
+    clearLegacyPersistedCryptoKey()
   }
+}
+
+/** True when a legacy raw key still sits in localStorage (should be purged, never used). */
+export function hasLegacyPersistedCryptoKey(): boolean {
+  if (!import.meta.client) return false
+  return localStorage.getItem(LEGACY_PERSISTED_CRYPTO_KEY) != null
 }

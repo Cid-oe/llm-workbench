@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useSecurityStore } from '../app/stores/useSecurityStore'
 import { useProviderStore } from '../app/stores/useProviderStore'
 import {
-  loadPersistedCryptoKey,
+  hasLegacyPersistedCryptoKey,
   loadSessionCryptoKey,
 } from '../app/lib/crypto'
 
@@ -37,7 +37,8 @@ describe('useSecurityStore', () => {
     expect(security.getCryptoKey()).not.toBeNull()
     expect(provider.encryptedPayload).not.toBeNull()
     expect(await loadSessionCryptoKey()).not.toBeNull()
-    expect(await loadPersistedCryptoKey()).not.toBeNull()
+    expect(localStorage.getItem('llm-playground-vault-key')).toBeNull()
+    expect(hasLegacyPersistedCryptoKey()).toBe(false)
   })
 
   it('unlocks with the correct password and rejects a wrong one', async () => {
@@ -97,7 +98,7 @@ describe('useSecurityStore', () => {
     expect(security.getCryptoKey()).toBeNull()
   })
 
-  it('bootstrapKeys restores the crypto key and decrypts provider payload', async () => {
+  it('bootstrapKeys restores the crypto key from sessionStorage and decrypts provider payload', async () => {
     const security = useSecurityStore()
     const provider = useProviderStore()
     provider.setApiKey('openai', 'sk-persisted')
@@ -105,7 +106,7 @@ describe('useSecurityStore', () => {
 
     expect(provider.encryptedPayload).not.toBeNull()
 
-    // Simulate cold start: memory cleared, vault metadata + encrypted payload remain
+    // Soft reload within the same browser session: memory cleared, sessionStorage kept
     security._cryptoKey = null
     security.isUnlocked = false
     provider.clearDecryptedKeys()
@@ -120,19 +121,27 @@ describe('useSecurityStore', () => {
     expect(security.hideKeyValues).toBe(true)
   })
 
-  it('bootstrapKeys falls back to the persisted vault key when session is empty', async () => {
+  it('bootstrapKeys does not auto-unlock from a legacy localStorage key', async () => {
     const security = useSecurityStore()
     const provider = useProviderStore()
     provider.setApiKey('openai', 'sk-fallback')
     await security.setupMasterPassword('correct-horse')
 
+    const raw = sessionStorage.getItem('llm-playground-session-key')
+    expect(raw).toBeTruthy()
+    // Simulate a pre-#21 install that also wrote the raw key to localStorage
+    localStorage.setItem('llm-playground-vault-key', raw!)
+
+    // Cold start: sessionStorage gone, only localStorage legacy key remains
     sessionStorage.removeItem('llm-playground-session-key')
     security._cryptoKey = null
+    security.isUnlocked = false
     provider.clearDecryptedKeys()
 
     await security.bootstrapKeys()
 
-    expect(security.getCryptoKey()).not.toBeNull()
-    expect(provider.openaiKey).toBe('sk-fallback')
+    expect(security.getCryptoKey()).toBeNull()
+    expect(provider.openaiKey).toBe('')
+    expect(hasLegacyPersistedCryptoKey()).toBe(false)
   })
 })

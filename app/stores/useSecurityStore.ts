@@ -7,7 +7,7 @@ import {
   verifyPassword,
   saveSessionCryptoKey,
   loadSessionCryptoKey,
-  loadPersistedCryptoKey,
+  purgeLegacyPersistedCryptoKey,
   type ApiKeysPayload,
 } from '~/lib/crypto'
 
@@ -100,7 +100,7 @@ export const useSecurityStore = defineStore('security', {
       return true
     },
 
-    /** Load keys into memory silently — Compare keeps working even when UI is locked */
+    /** Restore sessionStorage key only — cold starts require an explicit unlock */
     async bootstrapKeys(): Promise<void> {
       const provider = useProviderStore()
       const hasAnyKey = !!(
@@ -112,7 +112,9 @@ export const useSecurityStore = defineStore('security', {
 
       if (!this.hasMasterPassword) return
 
-      const cryptoKey = await loadSessionCryptoKey() ?? await loadPersistedCryptoKey()
+      // Drop any pre-#21 raw key left in localStorage; never auto-load from it.
+      purgeLegacyPersistedCryptoKey()
+      const cryptoKey = await loadSessionCryptoKey()
       if (!cryptoKey) return
 
       this._cryptoKey = cryptoKey

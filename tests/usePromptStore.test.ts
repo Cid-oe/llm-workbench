@@ -122,4 +122,53 @@ imported user
     expect(store.history[0]?.variables).toEqual({ topic: 'x' })
     expect(store.savedPrompts[0]?.name).toBe('Pack')
   })
+
+  it('loads from history, clears history, and deletes saved prompts', () => {
+    const store = usePromptStore()
+    store.systemPrompt = 'run-sys'
+    store.userPrompt = 'run-user'
+    store.variables = { topic: 'alpha' }
+    store.addToHistory([response({ content: 'done-out', status: 'done' })], [
+      { slotId: 'slot-1', provider: 'openai', modelId: 'gpt-4o-mini' },
+    ])
+    const historyId = store.history[0]!.id
+
+    store.systemPrompt = 'changed'
+    store.userPrompt = 'changed'
+    store.variables = {}
+    store.responses = []
+
+    store.loadFromHistory(historyId)
+    expect(store.systemPrompt).toBe('run-sys')
+    expect(store.userPrompt).toBe('run-user')
+    expect(store.variables.topic).toBe('alpha')
+    expect(store.responses[0]?.content).toBe('done-out')
+
+    store.savePrompt('Keep')
+    store.savePrompt('Drop')
+    expect(store.savedPrompts).toHaveLength(2)
+    store.deleteSavedPrompt(store.savedPrompts.find(p => p.name === 'Drop')!.id)
+    expect(store.savedPrompts.map(p => p.name)).toEqual(['Keep'])
+
+    store.clearHistory()
+    expect(store.history).toHaveLength(0)
+  })
+
+  it('bumps saved prompt version and caps history at 100', () => {
+    const store = usePromptStore()
+    store.savePrompt('Demo')
+    expect(store.savedPrompts[0]?.version).toBe(1)
+    store.systemPrompt = 'v2'
+    store.savePrompt('Demo')
+    expect(store.savedPrompts[0]?.version).toBe(2)
+    expect(store.savedPrompts[0]?.revisions).toHaveLength(1)
+
+    store.history = []
+    for (let i = 0; i < 105; i++) {
+      store.addToHistory([response({ content: `c-${i}`, status: 'done' })], [
+        { slotId: 'slot-1', provider: 'openai', modelId: 'gpt-4o-mini' },
+      ])
+    }
+    expect(store.history).toHaveLength(100)
+  })
 })

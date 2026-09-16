@@ -15,7 +15,7 @@ const uiStubs = {
   UiBadge: { template: '<span><slot /></span>', props: ['variant'] },
 }
 
-describe('pages/history backup', () => {
+describe('pages/history', () => {
   beforeEach(() => {
     setActivePinia(createTestingPinia({ stubActions: false, createSpy: vi.fn }))
     vi.restoreAllMocks()
@@ -37,7 +37,7 @@ describe('pages/history backup', () => {
   })
 
   it('imports a JSON backup with replace mode', async () => {
-    window.confirm = vi.fn().mockReturnValueOnce(true) // replace
+    window.confirm = vi.fn().mockReturnValueOnce(true)
 
     const { wrapper, promptStore } = mountPage()
     promptStore.history = [{
@@ -88,5 +88,74 @@ describe('pages/history backup', () => {
     expect(promptStore.history[0]?.id).toBe('new-h')
     expect(promptStore.savedPrompts).toHaveLength(1)
     expect(wrapper.text()).toMatch(/imported 1 history entry/i)
+  })
+
+  it('switches tabs and clears history from the UI', async () => {
+    const { wrapper, promptStore } = mountPage()
+    promptStore.$patch({
+      history: [{
+        id: 'h1',
+        systemPrompt: 'Sys',
+        userPrompt: 'History prompt',
+        variables: { topic: 't' },
+        models: [],
+        responses: [],
+        createdAt: '2026-09-16T11:00:00.000Z',
+      }],
+      savedPrompts: [{
+        id: 's1',
+        name: 'Library',
+        systemPrompt: 'Sys',
+        userPrompt: 'Saved prompt',
+        tags: [],
+        version: 1,
+        createdAt: '2026-09-16T10:00:00.000Z',
+        updatedAt: '2026-09-16T10:00:00.000Z',
+        variables: {},
+        revisions: [],
+      }],
+    })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('History prompt')
+    const savedTab = wrapper.findAll('button').find(b => b.text().includes('Saved'))
+    await savedTab!.trigger('click')
+    expect(wrapper.text()).toContain('Library')
+
+    const historyTab = wrapper.findAll('button').find(b => b.text().includes('History'))
+    await historyTab!.trigger('click')
+    const clearBtn = wrapper.findAll('button').find(b => b.text().includes('Clear history'))
+    await clearBtn!.trigger('click')
+    expect(promptStore.history).toHaveLength(0)
+  })
+
+  it('loads a history entry into the prompt store', async () => {
+    const { wrapper, promptStore } = mountPage()
+    promptStore.$patch({
+      history: [{
+        id: 'h1',
+        systemPrompt: 'From history',
+        userPrompt: 'Click me',
+        variables: { topic: 'loaded' },
+        models: [],
+        responses: [{
+          slotId: 'slot-1',
+          provider: 'openai',
+          modelId: 'gpt-4o-mini',
+          content: 'out',
+          status: 'done',
+          metrics: { latencyMs: 1, ttftMs: 1, inputTokens: 1, outputTokens: 1, costUsd: 0 },
+        }],
+        createdAt: '2026-09-16T11:00:00.000Z',
+      }],
+      systemPrompt: 'other',
+    })
+    await flushPromises()
+
+    const clickable = wrapper.findAll('div').filter(d => d.text().includes('Click me')).at(-1)
+    expect(clickable).toBeTruthy()
+    await clickable!.trigger('click')
+    expect(promptStore.systemPrompt).toBe('From history')
+    expect(promptStore.variables.topic).toBe('loaded')
   })
 })

@@ -28,6 +28,7 @@ export default defineConfig({
         'app/stores/**/*.ts',
         'server/**/*.ts',
         'app/pages/index.vue',
+        'app/pages/history.vue',
         'app/pages/metrics.vue',
         'app/components/metrics/LatencyTimeline.vue',
         'app/components/playground/PromptVersionDiff.vue',

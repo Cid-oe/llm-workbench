@@ -13,14 +13,17 @@ const gridClass = computed(() => {
 </script>
 
 <template>
-  <div
-    class="grid gap-4"
-    :class="gridClass(responses.length)"
-  >
-    <PlaygroundResponseCard
-      v-for="response in responses"
-      :key="response.slotId"
-      :response="response"
-    />
+  <div class="space-y-4">
+    <div
+      class="grid gap-4"
+      :class="gridClass(responses.length)"
+    >
+      <PlaygroundResponseCard
+        v-for="response in responses"
+        :key="response.slotId"
+        :response="response"
+      />
+    </div>
+    <PlaygroundResponseDiff :responses="responses" />
   </div>
 </template>

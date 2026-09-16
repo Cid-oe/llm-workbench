@@ -99,7 +99,7 @@ docker compose --profile ollama up --build
 4. Write your prompt with optional `{{variables}}`
 5. Click **Run All**
 
-> **Ollama tip:** Install [Ollama](https://ollama.com) and run `ollama pull llama3.2` — no API key needed. For browser access, set `OLLAMA_ORIGINS=*` if required.
+> **Ollama tip:** Install [Ollama](https://ollama.com) and run `ollama pull llama3.2` — no API key needed. On Compare, use **Refresh Ollama** to load models from `{OLLAMA_URL}/api/tags` (falls back to the built-in list if the daemon is unreachable). For browser access, set `OLLAMA_ORIGINS=*` if required.
 
 ## Streaming architecture
 

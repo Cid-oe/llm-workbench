@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { Plus, Trash2 } from '@lucide/vue'
+import { Plus, RefreshCw, Trash2 } from '@lucide/vue'
 import type { ProviderId } from '~/types/llm'
-import { PROVIDER_MODELS } from '~/stores/useProviderStore'
 
 const providerStore = useProviderStore()
 
@@ -13,30 +12,55 @@ const providers: { id: ProviderId; label: string }[] = [
   { id: 'ollama', label: 'Ollama' },
 ]
 
+const hasOllamaSlot = computed(() =>
+  providerStore.selectedModels.some(s => s.provider === 'ollama'),
+)
+
 function modelsForProvider(provider: ProviderId) {
-  return PROVIDER_MODELS.filter(m => m.provider === provider)
+  return providerStore.modelsByProvider[provider] ?? []
 }
 
 function onProviderChange(slotId: string, provider: ProviderId) {
   const first = modelsForProvider(provider)[0]
   if (first) providerStore.updateSlot(slotId, provider, first.id)
 }
+
+async function refreshOllama() {
+  await providerStore.refreshOllamaModels()
+}
 </script>
 
 <template>
   <UiCard class="p-4">
-    <div class="flex items-center justify-between mb-3">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
       <h3 class="text-sm font-medium">Models ({{ providerStore.selectedModels.length }}/4)</h3>
-      <UiButton
-        v-if="providerStore.selectedModels.length < 4"
-        variant="outline"
-        size="sm"
-        @click="providerStore.addSlot()"
-      >
-        <Plus class="h-4 w-4" />
-        Add
-      </UiButton>
+      <div class="flex flex-wrap gap-2">
+        <UiButton
+          v-if="hasOllamaSlot"
+          variant="outline"
+          size="sm"
+          :disabled="providerStore.ollamaDiscovering"
+          @click="refreshOllama"
+        >
+          <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': providerStore.ollamaDiscovering }" />
+          {{ providerStore.ollamaDiscovering ? 'Refreshing…' : 'Refresh Ollama' }}
+        </UiButton>
+        <UiButton
+          v-if="providerStore.selectedModels.length < 4"
+          variant="outline"
+          size="sm"
+          @click="providerStore.addSlot()"
+        >
+          <Plus class="h-4 w-4" />
+          Add
+        </UiButton>
+      </div>
     </div>
+
+    <p v-if="hasOllamaSlot && providerStore.ollamaDiscoverError" class="text-xs text-destructive mb-3">
+      {{ providerStore.ollamaDiscoverError }}
+    </p>
+
     <div class="space-y-2">
       <div
         v-for="slot in providerStore.selectedModels"

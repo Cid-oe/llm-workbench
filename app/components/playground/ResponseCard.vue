@@ -21,6 +21,7 @@ const statusVariant = computed(() => {
     case 'streaming': return 'warning' as const
     case 'done': return 'success' as const
     case 'error': return 'error' as const
+    case 'cancelled': return 'warning' as const
     default: return 'secondary' as const
   }
 })

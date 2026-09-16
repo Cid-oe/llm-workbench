@@ -22,7 +22,7 @@ export interface StreamMetrics {
   costUsd: number
 }
 
-export type StreamStatus = 'idle' | 'streaming' | 'done' | 'error'
+export type StreamStatus = 'idle' | 'streaming' | 'done' | 'error' | 'cancelled'
 
 export interface ModelResponse {
   slotId: string

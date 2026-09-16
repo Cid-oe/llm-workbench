@@ -31,7 +31,7 @@ export class PromptBackupError extends Error {
 }
 
 const PROVIDERS: ProviderId[] = ['openai', 'anthropic', 'gemini', 'groq', 'ollama']
-const STATUSES: StreamStatus[] = ['idle', 'streaming', 'done', 'error']
+const STATUSES: StreamStatus[] = ['idle', 'streaming', 'done', 'error', 'cancelled']
 
 function scrubVariables(variables: PromptVariables | undefined): PromptVariables {
   const next: PromptVariables = {}

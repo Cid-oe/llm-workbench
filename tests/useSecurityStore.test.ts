@@ -90,6 +90,7 @@ describe('useSecurityStore', () => {
     expect(await security.unlock('correct-horse')).toBe(false)
     expect(await security.unlock('new-secure-pass')).toBe(true)
     expect(provider.openaiKey).toBe('sk-before')
+    expect(await loadSessionCryptoKey()).not.toBeNull()
   })
 
   it('bootstrapKeys is a no-op without a master password', async () => {

@@ -212,6 +212,8 @@ The derived AES CryptoKey is kept in memory and mirrored in **sessionStorage for
 
 Locking the vault **only hides key values in Settings** — within an already-unlocked session, the workbench keeps working with keys already loaded in memory / sessionStorage.
 
+While the vault is unlocked you can **Change master password** in Settings. That rotates the salt/verifier, re-encrypts stored API keys, and replaces the session CryptoKey (the previous session key is cleared first).
+
 > **Note:** In production (GitHub Pages), API keys are sent directly from your browser to the LLM provider. This is intentional for a local-first workbench, but never share your machine or browser session with untrusted parties.
 
 The **code exporter** never embeds stored API keys. Generated JavaScript, Python, cURL, and PHP snippets always read credentials from the environment (`process.env.OPENAI_API_KEY`, `os.environ['OPENAI_API_KEY']`, `$OPENAI_API_KEY`, `getenv('OPENAI_API_KEY')`).

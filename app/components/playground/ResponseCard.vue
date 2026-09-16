@@ -56,7 +56,13 @@ const statusVariant = computed(() => {
         <span class="text-sm">Waiting for first token...</span>
       </div>
       <p v-else-if="response.error" class="text-sm text-red-400">{{ response.error }}</p>
-      <pre v-else class="whitespace-pre-wrap text-sm font-mono leading-relaxed">{{ response.content }}<span v-if="response.status === 'streaming'" class="inline-block w-2 h-4 bg-primary animate-pulse ml-0.5" /></pre>
+      <div v-else class="relative">
+        <PlaygroundJsonStructuredPreview :content="response.content" />
+        <span
+          v-if="response.status === 'streaming'"
+          class="inline-block w-2 h-4 bg-primary animate-pulse ml-0.5"
+        />
+      </div>
     </div>
   </UiCard>
 </template>

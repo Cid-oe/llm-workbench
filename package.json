@@ -24,7 +24,6 @@
     "@lucide/vue": "^1.45.0",
     "@pinia/nuxt": "^1.0.2",
     "@tailwindcss/vite": "^4.3.3",
-    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "nuxt": "^4.5.2",
     "pinia": "^4.0.3",
@@ -34,8 +33,6 @@
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
-    "@emnapi/core": "^1.11.3",
-    "@emnapi/runtime": "^1.11.3",
     "@nuxt/eslint": "^1.17.0",
     "@pinia/testing": "^2.0.1",
     "@vitejs/plugin-vue": "^6.0.9",

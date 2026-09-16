@@ -100,7 +100,7 @@ This project uses [Semantic Versioning](https://semver.org/). Notable changes li
 - Direct packages that look unused to static scanners but are required:
   - `@pinia/nuxt` and `pinia-plugin-persistedstate` — loaded as Nuxt modules in `nuxt.config.ts`
   - `vue-router` — Nuxt peer / runtime router (not imported directly in app code)
-
+  - `@emnapi/core` and `@emnapi/runtime` — required so `npm ci` can resolve Tailwind Oxide / WASI optional deps in the lockfile
 ## Security reports
 
 Please do not open public issues for vulnerabilities. Follow [SECURITY.md](SECURITY.md).

@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Removed
-- Unused direct dependencies `class-variance-authority`, `@emnapi/core`, and `@emnapi/runtime` ([#11](https://github.com/ale94lko/llm-playground-os/issues/11))
+- Unused direct dependency `class-variance-authority` ([#11](https://github.com/ale94lko/llm-playground-os/issues/11))
 
 ### Added
 - Weekly `npm outdated` freshness workflow (non-failing summary + artifact) ([#11](https://github.com/ale94lko/llm-playground-os/issues/11))

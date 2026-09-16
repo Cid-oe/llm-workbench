@@ -1,0 +1,50 @@
+name: Smoke E2E
+
+# Optional / nightly browser smoke against static `npm run generate` output.
+# Non-blocking until stable (continue-on-error on the smoke job).
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'e2e/**'
+      - 'playwright.config.ts'
+      - '.github/workflows/smoke-e2e.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'nuxt.config.ts'
+      - 'app/pages/**'
+      - 'app/components/layout/**'
+      - 'app/components/settings/**'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Generate static site
+        run: npm run generate
+        env:
+          NUXT_APP_BASE_URL: /
+
+      - name: Smoke E2E
+        run: npm run test:e2e:smoke

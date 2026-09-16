@@ -102,4 +102,24 @@ imported user
     expect(store.variables.topic).toBe('imported')
     expect(JSON.stringify(store.$state)).not.toContain('sk-secret')
   })
+
+  it('exports and imports JSON backups without secret variables', () => {
+    const store = usePromptStore()
+    store.variables = { topic: 'x', api_key: 'sk-live' }
+    store.addToHistory([response({ content: 'out', status: 'done' })], [
+      { slotId: 'slot-1', provider: 'openai', modelId: 'gpt-4o-mini' },
+    ])
+    store.savePrompt('Pack')
+
+    const json = store.exportBackupJson()
+    expect(json).not.toContain('sk-live')
+
+    store.clearHistory()
+    store.savedPrompts = []
+    const counts = store.importBackupJson(json, 'replace')
+    expect(counts.history).toBe(1)
+    expect(counts.savedPrompts).toBe(1)
+    expect(store.history[0]?.variables).toEqual({ topic: 'x' })
+    expect(store.savedPrompts[0]?.name).toBe('Pack')
+  })
 })

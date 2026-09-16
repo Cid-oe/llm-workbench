@@ -44,7 +44,8 @@ export async function deriveKey(password: string, salt: Uint8Array<ArrayBuffer>)
     { name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
     keyMaterial,
     { name: 'AES-GCM', length: 256 },
-    false,
+    // Extractable so the vault can persist the session key (session/local storage).
+    true,
     ['encrypt', 'decrypt'],
   )
 }

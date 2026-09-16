@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Derive vault AES keys as extractable so session/persisted key storage can export them ([#20](https://github.com/ale94lko/llm-playground-os/issues/20))
+
 ### Removed
 - Unused direct dependency `class-variance-authority` ([#11](https://github.com/ale94lko/llm-playground-os/issues/11))
 
 ### Added
 - Weekly `npm outdated` freshness workflow (non-failing summary + artifact) ([#11](https://github.com/ale94lko/llm-playground-os/issues/11))
 - Unit tests for Nitro `/api/stream`, `/api/health`, and `/api/metrics` handlers ([#19](https://github.com/ale94lko/llm-playground-os/issues/19))
+- Unit tests for `useSecurityStore` and crypto session persistence helpers ([#20](https://github.com/ale94lko/llm-playground-os/issues/20))
 
 ## [0.1.0] - 2026-09-16
 

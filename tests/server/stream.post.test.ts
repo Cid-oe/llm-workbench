@@ -63,7 +63,10 @@ describe('server/api/stream.post', () => {
 
   it('proxies a successful SSE upstream body and records a stream request', async () => {
     stubNitroGlobals({ body: openaiBody, setHeader })
-    const { resetRuntimeMetrics } = await metrics()`n    resetRuntimeMetrics()`n`n    const upstreamBody = textStream([
+    const { resetRuntimeMetrics } = await metrics()
+    resetRuntimeMetrics()
+
+    const upstreamBody = textStream([
       'data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n',
       'data: [DONE]\n\n',
     ])
@@ -72,7 +75,6 @@ describe('server/api/stream.post', () => {
     const handler = await loadHandler('../../server/api/stream.post')
     const result = await handler({})
 
-    // Handler and this import must share the same module graph
     const { getRuntimeMetrics: getMetricsAfter } = await metrics()
 
     expect(result).toBeInstanceOf(ReadableStream)

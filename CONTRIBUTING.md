@@ -92,6 +92,15 @@ Pull request commits are checked by the `commitlint` CI job (Dependabot PRs are 
 
 This project uses [Semantic Versioning](https://semver.org/). Notable changes live in [`CHANGELOG.md`](CHANGELOG.md). Maintainers cut annotated tags (`v0.1.0`, …) from `main` and publish matching GitHub Releases from the changelog section.
 
+## Dependencies
+
+- Reproducible installs rely on the committed `package-lock.json` (`npm ci`). Do not hand-pin transitive packages.
+- Dependabot opens weekly grouped PRs for npm and GitHub Actions.
+- A weekly **Dependency freshness** workflow runs `npm outdated --long`, writes the result to the job summary, and uploads an artifact. It uses `continue-on-error: true` so outdated packages never fail the build.
+- Direct packages that look unused to static scanners but are required:
+  - `@pinia/nuxt` and `pinia-plugin-persistedstate` — loaded as Nuxt modules in `nuxt.config.ts`
+  - `vue-router` — Nuxt peer / runtime router (not imported directly in app code)
+  - `@emnapi/core` and `@emnapi/runtime` — required so `npm ci` can resolve Tailwind Oxide / WASI optional deps in the lockfile
 ## Security reports
 
 Please do not open public issues for vulnerabilities. Follow [SECURITY.md](SECURITY.md).

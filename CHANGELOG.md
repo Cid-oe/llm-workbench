@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- Unused direct dependency `class-variance-authority` ([#11](https://github.com/ale94lko/llm-playground-os/issues/11))
+
+### Added
+- Weekly `npm outdated` freshness workflow (non-failing summary + artifact) ([#11](https://github.com/ale94lko/llm-playground-os/issues/11))
+
 ## [0.1.0] - 2026-09-16
 
 First tagged milestone after env onboarding docs, Vue coverage, typed stream errors, and contributor process.

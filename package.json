@@ -37,8 +37,11 @@
     "@emnapi/runtime": "^1.11.3",
     "@nuxt/eslint": "^1.17.0",
     "@pinia/testing": "^2.0.1",
+    "@vitejs/plugin-vue": "^6.0.9",
     "@vitest/coverage-v8": "^5.0.0",
+    "@vue/test-utils": "^2.5.0",
     "eslint": "^10.10.0",
+    "happy-dom": "^20.14.5",
     "typescript": "~5.9.3",
     "vitest": "^5.0.0",
     "vue-tsc": "^3.3.11"

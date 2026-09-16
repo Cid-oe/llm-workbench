@@ -1,4 +1,5 @@
 import type { StreamRequest } from '~/types/llm'
+import { StreamError } from '~/lib/errors'
 import { logger } from '~/lib/logger'
 import {
   buildProviderRequest,
@@ -12,7 +13,7 @@ import { validateStreamRequest } from '~/lib/validateStreamRequest'
 export interface StreamCallbacks {
   onChunk: (text: string) => void
   onDone: () => void
-  onError: (error: string) => void
+  onError: (error: StreamError) => void
   onFirstToken?: (ttftMs: number) => void
 }
 
@@ -33,8 +34,13 @@ export async function streamCompletionDirect(
 
   const parsed = validateStreamRequest(request)
   if (!parsed.ok) {
-    logger.warn('stream_direct_invalid', { error: parsed.error })
-    callbacks.onError(parsed.error)
+    const error = new StreamError({
+      message: parsed.error,
+      code: 'validation',
+      provider: request.provider,
+    })
+    logger.warn('stream_direct_invalid', { error: error.toLogFields() })
+    callbacks.onError(error)
     return
   }
 
@@ -49,19 +55,28 @@ export async function streamCompletionDirect(
 
     if (!response.ok) {
       const message = await parseProviderError(response)
-      logger.error('stream_direct_http_error', {
+      const error = new StreamError({
+        message,
+        code: 'http',
         provider: request.provider,
-        model: request.model,
         status: response.status,
-        error: message,
       })
-      callbacks.onError(message)
+      logger.error('stream_direct_http_error', {
+        model: request.model,
+        error: error.toLogFields(),
+      })
+      callbacks.onError(error)
       return
     }
 
     const reader = response.body?.getReader()
     if (!reader) {
-      callbacks.onError('No response stream available')
+      const error = new StreamError({
+        message: 'No response stream available',
+        code: 'no_stream',
+        provider: request.provider,
+      })
+      callbacks.onError(error)
       return
     }
 
@@ -80,15 +95,31 @@ export async function streamCompletionDirect(
     if (signal?.aborted) return
 
     if (err instanceof TypeError) {
-      const message = `Network error: ${corsHint(request.provider)}`
-      logger.error('stream_direct_network_error', { provider: request.provider, model: request.model, error: message })
-      callbacks.onError(message)
+      const error = new StreamError({
+        message: `Network error: ${corsHint(request.provider)}`,
+        code: 'network',
+        provider: request.provider,
+        cause: err,
+      })
+      logger.error('stream_direct_network_error', {
+        model: request.model,
+        error: error.toLogFields(),
+      })
+      callbacks.onError(error)
       return
     }
 
-    const message = err instanceof Error ? err.message : 'Stream failed'
-    logger.error('stream_direct_failed', { provider: request.provider, model: request.model, error: message })
-    callbacks.onError(message)
+    const error = new StreamError({
+      message: err instanceof Error ? err.message : 'Stream failed',
+      code: 'unknown',
+      provider: request.provider,
+      cause: err,
+    })
+    logger.error('stream_direct_failed', {
+      model: request.model,
+      error: error.toLogFields(),
+    })
+    callbacks.onError(error)
   }
 }
 
@@ -103,8 +134,13 @@ export async function streamCompletionViaProxy(
 
   const parsed = validateStreamRequest(request)
   if (!parsed.ok) {
-    logger.warn('stream_proxy_invalid', { error: parsed.error })
-    callbacks.onError(parsed.error)
+    const error = new StreamError({
+      message: parsed.error,
+      code: 'validation',
+      provider: request.provider,
+    })
+    logger.warn('stream_proxy_invalid', { error: error.toLogFields() })
+    callbacks.onError(error)
     return
   }
 
@@ -118,13 +154,23 @@ export async function streamCompletionViaProxy(
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({ message: response.statusText }))
-      callbacks.onError((err as { message?: string }).message ?? `HTTP ${response.status}`)
+      const error = new StreamError({
+        message: (err as { message?: string }).message ?? `HTTP ${response.status}`,
+        code: 'http',
+        provider: request.provider,
+        status: response.status,
+      })
+      callbacks.onError(error)
       return
     }
 
     const reader = response.body?.getReader()
     if (!reader) {
-      callbacks.onError('No response stream available')
+      callbacks.onError(new StreamError({
+        message: 'No response stream available',
+        code: 'no_stream',
+        provider: request.provider,
+      }))
       return
     }
 
@@ -141,7 +187,12 @@ export async function streamCompletionViaProxy(
   }
   catch (err) {
     if (signal?.aborted) return
-    callbacks.onError(err instanceof Error ? err.message : 'Stream failed')
+    callbacks.onError(new StreamError({
+      message: err instanceof Error ? err.message : 'Stream failed',
+      code: 'unknown',
+      provider: request.provider,
+      cause: err,
+    }))
   }
 }
 

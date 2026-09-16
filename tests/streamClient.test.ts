@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { StreamError } from '../app/lib/errors'
 import {
   resolveStreamEndpoint,
   streamCompletionDirect,
@@ -22,11 +23,11 @@ function collectCallbacks() {
   const collect = {
     chunks: [] as string[],
     done: false,
-    error: null as string | null,
+    error: null as StreamError | null,
     ttft: null as number | null,
     onChunk: (text: string) => { collect.chunks.push(text) },
     onDone: () => { collect.done = true },
-    onError: (error: string) => { collect.error = error },
+    onError: (error: StreamError) => { collect.error = error },
     onFirstToken: (ttftMs: number) => { collect.ttft = ttftMs },
   }
   return collect
@@ -104,7 +105,11 @@ describe('streamClient', () => {
 
     await streamCompletionDirect(openaiRequest, callbacks)
 
-    expect(callbacks.error).toBe('quota exceeded')
+    expect(callbacks.error).toBeInstanceOf(StreamError)
+    expect(callbacks.error?.message).toBe('quota exceeded')
+    expect(callbacks.error?.code).toBe('http')
+    expect(callbacks.error?.status).toBe(429)
+    expect(callbacks.error?.provider).toBe('openai')
     expect(callbacks.done).toBe(false)
     expect(callbacks.chunks).toEqual([])
   })
@@ -137,6 +142,8 @@ describe('streamClient', () => {
     }, callbacks)
 
     expect(fetchMock).not.toHaveBeenCalled()
-    expect(callbacks.error).toMatch(/provider/i)
+    expect(callbacks.error).toBeInstanceOf(StreamError)
+    expect(callbacks.error?.code).toBe('validation')
+    expect(callbacks.error?.message).toMatch(/provider/i)
   })
 })

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Pages deploy waits on successful CI for `main` instead of re-running the quality gate; Vitest uses shared-thread pool; branch coverage threshold ≥50% ([#29](https://github.com/ale94lko/llm-workbench/issues/29))
 - Rename repository and product branding from `llm-playground-os` / LLM Playground OS to **`llm-workbench` / LLM Workbench** (avoids demo/template naming for buyers and Pages base path `/llm-workbench/`)
 
 ### Fixed

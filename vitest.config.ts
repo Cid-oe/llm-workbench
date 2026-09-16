@@ -17,6 +17,10 @@ export default defineConfig({
   },
   test: {
     environment: 'happy-dom',
+    // threads + shared env: less happy-dom spin-up vs per-file forks isolation.
+    // setup.ts resets storage each test; keep tests free of cross-file leaks.
+    pool: 'threads',
+    isolate: false,
     include: ['tests/**/*.test.ts'],
     setupFiles: ['tests/setup.ts'],
     coverage: {
@@ -37,6 +41,7 @@ export default defineConfig({
         lines: 60,
         functions: 60,
         statements: 60,
+        branches: 50,
       },
     },
   },

@@ -1,4 +1,5 @@
 import type { ProviderId } from '~/types/llm'
+import { resolveGenerationParams } from '~/lib/generation'
 
 export type ExportLanguage = 'javascript' | 'python' | 'curl' | 'php'
 
@@ -10,6 +11,8 @@ interface ExportOptions {
   /** Ignored in generated snippets — keys must come from the environment. */
   apiKey?: string
   ollamaUrl?: string
+  temperature?: number
+  maxTokens?: number
 }
 
 export function envVarName(provider: Exclude<ProviderId, 'ollama'>): string {
@@ -34,7 +37,13 @@ export function useCodeExporter() {
   return { exportCode }
 }
 
+function sampling(opts: ExportOptions) {
+  return resolveGenerationParams(opts)
+}
+
 function exportJavaScript(opts: ExportOptions): string {
+  const { temperature, maxTokens } = sampling(opts)
+
   if (opts.provider === 'ollama') {
     return `const response = await fetch('${opts.ollamaUrl ?? 'http://localhost:11434'}/api/chat', {
   method: 'POST',
@@ -45,6 +54,7 @@ function exportJavaScript(opts: ExportOptions): string {
       { role: 'system', content: ${JSON.stringify(opts.systemPrompt)} },
       { role: 'user', content: ${JSON.stringify(opts.userPrompt)} },
     ],
+    options: { temperature: ${temperature}, num_predict: ${maxTokens} },
     stream: true,
   }),
 });
@@ -65,6 +75,59 @@ while (true) {
 }`
   }
 
+  if (opts.provider === 'anthropic') {
+    const baseUrl = getBaseUrl(opts.provider, opts.model)
+    const headers = formatJsHeaders(opts.provider)
+    return `const response = await fetch('${baseUrl}', {
+  method: 'POST',
+  headers: ${headers},
+  body: JSON.stringify({
+    model: '${opts.model}',
+    max_tokens: ${maxTokens},
+    temperature: ${temperature},
+    system: ${JSON.stringify(opts.systemPrompt)},
+    messages: [{ role: 'user', content: ${JSON.stringify(opts.userPrompt)} }],
+    stream: true,
+  }),
+});
+
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  const chunk = decoder.decode(value);
+  // Parse SSE chunks (data: {...})
+  console.log(chunk);
+}`
+  }
+
+  if (opts.provider === 'gemini') {
+    const baseUrl = getBaseUrl(opts.provider, opts.model)
+    const headers = formatJsHeaders(opts.provider)
+    return `const response = await fetch('${baseUrl}', {
+  method: 'POST',
+  headers: ${headers},
+  body: JSON.stringify({
+    contents: [{ role: 'user', parts: [{ text: ${JSON.stringify(opts.userPrompt)} }] }],
+    systemInstruction: { parts: [{ text: ${JSON.stringify(opts.systemPrompt)} }] },
+    generationConfig: { temperature: ${temperature}, maxOutputTokens: ${maxTokens} },
+  }),
+});
+
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  const chunk = decoder.decode(value);
+  // Parse SSE chunks (data: {...})
+  console.log(chunk);
+}`
+  }
+
   const baseUrl = getBaseUrl(opts.provider, opts.model)
   const headers = formatJsHeaders(opts.provider)
 
@@ -77,6 +140,8 @@ while (true) {
       { role: 'system', content: ${JSON.stringify(opts.systemPrompt)} },
       { role: 'user', content: ${JSON.stringify(opts.userPrompt)} },
     ],
+    temperature: ${temperature},
+    max_tokens: ${maxTokens},
     stream: true,
   }),
 });
@@ -94,6 +159,8 @@ while (true) {
 }
 
 function exportPython(opts: ExportOptions): string {
+  const { temperature, maxTokens } = sampling(opts)
+
   if (opts.provider === 'openai') {
     return `import os
 from openai import OpenAI
@@ -106,6 +173,8 @@ stream = client.chat.completions.create(
         {"role": "system", "content": ${JSON.stringify(opts.systemPrompt)}},
         {"role": "user", "content": ${JSON.stringify(opts.userPrompt)}},
     ],
+    temperature=${temperature},
+    max_tokens=${maxTokens},
     stream=True,
 )
 
@@ -122,7 +191,8 @@ client = anthropic.Anthropic(api_key=os.environ['ANTHROPIC_API_KEY'])
 
 with client.messages.stream(
     model="${opts.model}",
-    max_tokens=4096,
+    max_tokens=${maxTokens},
+    temperature=${temperature},
     system=${JSON.stringify(opts.systemPrompt)},
     messages=[{"role": "user", "content": ${JSON.stringify(opts.userPrompt)}}],
 ) as stream:
@@ -145,6 +215,8 @@ stream = client.chat.completions.create(
         {"role": "system", "content": ${JSON.stringify(opts.systemPrompt)}},
         {"role": "user", "content": ${JSON.stringify(opts.userPrompt)}},
     ],
+    temperature=${temperature},
+    max_tokens=${maxTokens},
     stream=True,
 )
 
@@ -164,6 +236,8 @@ stream = client.models.generate_content_stream(
     contents=${JSON.stringify(opts.userPrompt)},
     config=genai.types.GenerateContentConfig(
         system_instruction=${JSON.stringify(opts.systemPrompt)},
+        temperature=${temperature},
+        max_output_tokens=${maxTokens},
     ),
 )
 
@@ -185,6 +259,7 @@ response = requests.post(
             {"role": "system", "content": ${JSON.stringify(opts.systemPrompt)}},
             {"role": "user", "content": ${JSON.stringify(opts.userPrompt)}},
         ],
+        "options": {"temperature": ${temperature}, "num_predict": ${maxTokens}},
         "stream": True,
     },
     stream=True,
@@ -208,6 +283,8 @@ for line in response.iter_lines():
 }
 
 function exportCurl(opts: ExportOptions): string {
+  const { temperature, maxTokens } = sampling(opts)
+
   if (opts.provider === 'ollama') {
     return `curl ${opts.ollamaUrl ?? 'http://localhost:11434'}/api/chat \\
   -H "Content-Type: application/json" \\
@@ -217,6 +294,7 @@ function exportCurl(opts: ExportOptions): string {
       { role: 'system', content: opts.systemPrompt },
       { role: 'user', content: opts.userPrompt },
     ],
+    options: { temperature, num_predict: maxTokens },
     stream: true,
   })}'`
   }
@@ -228,6 +306,22 @@ function exportCurl(opts: ExportOptions): string {
   -d '${JSON.stringify({
     contents: [{ role: 'user', parts: [{ text: opts.userPrompt }] }],
     systemInstruction: { parts: [{ text: opts.systemPrompt }] },
+    generationConfig: { temperature, maxOutputTokens: maxTokens },
+  })}'`
+  }
+
+  if (opts.provider === 'anthropic') {
+    const baseUrl = getBaseUrl(opts.provider, opts.model)
+    const headerFlags = formatCurlHeaders(opts.provider)
+    return `curl ${baseUrl} \\
+  ${headerFlags} \\
+  -d '${JSON.stringify({
+    model: opts.model,
+    max_tokens: maxTokens,
+    temperature,
+    system: opts.systemPrompt,
+    messages: [{ role: 'user', content: opts.userPrompt }],
+    stream: true,
   })}'`
   }
 
@@ -242,23 +336,61 @@ function exportCurl(opts: ExportOptions): string {
       { role: 'system', content: opts.systemPrompt },
       { role: 'user', content: opts.userPrompt },
     ],
+    temperature,
+    max_tokens: maxTokens,
     stream: true,
   })}'`
 }
 
 function exportPhp(opts: ExportOptions): string {
+  const { temperature, maxTokens } = sampling(opts)
   const url = opts.provider === 'ollama'
     ? `${opts.ollamaUrl ?? 'http://localhost:11434'}/api/chat`
     : getBaseUrl(opts.provider, opts.model)
 
-  const body = JSON.stringify({
-    model: opts.model,
-    messages: [
-      { role: 'system', content: opts.systemPrompt },
-      { role: 'user', content: opts.userPrompt },
-    ],
-    stream: true,
-  }, null, 2)
+  let payload: Record<string, unknown>
+  if (opts.provider === 'anthropic') {
+    payload = {
+      model: opts.model,
+      max_tokens: maxTokens,
+      temperature,
+      system: opts.systemPrompt,
+      messages: [{ role: 'user', content: opts.userPrompt }],
+      stream: true,
+    }
+  }
+  else if (opts.provider === 'gemini') {
+    payload = {
+      contents: [{ role: 'user', parts: [{ text: opts.userPrompt }] }],
+      systemInstruction: { parts: [{ text: opts.systemPrompt }] },
+      generationConfig: { temperature, maxOutputTokens: maxTokens },
+    }
+  }
+  else if (opts.provider === 'ollama') {
+    payload = {
+      model: opts.model,
+      messages: [
+        { role: 'system', content: opts.systemPrompt },
+        { role: 'user', content: opts.userPrompt },
+      ],
+      options: { temperature, num_predict: maxTokens },
+      stream: true,
+    }
+  }
+  else {
+    payload = {
+      model: opts.model,
+      messages: [
+        { role: 'system', content: opts.systemPrompt },
+        { role: 'user', content: opts.userPrompt },
+      ],
+      temperature,
+      max_tokens: maxTokens,
+      stream: true,
+    }
+  }
+
+  const body = JSON.stringify(payload, null, 2)
 
   return `<?php
 

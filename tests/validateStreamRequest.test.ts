@@ -16,7 +16,38 @@ describe('validateStreamRequest', () => {
     if (result.ok) {
       expect(result.value.model).toBe('gpt-4o-mini')
       expect(result.value.provider).toBe('openai')
+      expect(result.value.temperature).toBe(0.7)
+      expect(result.value.maxTokens).toBe(4096)
     }
+  })
+
+  it('accepts and clamps temperature and maxTokens', () => {
+    const result = validateStreamRequest({
+      ...valid,
+      temperature: 1.5,
+      maxTokens: 100,
+    })
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.value.temperature).toBe(1.5)
+      expect(result.value.maxTokens).toBe(100)
+    }
+
+    const clamped = validateStreamRequest({
+      ...valid,
+      temperature: 9,
+      maxTokens: -5,
+    })
+    expect(clamped.ok).toBe(true)
+    if (clamped.ok) {
+      expect(clamped.value.temperature).toBe(2)
+      expect(clamped.value.maxTokens).toBe(1)
+    }
+  })
+
+  it('rejects non-numeric sampling fields', () => {
+    expect(validateStreamRequest({ ...valid, temperature: 'hot' }).ok).toBe(false)
+    expect(validateStreamRequest({ ...valid, maxTokens: 'lots' }).ok).toBe(false)
   })
 
   it('rejects missing or unknown providers', () => {

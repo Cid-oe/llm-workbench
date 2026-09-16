@@ -30,6 +30,7 @@ const uiStubs = {
   },
   PlaygroundPromptEditor: true,
   PlaygroundVariablesInput: true,
+  PlaygroundGenerationControls: true,
   PlaygroundModelSelector: true,
   PlaygroundComparisonGrid: true,
   PlaygroundPromptVersionDiff: true,
@@ -91,6 +92,7 @@ describe('pages/index compare run path', () => {
 
   it('run all streams completions into the prompt store', async () => {
     const { wrapper, promptStore } = mountPage()
+    promptStore.generation = { temperature: 0.25, maxTokens: 300 }
 
     const runBtn = wrapper.findAll('button').find(b => b.text().includes('Run All'))
     expect(runBtn).toBeTruthy()
@@ -98,6 +100,10 @@ describe('pages/index compare run path', () => {
     await flushPromises()
 
     expect(streamCompletion).toHaveBeenCalledTimes(1)
+    expect(streamCompletion.mock.calls[0]?.[0]).toMatchObject({
+      temperature: 0.25,
+      maxTokens: 300,
+    })
     expect(promptStore.responses).toHaveLength(1)
     expect(promptStore.responses[0]?.content).toBe('Hello')
     expect(promptStore.responses[0]?.status).toBe('done')

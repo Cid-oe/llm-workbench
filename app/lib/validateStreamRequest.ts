@@ -1,4 +1,5 @@
 import type { ProviderId, StreamRequest } from '~/types/llm'
+import { resolveGenerationParams } from '~/lib/generation'
 
 export const PROVIDER_IDS = ['openai', 'anthropic', 'gemini', 'groq', 'ollama'] as const
 
@@ -18,6 +19,14 @@ export function isAllowedUrl(value: string): boolean {
   catch {
     return false
   }
+}
+
+function optionalFiniteNumber(value: unknown, field: string): { ok: true, value?: number } | { ok: false, error: string } {
+  if (value === undefined) return { ok: true }
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return { ok: false, error: `${field} must be a finite number` }
+  }
+  return { ok: true, value }
 }
 
 export function validateStreamRequest(body: unknown): ValidationResult {
@@ -53,6 +62,17 @@ export function validateStreamRequest(body: unknown): ValidationResult {
     }
   }
 
+  const temperatureResult = optionalFiniteNumber(input.temperature, 'temperature')
+  if (!temperatureResult.ok) return temperatureResult
+
+  const maxTokensResult = optionalFiniteNumber(input.maxTokens, 'maxTokens')
+  if (!maxTokensResult.ok) return maxTokensResult
+
+  const generation = resolveGenerationParams({
+    temperature: temperatureResult.value,
+    maxTokens: maxTokensResult.value,
+  })
+
   return {
     ok: true,
     value: {
@@ -62,6 +82,8 @@ export function validateStreamRequest(body: unknown): ValidationResult {
       userPrompt: input.userPrompt,
       apiKey: typeof input.apiKey === 'string' ? input.apiKey : undefined,
       ollamaUrl: typeof input.ollamaUrl === 'string' ? input.ollamaUrl : undefined,
+      temperature: generation.temperature,
+      maxTokens: generation.maxTokens,
     },
   }
 }

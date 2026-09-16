@@ -46,6 +46,8 @@ const exportSnippet = computed(() => {
     systemPrompt: promptStore.interpolatedSystemPrompt,
     userPrompt: promptStore.interpolatedUserPrompt,
     ollamaUrl: providerStore.ollamaUrl,
+    temperature: promptStore.generation.temperature,
+    maxTokens: promptStore.generation.maxTokens,
   })
 })
 
@@ -117,6 +119,8 @@ async function runSlotStream(
       userPrompt: prompts.userPrompt,
       apiKey: providerStore.getApiKey(slot.provider),
       ollamaUrl: providerStore.ollamaUrl,
+      temperature: promptStore.generation.temperature,
+      maxTokens: promptStore.generation.maxTokens,
     },
     {
       onChunk: (text) => {
@@ -381,6 +385,7 @@ const languages: { id: ExportLanguage; label: string }[] = [
       <div class="space-y-4">
         <PlaygroundPromptEditor />
         <PlaygroundVariablesInput />
+        <PlaygroundGenerationControls />
       </div>
       <PlaygroundModelSelector />
     </div>

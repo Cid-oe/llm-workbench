@@ -25,7 +25,7 @@ export const usePromptStore = defineStore('prompt', {
     isRunning: false,
     history: [] as ExecutionHistoryEntry[],
     savedPrompts: [] as SavedPrompt[],
-    generation: {} as GenerationParams,
+    generation: { temperature: 0.7, maxTokens: 4096 } as GenerationParams,
   }),
 
   getters: {

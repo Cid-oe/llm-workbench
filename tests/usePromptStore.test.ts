@@ -64,4 +64,42 @@ describe('usePromptStore', () => {
     expect(store.systemPrompt).toBe('sys')
     expect(store.userPrompt).toBe('user')
   })
+
+  it('keeps revisions and round-trips a .prompt file without secrets', () => {
+    const store = usePromptStore()
+    store.systemPrompt = 'sys v1'
+    store.userPrompt = 'user v1'
+    store.savePrompt('Demo')
+    store.systemPrompt = 'sys v2'
+    store.userPrompt = 'user v2'
+    store.savePrompt('Demo')
+    expect(store.savedPrompts[0]?.version).toBe(2)
+    expect(store.savedPrompts[0]?.revisions).toHaveLength(1)
+    expect(store.promptSnapshots.some(s => s.source === 'revision')).toBe(true)
+
+    store.generation = { temperature: 0.2 }
+    store.variables = { topic: 'x' }
+    const markdown = store.exportPromptMarkdown({ name: 'Demo', model: 'gpt-4o', provider: 'openai' })
+    expect(markdown).toContain('temperature: 0.2')
+    expect(markdown).not.toContain('apiKey')
+
+    store.systemPrompt = 'other'
+    store.importPromptMarkdown(`---
+model: gpt-4o
+apiKey: sk-secret
+temperature: 0.5
+variables:
+  topic: imported
+---
+## System
+imported sys
+## User
+imported user
+`)
+    expect(store.systemPrompt).toBe('imported sys')
+    expect(store.userPrompt).toBe('imported user')
+    expect(store.generation.temperature).toBe(0.5)
+    expect(store.variables.topic).toBe('imported')
+    expect(JSON.stringify(store.$state)).not.toContain('sk-secret')
+  })
 })

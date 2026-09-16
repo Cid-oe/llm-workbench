@@ -1,6 +1,16 @@
 import { defineStore } from 'pinia'
+import { parsePromptFile, serializePromptFile } from '~/lib/promptFile'
 import { detectVariables, interpolateVariables, syncVariableKeys } from '~/lib/variables'
-import type { ExecutionHistoryEntry, ModelResponse, PromptVariables, SavedPrompt } from '~/types/llm'
+import type {
+  ExecutionHistoryEntry,
+  GenerationParams,
+  ModelResponse,
+  PromptFileData,
+  PromptSnapshot,
+  PromptVariables,
+  ProviderId,
+  SavedPrompt,
+} from '~/types/llm'
 
 function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
@@ -15,11 +25,47 @@ export const usePromptStore = defineStore('prompt', {
     isRunning: false,
     history: [] as ExecutionHistoryEntry[],
     savedPrompts: [] as SavedPrompt[],
+    generation: {} as GenerationParams,
   }),
 
   getters: {
     detectedVariables(state): string[] {
       return detectVariables(state.systemPrompt, state.userPrompt)
+    },
+
+    promptSnapshots(state): PromptSnapshot[] {
+      const snapshots: PromptSnapshot[] = []
+      for (const prompt of state.savedPrompts) {
+        snapshots.push({
+          id: `saved:${prompt.id}:current`,
+          label: `${prompt.name} (v${prompt.version})`,
+          source: 'saved',
+          systemPrompt: prompt.systemPrompt,
+          userPrompt: prompt.userPrompt,
+          variables: { ...(prompt.variables ?? {}) },
+        })
+        for (const revision of prompt.revisions ?? []) {
+          snapshots.push({
+            id: `saved:${prompt.id}:v${revision.version}`,
+            label: `${prompt.name} (v${revision.version})`,
+            source: 'revision',
+            systemPrompt: revision.systemPrompt,
+            userPrompt: revision.userPrompt,
+            variables: { ...revision.variables },
+          })
+        }
+      }
+      for (const entry of state.history) {
+        snapshots.push({
+          id: `history:${entry.id}`,
+          label: `History · ${entry.createdAt}`,
+          source: 'history',
+          systemPrompt: entry.systemPrompt,
+          userPrompt: entry.userPrompt,
+          variables: { ...entry.variables },
+        })
+      }
+      return snapshots
     },
 
     interpolatedSystemPrompt(state): string {
@@ -65,13 +111,26 @@ export const usePromptStore = defineStore('prompt', {
       if (this.history.length > 100) this.history.pop()
     },
 
-    savePrompt(name: string, tags: string[] = []) {
+    savePrompt(name: string, tags: string[] = [], meta: { model?: string; provider?: ProviderId } = {}) {
       const existing = this.savedPrompts.find(p => p.name === name)
       const now = new Date().toISOString()
 
       if (existing) {
+        existing.revisions = existing.revisions ?? []
+        existing.revisions.push({
+          version: existing.version,
+          systemPrompt: existing.systemPrompt,
+          userPrompt: existing.userPrompt,
+          variables: { ...(existing.variables ?? {}) },
+          generation: existing.generation,
+          savedAt: existing.updatedAt,
+        })
         existing.systemPrompt = this.systemPrompt
         existing.userPrompt = this.userPrompt
+        existing.variables = { ...this.variables }
+        existing.generation = { ...this.generation }
+        existing.model = meta.model ?? existing.model
+        existing.provider = meta.provider ?? existing.provider
         existing.tags = tags
         existing.version += 1
         existing.updatedAt = now
@@ -87,6 +146,11 @@ export const usePromptStore = defineStore('prompt', {
         version: 1,
         createdAt: now,
         updatedAt: now,
+        variables: { ...this.variables },
+        model: meta.model,
+        provider: meta.provider,
+        generation: { ...this.generation },
+        revisions: [],
       }
       this.savedPrompts.unshift(prompt)
       return prompt
@@ -97,6 +161,8 @@ export const usePromptStore = defineStore('prompt', {
       if (!prompt) return
       this.systemPrompt = prompt.systemPrompt
       this.userPrompt = prompt.userPrompt
+      this.variables = { ...(prompt.variables ?? {}) }
+      this.generation = { ...(prompt.generation ?? {}) }
       this.syncVariablesFromPrompts()
     },
 
@@ -115,6 +181,33 @@ export const usePromptStore = defineStore('prompt', {
 
     clearHistory() {
       this.history = []
+    },
+
+    exportPromptMarkdown(meta: { name?: string; model?: string; provider?: ProviderId; tags?: string[] } = {}): string {
+      return serializePromptFile({
+        name: meta.name,
+        model: meta.model,
+        provider: meta.provider,
+        tags: meta.tags,
+        generation: Object.keys(this.generation).length ? { ...this.generation } : undefined,
+        variables: { ...this.variables },
+        systemPrompt: this.systemPrompt,
+        userPrompt: this.userPrompt,
+      })
+    },
+
+    applyPromptFile(data: PromptFileData) {
+      this.systemPrompt = data.systemPrompt
+      this.userPrompt = data.userPrompt
+      this.variables = { ...data.variables }
+      this.generation = { ...(data.generation ?? {}) }
+      this.syncVariablesFromPrompts()
+    },
+
+    importPromptMarkdown(markdown: string): PromptFileData {
+      const data = parsePromptFile(markdown)
+      this.applyPromptFile(data)
+      return data
     },
   },
 

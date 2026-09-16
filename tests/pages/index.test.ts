@@ -21,7 +21,7 @@ const uiStubs = {
     props: ['disabled', 'variant', 'size'],
     emits: ['click'],
   },
-  UiDialog: { template: '<div v-if="open"><slot /></div>', props: ['open', 'title'] },
+  UiDialog: { template: '<div v-if="open"><slot /></div>', props: ['open', 'title', 'size'] },
   UiLabel: { template: '<label><slot /></label>' },
   UiInput: {
     template: '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
@@ -32,6 +32,7 @@ const uiStubs = {
   PlaygroundVariablesInput: true,
   PlaygroundModelSelector: true,
   PlaygroundComparisonGrid: true,
+  PlaygroundPromptVersionDiff: true,
 }
 
 describe('pages/index compare run path', () => {
@@ -110,5 +111,53 @@ describe('pages/index compare run path', () => {
 
     expect(promptStore.responses[0]?.status).toBe('error')
     expect(promptStore.responses[0]?.error).toBe('boom')
+  })
+
+  it('exports a .prompt file preview and imports it back', async () => {
+    const { wrapper, promptStore, providerStore } = mountPage()
+    promptStore.userPrompt = 'Round trip {{topic}}'
+    promptStore.generation = { temperature: 0.4 }
+
+    const exportBtn = wrapper.findAll('button').find(b => b.text().includes('Export'))
+    await exportBtn!.trigger('click')
+    const promptTab = wrapper.findAll('button').find(b => b.text().includes('.prompt'))
+    await promptTab!.trigger('click')
+
+    expect(wrapper.text()).toContain('Git-friendly Markdown')
+    expect(wrapper.text()).toContain('temperature: 0.4')
+    expect(wrapper.text()).toContain('gpt-4o-mini')
+    expect(wrapper.text()).not.toContain('sk-test')
+
+    const imported = `---
+model: gpt-4o
+provider: openai
+temperature: 0.9
+variables:
+  topic: imported
+---
+## System
+sys from file
+## User
+user from file
+`
+    const input = wrapper.get('input[type="file"]')
+    Object.defineProperty(input.element, 'files', {
+      configurable: true,
+      value: [{ text: async () => imported }],
+    })
+    await input.trigger('change')
+    await flushPromises()
+
+    expect(promptStore.systemPrompt).toBe('sys from file')
+    expect(promptStore.userPrompt).toBe('user from file')
+    expect(promptStore.generation.temperature).toBe(0.9)
+    expect(providerStore.selectedModels[0]?.modelId).toBe('gpt-4o')
+  })
+
+  it('opens the prompt diff dialog', async () => {
+    const { wrapper } = mountPage()
+    const diffBtn = wrapper.findAll('button').find(b => b.text().includes('Diff'))
+    await diffBtn!.trigger('click')
+    expect(wrapper.findComponent({ name: 'PlaygroundPromptVersionDiff' }).exists()).toBe(true)
   })
 })

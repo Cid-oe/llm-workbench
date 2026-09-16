@@ -17,7 +17,9 @@ import type {
   PromptVariables,
   ProviderId,
   SavedPrompt,
+  AssertionRule,
 } from '~/types/llm'
+import { createAssertionId } from '~/lib/assertions'
 
 function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
@@ -33,6 +35,7 @@ export const usePromptStore = defineStore('prompt', {
     history: [] as ExecutionHistoryEntry[],
     savedPrompts: [] as SavedPrompt[],
     generation: { temperature: 0.7, maxTokens: 4096 } as GenerationParams,
+    assertions: [] as AssertionRule[],
   }),
 
   getters: {
@@ -104,7 +107,7 @@ export const usePromptStore = defineStore('prompt', {
       this.responses[idx] = { ...current, ...patch }
     },
 
-    addToHistory(responses: ModelResponse[], models: ExecutionHistoryEntry['models']) {
+    addToHistory(responses: ModelResponse[], models: ExecutionHistoryEntry['models'], assertionSummary?: ExecutionHistoryEntry['assertionSummary']) {
       const entry: ExecutionHistoryEntry = {
         id: createId(),
         systemPrompt: this.systemPrompt,
@@ -113,9 +116,29 @@ export const usePromptStore = defineStore('prompt', {
         models,
         responses: JSON.parse(JSON.stringify(responses)),
         createdAt: new Date().toISOString(),
+        assertionSummary,
       }
       this.history.unshift(entry)
       if (this.history.length > 100) this.history.pop()
+    },
+
+    addAssertion(rule: Omit<AssertionRule, 'id'> & { id?: string }) {
+      this.assertions.push({
+        enabled: true,
+        ...rule,
+        id: rule.id ?? createAssertionId(),
+      })
+    },
+
+    updateAssertion(id: string, patch: Partial<AssertionRule>) {
+      const idx = this.assertions.findIndex(a => a.id === id)
+      const current = idx === -1 ? undefined : this.assertions[idx]
+      if (!current) return
+      this.assertions[idx] = { ...current, ...patch }
+    },
+
+    removeAssertion(id: string) {
+      this.assertions = this.assertions.filter(a => a.id !== id)
     },
 
     savePrompt(name: string, tags: string[] = [], meta: { model?: string; provider?: ProviderId } = {}) {

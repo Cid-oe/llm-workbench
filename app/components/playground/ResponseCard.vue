@@ -33,6 +33,12 @@ const statusVariant = computed(() => {
       <div class="flex items-center gap-2 min-w-0">
         <span class="font-medium text-sm truncate">{{ model?.label ?? response.modelId }}</span>
         <UiBadge :variant="statusVariant">{{ response.status }}</UiBadge>
+        <UiBadge
+          v-if="response.assertionResults?.length"
+          :variant="response.assertionResults.every(r => r.pass) ? 'success' : 'error'"
+        >
+          {{ response.assertionResults.every(r => r.pass) ? 'PASS' : 'FAIL' }}
+        </UiBadge>
       </div>
       <UiButton variant="ghost" size="sm" :disabled="!response.content" @click="copyResponse">
         <Check v-if="copied" class="h-4 w-4 text-emerald-400" />
@@ -50,7 +56,7 @@ const statusVariant = computed(() => {
       <UiBadge variant="secondary">{{ formatCost(response.metrics.costUsd) }}</UiBadge>
     </div>
 
-    <div class="flex-1 overflow-auto p-4">
+    <div class="flex-1 overflow-auto p-4 space-y-3">
       <div v-if="response.status === 'streaming' && !response.content" class="flex items-center gap-2 text-muted-foreground">
         <Loader2 class="h-4 w-4 animate-spin" />
         <span class="text-sm">Waiting for first token...</span>
@@ -63,6 +69,18 @@ const statusVariant = computed(() => {
           class="inline-block w-2 h-4 bg-primary animate-pulse ml-0.5"
         />
       </div>
+      <ul v-if="response.assertionResults?.length" class="space-y-1 border-t border-border pt-3">
+        <li
+          v-for="result in response.assertionResults"
+          :key="result.ruleId"
+          class="text-xs flex gap-2"
+        >
+          <UiBadge :variant="result.pass ? 'success' : 'error'" class="shrink-0">
+            {{ result.pass ? 'PASS' : 'FAIL' }}
+          </UiBadge>
+          <span class="text-muted-foreground">{{ result.message }}</span>
+        </li>
+      </ul>
     </div>
   </UiCard>
 </template>

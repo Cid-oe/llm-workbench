@@ -32,6 +32,29 @@ export interface ModelResponse {
   status: StreamStatus
   metrics: StreamMetrics
   error?: string
+  assertionResults?: AssertionResult[]
+}
+
+export type AssertionKind = 'jsonValid' | 'jsonSchema' | 'forbiddenSubstring' | 'length'
+export type LengthUnit = 'characters' | 'words' | 'tokens'
+export type AssertionSummary = 'pass' | 'fail' | 'none'
+
+export interface AssertionRule {
+  id: string
+  kind: AssertionKind
+  substring?: string
+  schemaJson?: string
+  min?: number
+  max?: number
+  unit?: LengthUnit
+  enabled?: boolean
+}
+
+export interface AssertionResult {
+  ruleId: string
+  kind: AssertionKind
+  pass: boolean
+  message: string
 }
 
 export interface PromptVariables {
@@ -97,6 +120,7 @@ export interface ExecutionHistoryEntry {
   models: SelectedModel[]
   responses: ModelResponse[]
   createdAt: string
+  assertionSummary?: AssertionSummary
 }
 
 export interface StreamRequest {

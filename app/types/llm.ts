@@ -106,4 +106,8 @@ export interface StreamRequest {
   userPrompt: string
   apiKey?: string
   ollamaUrl?: string
+  /** Sampling temperature (0–2). Defaults applied in the provider builder. */
+  temperature?: number
+  /** Max output tokens. Anthropic requires this; others map to provider equivalents. */
+  maxTokens?: number
 }

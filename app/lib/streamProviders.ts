@@ -1,4 +1,5 @@
 import type { ProviderId, StreamRequest } from '~/types/llm'
+import { resolveGenerationParams } from '~/lib/generation'
 
 export type StreamFormat = 'sse' | 'ollama'
 
@@ -11,6 +12,7 @@ export interface ProviderRequest {
 
 export function buildProviderRequest(request: StreamRequest): ProviderRequest {
   const { provider, model, systemPrompt, userPrompt, apiKey, ollamaUrl } = request
+  const { temperature, maxTokens } = resolveGenerationParams(request)
 
   switch (provider) {
     case 'openai':
@@ -26,6 +28,8 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
           ],
+          temperature,
+          max_tokens: maxTokens,
           stream: true,
         }),
         format: 'sse',
@@ -44,6 +48,8 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
           ],
+          temperature,
+          max_tokens: maxTokens,
           stream: true,
         }),
         format: 'sse',
@@ -60,7 +66,8 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
         },
         body: JSON.stringify({
           model,
-          max_tokens: 4096,
+          max_tokens: maxTokens,
+          temperature,
           system: systemPrompt,
           messages: [{ role: 'user', content: userPrompt }],
           stream: true,
@@ -75,6 +82,10 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
           systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: {
+            temperature,
+            maxOutputTokens: maxTokens,
+          },
         }),
         format: 'sse',
       }
@@ -89,6 +100,10 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
           ],
+          options: {
+            temperature,
+            num_predict: maxTokens,
+          },
           stream: true,
         }),
         format: 'ollama',

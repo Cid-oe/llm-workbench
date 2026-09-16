@@ -27,14 +27,18 @@ describe('useCodeExporter', () => {
     expect(code).toContain('fetch(')
     expect(code).toContain('gpt-4o-mini')
     expect(code).toContain('process.env.OPENAI_API_KEY')
+    expect(code).toContain('temperature: 0.7')
+    expect(code).toContain('max_tokens: 4096')
     expect(code).not.toContain('Bearer sk-')
   })
 
   it('exports Python OpenAI snippet', () => {
-    const code = exportCode('python', baseOpts)
+    const code = exportCode('python', { ...baseOpts, temperature: 0.3, maxTokens: 256 })
     expect(code).toContain('from openai import OpenAI')
     expect(code).toContain('gpt-4o-mini')
     expect(code).toContain("os.environ['OPENAI_API_KEY']")
+    expect(code).toContain('temperature=0.3')
+    expect(code).toContain('max_tokens=256')
   })
 
   it('exports cURL command', () => {
@@ -89,8 +93,12 @@ describe('useCodeExporter', () => {
       systemPrompt: 'Sys',
       userPrompt: 'Hi',
       apiKey,
+      temperature: 0.4,
+      maxTokens: 800,
     })
     expect(code).toContain("os.environ['ANTHROPIC_API_KEY']")
+    expect(code).toContain('max_tokens=800')
+    expect(code).toContain('temperature=0.4')
     expect(code).not.toContain(apiKey)
   })
 

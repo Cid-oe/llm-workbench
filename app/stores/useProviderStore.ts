@@ -8,6 +8,13 @@ import {
 } from '~/lib/crypto'
 import { DEPRECATED_MODEL_MAP, migrateModelId, PROVIDER_MODELS } from '~/lib/providerModels'
 import { discoverOllamaModels, staticOllamaModels } from '~/lib/ollamaModels'
+import {
+  assertAirGappedUrl,
+  DEFAULT_LM_STUDIO_URL,
+  DEFAULT_OLLAMA_URL,
+  discoverLocalLlms,
+  isCloudProvider,
+} from '~/lib/localDiscovery'
 import { sessionStore } from '~/lib/sessionStore'
 import { useSecurityStore } from './useSecurityStore'
 
@@ -23,7 +30,8 @@ const LEGACY_STORAGE_KEY = 'provider'
 export const useProviderStore = defineStore('provider', {
   state: () => ({
     encryptedPayload: null as EncryptedPayload | null,
-    ollamaUrl: 'http://localhost:11434',
+    ollamaUrl: DEFAULT_OLLAMA_URL,
+    lmStudioUrl: DEFAULT_LM_STUDIO_URL,
     selectedModels: DEFAULT_SLOTS as SelectedModel[],
     openaiKey: '',
     anthropicKey: '',
@@ -31,8 +39,12 @@ export const useProviderStore = defineStore('provider', {
     groqKey: '',
     streamProxyUrl: '',
     discoveredOllamaModels: null as ProviderModel[] | null,
+    discoveredLmStudioModels: null as ProviderModel[] | null,
     ollamaDiscoverError: '',
+    localDiscoverError: '',
     ollamaDiscovering: false,
+    localDiscovering: false,
+    airGapped: false,
   }),
 
   getters: {
@@ -43,23 +55,33 @@ export const useProviderStore = defineStore('provider', {
         return acc
       }, {} as Record<ProviderId, ProviderModel[]>)
       base.ollama = this.discoveredOllamaModels ?? staticOllamaModels()
+      base.lmstudio = this.discoveredLmStudioModels ?? []
       return base
+    },
+
+    availableProviders(): ProviderId[] {
+      const all: ProviderId[] = ['openai', 'anthropic', 'gemini', 'groq', 'ollama', 'lmstudio']
+      if (!this.airGapped) return all
+      return all.filter(p => !isCloudProvider(p))
     },
 
     getModel(): (modelId: string) => ProviderModel | undefined {
       return (modelId: string) =>
         PROVIDER_MODELS.find(m => m.id === modelId)
         ?? this.discoveredOllamaModels?.find(m => m.id === modelId)
+        ?? this.discoveredLmStudioModels?.find(m => m.id === modelId)
     },
 
     isProviderConfigured(): (provider: ProviderId) => boolean {
       return (provider: ProviderId) => {
+        if (this.airGapped && isCloudProvider(provider)) return false
         switch (provider) {
           case 'openai': return !!this.openaiKey
           case 'anthropic': return !!this.anthropicKey
           case 'gemini': return !!this.geminiKey
           case 'groq': return !!this.groqKey
           case 'ollama': return !!this.ollamaUrl
+          case 'lmstudio': return !!this.lmStudioUrl
           default: return false
         }
       }
@@ -105,22 +127,18 @@ export const useProviderStore = defineStore('provider', {
     },
 
     setApiKey(provider: ProviderId, value: string) {
-      const keyMap: Record<ProviderId, keyof ApiKeysPayload | 'ollamaUrl'> = {
-        openai: 'openaiKey',
-        anthropic: 'anthropicKey',
-        gemini: 'geminiKey',
-        groq: 'groqKey',
-        ollama: 'ollamaUrl',
-      }
-      const field = keyMap[provider]
-      if (field === 'ollamaUrl') {
+      if (provider === 'ollama') {
         this.ollamaUrl = value
         return
       }
-      if (field === 'openaiKey') this.openaiKey = value
-      else if (field === 'anthropicKey') this.anthropicKey = value
-      else if (field === 'geminiKey') this.geminiKey = value
-      else if (field === 'groqKey') this.groqKey = value
+      if (provider === 'lmstudio') {
+        this.lmStudioUrl = value
+        return
+      }
+      if (provider === 'openai') this.openaiKey = value
+      else if (provider === 'anthropic') this.anthropicKey = value
+      else if (provider === 'gemini') this.geminiKey = value
+      else if (provider === 'groq') this.groqKey = value
 
       const security = useSecurityStore()
       if (security.getCryptoKey()) {
@@ -135,7 +153,22 @@ export const useProviderStore = defineStore('provider', {
         case 'gemini': return this.geminiKey
         case 'groq': return this.groqKey
         case 'ollama': return this.ollamaUrl
+        case 'lmstudio': return this.lmStudioUrl
         default: return ''
+      }
+    },
+
+    setAirGapped(enabled: boolean) {
+      this.airGapped = enabled
+      if (!enabled) return
+      this.streamProxyUrl = ''
+      for (const slot of this.selectedModels) {
+        if (isCloudProvider(slot.provider)) {
+          const localModels = this.modelsByProvider.ollama
+          const first = localModels[0]
+          slot.provider = 'ollama'
+          slot.modelId = first?.id ?? 'llama3.2'
+        }
       }
     },
 
@@ -172,6 +205,7 @@ export const useProviderStore = defineStore('provider', {
     },
 
     updateSlot(slotId: string, provider: ProviderId, modelId: string) {
+      if (this.airGapped && isCloudProvider(provider)) return
       const slot = this.selectedModels.find(s => s.slotId === slotId)
       if (slot) {
         slot.provider = provider
@@ -182,12 +216,29 @@ export const useProviderStore = defineStore('provider', {
     addSlot() {
       if (this.selectedModels.length >= 4) return
       const id = `slot-${Date.now()}`
+      if (this.airGapped) {
+        const first = this.modelsByProvider.ollama[0]
+        this.selectedModels.push({
+          slotId: id,
+          provider: 'ollama',
+          modelId: first?.id ?? 'llama3.2',
+        })
+        return
+      }
       this.selectedModels.push({ slotId: id, provider: 'openai', modelId: 'gpt-4o-mini' })
     },
 
     removeSlot(slotId: string) {
       if (this.selectedModels.length <= 1) return
       this.selectedModels = this.selectedModels.filter(s => s.slotId !== slotId)
+    },
+
+    assertRequestAllowed(provider: ProviderId, url: string) {
+      if (!this.airGapped) return
+      if (isCloudProvider(provider)) {
+        throw new Error('Air-gapped mode only allows local providers (Ollama / LM Studio)')
+      }
+      assertAirGappedUrl(url, true)
     },
 
     async refreshOllamaModels(): Promise<void> {
@@ -202,11 +253,42 @@ export const useProviderStore = defineStore('provider', {
         this.ollamaDiscovering = false
       }
     },
+
+    async discoverLocalLlms(): Promise<void> {
+      this.localDiscovering = true
+      this.localDiscoverError = ''
+      try {
+        const result = await discoverLocalLlms({
+          ollamaUrl: this.ollamaUrl,
+          lmStudioUrl: this.lmStudioUrl,
+        })
+        const ollama = result.probes.find(p => p.backend === 'ollama')
+        const lmstudio = result.probes.find(p => p.backend === 'lmstudio')
+        if (ollama?.ok) {
+          this.discoveredOllamaModels = ollama.models
+          this.ollamaUrl = ollama.baseUrl
+        }
+        if (lmstudio?.ok) {
+          this.discoveredLmStudioModels = lmstudio.models
+          this.lmStudioUrl = lmstudio.baseUrl
+        }
+        const failures = result.probes.filter(p => !p.ok).map(p => p.error).filter(Boolean)
+        if (!result.primary) {
+          this.localDiscoverError = failures.join(' ') || 'No local LLM servers detected on :11434 or :1234.'
+        }
+        else if (failures.length) {
+          this.localDiscoverError = failures.join(' ')
+        }
+      }
+      finally {
+        this.localDiscovering = false
+      }
+    },
   },
 
   persist: [
     {
-      pick: ['encryptedPayload', 'ollamaUrl', 'selectedModels', 'streamProxyUrl'],
+      pick: ['encryptedPayload', 'ollamaUrl', 'lmStudioUrl', 'selectedModels', 'streamProxyUrl', 'airGapped'],
     },
     {
       key: 'provider-session',

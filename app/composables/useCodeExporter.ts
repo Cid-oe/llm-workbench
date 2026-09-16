@@ -11,11 +11,12 @@ interface ExportOptions {
   /** Ignored in generated snippets — keys must come from the environment. */
   apiKey?: string
   ollamaUrl?: string
+  lmStudioUrl?: string
   temperature?: number
   maxTokens?: number
 }
 
-export function envVarName(provider: Exclude<ProviderId, 'ollama'>): string {
+export function envVarName(provider: Exclude<ProviderId, 'ollama' | 'lmstudio'>): string {
   switch (provider) {
     case 'openai': return 'OPENAI_API_KEY'
     case 'anthropic': return 'ANTHROPIC_API_KEY'
@@ -73,6 +74,27 @@ while (true) {
     process.stdout.write(chunk.message?.content ?? '');
   }
 }`
+  }
+
+  if (opts.provider === 'lmstudio') {
+    const baseUrl = getBaseUrl('lmstudio', opts.model, opts.lmStudioUrl)
+    return `const response = await fetch('${baseUrl}', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer lm-studio',
+  },
+  body: JSON.stringify({
+    model: '${opts.model}',
+    messages: [
+      { role: 'system', content: ${JSON.stringify(opts.systemPrompt)} },
+      { role: 'user', content: ${JSON.stringify(opts.userPrompt)} },
+    ],
+    temperature: ${temperature},
+    max_tokens: ${maxTokens},
+    stream: true,
+  }),
+});`
   }
 
   if (opts.provider === 'anthropic') {
@@ -275,6 +297,29 @@ for line in response.iter_lines():
         print(content, end="", flush=True)`
   }
 
+  if (opts.provider === 'lmstudio') {
+    const url = getBaseUrl('lmstudio', opts.model, opts.lmStudioUrl)
+    return `import requests
+
+response = requests.post(
+    "${url}",
+    headers={"Authorization": "Bearer lm-studio"},
+    json={
+        "model": "${opts.model}",
+        "messages": [
+            {"role": "system", "content": ${JSON.stringify(opts.systemPrompt)}},
+            {"role": "user", "content": ${JSON.stringify(opts.userPrompt)}},
+        ],
+        "temperature": ${temperature},
+        "max_tokens": ${maxTokens},
+        "stream": True,
+    },
+    stream=True,
+)
+response.raise_for_status()
+print(response.text)`
+  }
+
   return `# Provider: ${opts.provider}
 # Use the corresponding SDK or REST API
 # Model: ${opts.model}
@@ -295,6 +340,23 @@ function exportCurl(opts: ExportOptions): string {
       { role: 'user', content: opts.userPrompt },
     ],
     options: { temperature, num_predict: maxTokens },
+    stream: true,
+  })}'`
+  }
+
+  if (opts.provider === 'lmstudio') {
+    const url = getBaseUrl('lmstudio', opts.model, opts.lmStudioUrl)
+    return `curl ${url} \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer lm-studio" \\
+  -d '${JSON.stringify({
+    model: opts.model,
+    messages: [
+      { role: 'system', content: opts.systemPrompt },
+      { role: 'user', content: opts.userPrompt },
+    ],
+    temperature,
+    max_tokens: maxTokens,
     stream: true,
   })}'`
   }
@@ -346,7 +408,7 @@ function exportPhp(opts: ExportOptions): string {
   const { temperature, maxTokens } = sampling(opts)
   const url = opts.provider === 'ollama'
     ? `${opts.ollamaUrl ?? 'http://localhost:11434'}/api/chat`
-    : getBaseUrl(opts.provider, opts.model)
+    : getBaseUrl(opts.provider, opts.model, opts.lmStudioUrl)
 
   let payload: Record<string, unknown>
   if (opts.provider === 'anthropic') {
@@ -410,9 +472,10 @@ curl_exec($ch);
 curl_close($ch);`
 }
 
-function getBaseUrl(provider: ProviderId, model?: string): string {
+function getBaseUrl(provider: ProviderId, model?: string, lmStudioUrl?: string): string {
   switch (provider) {
     case 'openai': return 'https://api.openai.com/v1/chat/completions'
+    case 'lmstudio': return `${(lmStudioUrl ?? 'http://localhost:1234').replace(/\/+$/, '')}/v1/chat/completions`
     case 'anthropic': return 'https://api.anthropic.com/v1/messages'
     case 'gemini': return `https://generativelanguage.googleapis.com/v1beta/models/${model ?? 'MODEL'}:streamGenerateContent?alt=sse`
     case 'groq': return 'https://api.groq.com/openai/v1/chat/completions'
@@ -420,7 +483,7 @@ function getBaseUrl(provider: ProviderId, model?: string): string {
   }
 }
 
-function formatJsHeaders(provider: Exclude<ProviderId, 'ollama'>): string {
+function formatJsHeaders(provider: Exclude<ProviderId, 'ollama' | 'lmstudio'>): string {
   const env = `process.env.${envVarName(provider)}`
   const lines = [`    'Content-Type': 'application/json'`]
 
@@ -441,7 +504,7 @@ function formatJsHeaders(provider: Exclude<ProviderId, 'ollama'>): string {
   return `{\n${lines.join(',\n')},\n  }`
 }
 
-function formatCurlHeaders(provider: Exclude<ProviderId, 'ollama'>): string {
+function formatCurlHeaders(provider: Exclude<ProviderId, 'ollama' | 'lmstudio'>): string {
   const env = `$${envVarName(provider)}`
   const headers: string[] = ['-H "Content-Type: application/json"']
 
@@ -465,7 +528,10 @@ function formatCurlHeaders(provider: Exclude<ProviderId, 'ollama'>): string {
 function phpHeadersArray(provider: ProviderId): string {
   const lines = [`    'Content-Type: application/json'`]
 
-  if (provider !== 'ollama') {
+  if (provider === 'lmstudio') {
+    lines.push(`    'Authorization: Bearer lm-studio'`)
+  }
+  else if (provider !== 'ollama') {
     const env = `getenv('${envVarName(provider)}')`
     switch (provider) {
       case 'openai':

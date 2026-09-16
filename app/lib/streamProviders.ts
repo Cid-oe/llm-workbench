@@ -11,7 +11,7 @@ export interface ProviderRequest {
 }
 
 export function buildProviderRequest(request: StreamRequest): ProviderRequest {
-  const { provider, model, systemPrompt, userPrompt, apiKey, ollamaUrl } = request
+  const { provider, model, systemPrompt, userPrompt, apiKey, ollamaUrl, lmStudioUrl } = request
   const { temperature, maxTokens } = resolveGenerationParams(request)
 
   switch (provider) {
@@ -34,6 +34,28 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
         }),
         format: 'sse',
       }
+
+    case 'lmstudio': {
+      const base = (lmStudioUrl ?? 'http://localhost:1234').replace(/\/+$/, '')
+      return {
+        url: `${base}/v1/chat/completions`,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey || 'lm-studio'}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+          temperature,
+          max_tokens: maxTokens,
+          stream: true,
+        }),
+        format: 'sse',
+      }
+    }
 
     case 'groq':
       return {
@@ -161,6 +183,9 @@ export async function parseProviderError(response: Response): Promise<string> {
 export function corsHint(provider: ProviderId): string {
   if (provider === 'ollama') {
     return 'Check that Ollama is running and allows browser requests (OLLAMA_ORIGINS).'
+  }
+  if (provider === 'lmstudio') {
+    return 'Check that LM Studio server is running (local server / OpenAI-compatible) and allows browser CORS.'
   }
 
   return 'Some providers block browser requests. Run locally with npm run dev, or set a stream proxy URL in Settings.'

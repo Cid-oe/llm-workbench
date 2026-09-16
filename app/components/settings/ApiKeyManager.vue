@@ -11,6 +11,7 @@ const providers: { id: ProviderId; label: string; placeholder: string; isUrl?: b
   { id: 'gemini', label: 'Google Gemini', placeholder: 'AIza...' },
   { id: 'groq', label: 'Groq', placeholder: 'gsk_...' },
   { id: 'ollama', label: 'Ollama URL', placeholder: 'http://localhost:11434', isUrl: true },
+  { id: 'lmstudio', label: 'LM Studio URL', placeholder: 'http://localhost:1234', isUrl: true },
 ]
 
 const visible = ref<Record<string, boolean>>({})
@@ -47,7 +48,10 @@ function displayValue(provider: ProviderId, isUrl?: boolean): string {
     </div>
 
     <div class="grid gap-4 md:grid-cols-2">
-      <div v-for="provider in providers" :key="provider.id">
+      <div
+        v-for="provider in providers.filter(p => !providerStore.airGapped || p.isUrl)"
+        :key="provider.id"
+      >
         <UiLabel class="mb-1.5 block">{{ provider.label }}</UiLabel>
         <div class="relative">
           <UiInput
@@ -70,7 +74,27 @@ function displayValue(provider: ProviderId, isUrl?: boolean): string {
       </div>
     </div>
 
-    <UiCard class="p-4">
+    <UiCard class="p-4 space-y-3">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-sm font-medium">100% Offline / Air-gapped</p>
+          <p class="text-xs text-muted-foreground mt-1">
+            Disables cloud providers and blocks outbound calls to non-localhost endpoints.
+          </p>
+        </div>
+        <label class="flex items-center gap-2 text-sm shrink-0">
+          <input
+            type="checkbox"
+            class="h-4 w-4"
+            :checked="providerStore.airGapped"
+            @change="providerStore.setAirGapped(($event.target as HTMLInputElement).checked)"
+          >
+          Enable
+        </label>
+      </div>
+    </UiCard>
+
+    <UiCard v-if="!providerStore.airGapped" class="p-4">
       <UiLabel class="mb-1.5 block">Stream proxy URL (optional)</UiLabel>
       <UiInput
         :model-value="providerStore.streamProxyUrl"

@@ -1,4 +1,4 @@
-export type ProviderId = 'openai' | 'anthropic' | 'gemini' | 'groq' | 'ollama'
+export type ProviderId = 'openai' | 'anthropic' | 'gemini' | 'groq' | 'ollama' | 'lmstudio'
 
 export interface ProviderModel {
   id: string
@@ -130,6 +130,7 @@ export interface StreamRequest {
   userPrompt: string
   apiKey?: string
   ollamaUrl?: string
+  lmStudioUrl?: string
   /** Sampling temperature (0–2). Defaults applied in the provider builder. */
   temperature?: number
   /** Max output tokens. Anthropic requires this; others map to provider equivalents. */

@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { Plus, RefreshCw, Trash2 } from '@lucide/vue'
+import { Plus, Radar, RefreshCw, Trash2 } from '@lucide/vue'
 import type { ProviderId } from '~/types/llm'
 
 const providerStore = useProviderStore()
 
-const providers: { id: ProviderId; label: string }[] = [
-  { id: 'openai', label: 'OpenAI' },
-  { id: 'anthropic', label: 'Anthropic' },
-  { id: 'gemini', label: 'Gemini' },
-  { id: 'groq', label: 'Groq' },
-  { id: 'ollama', label: 'Ollama' },
-]
+const providerLabels: Record<ProviderId, string> = {
+  openai: 'OpenAI',
+  anthropic: 'Anthropic',
+  gemini: 'Gemini',
+  groq: 'Groq',
+  ollama: 'Ollama',
+  lmstudio: 'LM Studio',
+}
 
 const hasOllamaSlot = computed(() =>
   providerStore.selectedModels.some(s => s.provider === 'ollama'),
@@ -28,6 +29,10 @@ function onProviderChange(slotId: string, provider: ProviderId) {
 async function refreshOllama() {
   await providerStore.refreshOllamaModels()
 }
+
+async function detectLocal() {
+  await providerStore.discoverLocalLlms()
+}
 </script>
 
 <template>
@@ -35,6 +40,15 @@ async function refreshOllama() {
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
       <h3 class="text-sm font-medium">Models ({{ providerStore.selectedModels.length }}/4)</h3>
       <div class="flex flex-wrap gap-2">
+        <UiButton
+          variant="outline"
+          size="sm"
+          :disabled="providerStore.localDiscovering"
+          @click="detectLocal"
+        >
+          <Radar class="h-4 w-4" :class="{ 'animate-spin': providerStore.localDiscovering }" />
+          {{ providerStore.localDiscovering ? 'Detecting…' : 'Detect local LLMs' }}
+        </UiButton>
         <UiButton
           v-if="hasOllamaSlot"
           variant="outline"
@@ -57,8 +71,14 @@ async function refreshOllama() {
       </div>
     </div>
 
-    <p v-if="hasOllamaSlot && providerStore.ollamaDiscoverError" class="text-xs text-destructive mb-3">
+    <p v-if="providerStore.localDiscoverError" class="text-xs text-destructive mb-3">
+      {{ providerStore.localDiscoverError }}
+    </p>
+    <p v-else-if="hasOllamaSlot && providerStore.ollamaDiscoverError" class="text-xs text-destructive mb-3">
       {{ providerStore.ollamaDiscoverError }}
+    </p>
+    <p v-if="providerStore.airGapped" class="text-xs text-muted-foreground mb-3">
+      Air-gapped mode is on — only Ollama and LM Studio are selectable.
     </p>
 
     <div class="space-y-2">
@@ -72,7 +92,13 @@ async function refreshOllama() {
           class="h-9 rounded-md border border-border bg-card px-2 text-sm"
           @change="onProviderChange(slot.slotId, ($event.target as HTMLSelectElement).value as ProviderId)"
         >
-          <option v-for="p in providers" :key="p.id" :value="p.id">{{ p.label }}</option>
+          <option
+            v-for="p in providerStore.availableProviders"
+            :key="p"
+            :value="p"
+          >
+            {{ providerLabels[p] }}
+          </option>
         </select>
         <select
           :value="slot.modelId"

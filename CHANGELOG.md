@@ -7,13 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-16
+
+First tagged milestone after env onboarding docs, Vue coverage, typed stream errors, and contributor process.
+
 ### Changed
 - Switch from MIT to a source-available license with an AI-training restriction
 - Document optional provider API keys in `.env.example` and the README env table ([#8](https://github.com/ale94lko/llm-playground-os/issues/8))
 - Raise Vitest coverage thresholds to 60% for lines, functions, and statements ([#9](https://github.com/ale94lko/llm-playground-os/issues/9))
 - Stream client `onError` callbacks now receive typed `StreamError` values instead of raw strings ([#10](https://github.com/ale94lko/llm-playground-os/issues/10))
+- `NUXT_DEVTOOLS=false` actually disables DevTools (previously only `0` was treated as off)
 
 ### Added
+- Conventional Commits requirement, feature+test pairing guidance, and commitlint on pull requests ([#12](https://github.com/ale94lko/llm-playground-os/issues/12))
 - Typed `StreamError` helper with log-safe serialization ([#10](https://github.com/ale94lko/llm-playground-os/issues/10))
 - Vue page/component tests for the playground run path, metrics page, and `LatencyTimeline` ([#9](https://github.com/ale94lko/llm-playground-os/issues/9))
 - ESLint (`@nuxt/eslint`) and `nuxt typecheck` gates on every push and pull request
@@ -32,5 +38,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code exporter now emits environment-variable placeholders (`process.env.*`, `os.environ[...]`, `$VAR`, `getenv(...)`) instead of interpolating API keys into snippets
 - Stream/client failures use typed `StreamError` with log-safe serialization; logger redaction documented in the README ([#10](https://github.com/ale94lko/llm-playground-os/issues/10))
 
-### Changed
-- `NUXT_DEVTOOLS=false` actually disables DevTools (previously only `0` was treated as off)
+[Unreleased]: https://github.com/ale94lko/llm-playground-os/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/ale94lko/llm-playground-os/releases/tag/v0.1.0

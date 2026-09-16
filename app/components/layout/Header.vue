@@ -5,7 +5,7 @@ const route = useRoute()
 const menuOpen = ref(false)
 
 const links = [
-  { to: '/', label: 'Playground', icon: Cpu },
+  { to: '/', label: 'Compare', icon: Cpu },
   { to: '/history', label: 'History', icon: History },
   { to: '/metrics', label: 'Metrics', icon: BarChart3 },
   { to: '/settings', label: 'Settings', icon: Settings },
@@ -40,7 +40,7 @@ onUnmounted(() => {
 
       <NuxtLink to="/" class="flex min-w-0 items-center gap-2 font-semibold text-foreground">
         <Cpu class="h-5 w-5 shrink-0 text-primary" />
-        <span class="truncate">LLM Playground OS</span>
+        <span class="truncate">LLM Workbench</span>
       </NuxtLink>
 
       <nav class="ml-auto hidden items-center gap-1 sm:flex">

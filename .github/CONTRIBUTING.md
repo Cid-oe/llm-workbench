@@ -1,10 +1,10 @@
-# Welcome to LLM Playground OS contributing guide
+# Welcome to LLM Workbench contributing guide
 
 Thank you for investing your time in contributing to our project! Contributions are always **welcome and recommended**!
 
 The canonical guide lives in the repository root: [CONTRIBUTING.md](../CONTRIBUTING.md).
 
-Read our [Code of Conduct](https://github.com/ale94lko/llm-playground-os/blob/main/.github/CODE_OF_CONDUCT.md) to keep our community approachable and respectable.
+Read our [Code of Conduct](https://github.com/ale94lko/llm-workbench/blob/main/.github/CODE_OF_CONDUCT.md) to keep our community approachable and respectable.
 
 ## Getting started
 

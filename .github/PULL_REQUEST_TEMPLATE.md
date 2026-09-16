@@ -20,7 +20,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 - [ ] `npm run lint`
 - [ ] `npm run typecheck`
 - [ ] `npm test`
-- [ ] Manual testing in the playground
+- [ ] Manual testing in the workbench
 
 # Checklist:
 

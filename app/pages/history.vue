@@ -37,7 +37,7 @@ const activeTab = ref<'history' | 'saved'>('history')
 
     <div v-if="activeTab === 'history'" class="space-y-3">
       <div v-if="!promptStore.history.length" class="text-center py-12 text-muted-foreground">
-        No executions yet. Run a prompt from the Playground.
+        No executions yet. Run a prompt from Compare.
       </div>
       <UiCard
         v-for="entry in promptStore.history"

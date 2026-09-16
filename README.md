@@ -1,19 +1,19 @@
-# LLM Playground OS
+# LLM Workbench
 
 [![License: Source-Available (AI restricted)](https://img.shields.io/badge/License-Source--Available-blue.svg)](LICENSE)
-[![Health Score](https://github.com/ale94lko/llm-playground-os/blob/output/badge.svg)](https://github.com/ale94lko/repo-health-score)
+[![Health Score](https://github.com/ale94lko/llm-workbench/blob/output/badge.svg)](https://github.com/ale94lko/repo-health-score)
 [![Nuxt](https://img.shields.io/badge/Nuxt-4-00DC82?logo=nuxt.js&logoColor=white)](https://nuxt.com)
 [![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org)
 
-Source-available **multi-LLM playground** for developers and AI enthusiasts. Design prompts with dynamic variables, run them in parallel against up to 4 models, and compare responses with real-time metrics — all **local-first** in your browser.
+Source-available **multi-LLM workbench** for developers. Design prompts with dynamic variables, run them in parallel against up to 4 models, and compare responses with real-time metrics — all **local-first** in your browser.
 
-**Live demo:** [https://ale94lko.github.io/llm-playground-os/](https://ale94lko.github.io/llm-playground-os/)
+**Live app:** [https://ale94lko.github.io/llm-workbench/](https://ale94lko.github.io/llm-workbench/)
 
 ## Screenshots
 
-### Playground — compare models in parallel
+### Compare — run models in parallel
 
-![Playground with prompt variables and model selection](docs/screenshots/playground.png)
+![Workbench with prompt variables and model selection](docs/screenshots/playground.png)
 
 Write system and user prompts with `{{variables}}`, pick up to 4 providers, and run them side-by-side.
 
@@ -27,7 +27,7 @@ Track latency, TTFT, tokens, and cost. Toggle between **Latest run** and **Histo
 
 ![History page with past prompt executions](docs/screenshots/history.png)
 
-Browse previous comparisons and reload any run back into the playground.
+Browse previous comparisons and reload any run back into the workbench.
 
 ### Settings — encrypted vault and API keys
 
@@ -50,8 +50,8 @@ Store API keys locally with AES-256-GCM encryption and an optional master passwo
 ## Quick Start
 
 ```bash
-git clone https://github.com/ale94lko/llm-playground-os.git
-cd llm-playground-os
+git clone https://github.com/ale94lko/llm-workbench.git
+cd llm-workbench
 cp .env.example .env
 npm install
 npm run dev
@@ -63,7 +63,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Variable | Default | Purpose |
 | :--- | :--- | :--- |
-| `NUXT_APP_BASE_URL` | `/` | Public path prefix. GitHub Pages uses `/llm-playground-os/`. |
+| `NUXT_APP_BASE_URL` | `/` | Public path prefix. GitHub Pages uses `/llm-workbench/`. |
 | `NUXT_DEVTOOLS` | `false` | Enable Nuxt DevTools. Set `true` locally if you want the overlay. |
 | `OPENAI_API_KEY` | _(empty)_ | Optional. Used by exporter snippets / local tooling. Get a key at [platform.openai.com](https://platform.openai.com/api-keys). |
 | `ANTHROPIC_API_KEY` | _(empty)_ | Optional. Same as above for Anthropic ([console.anthropic.com](https://console.anthropic.com/settings/keys)). |
@@ -93,7 +93,7 @@ docker compose --profile ollama up --build
 
 1. Go to **Settings** and create an encrypted vault with a master password
 2. Unlock the vault and add your API keys (or Ollama URL for local models)
-3. Select models in the **Playground**
+3. Select models on the **Compare** page
 4. Write your prompt with optional `{{variables}}`
 5. Click **Run All**
 
@@ -135,12 +135,12 @@ The site is published at:
 https://<username>.github.io/<repo-name>/
 ```
 
-For this repo: [https://ale94lko.github.io/llm-playground-os/](https://ale94lko.github.io/llm-playground-os/)
+For this repo: [https://ale94lko.github.io/llm-workbench/](https://ale94lko.github.io/llm-workbench/)
 
 Build locally:
 
 ```bash
-NUXT_APP_BASE_URL=/llm-playground-os/ npm run generate
+NUXT_APP_BASE_URL=/llm-workbench/ npm run generate
 npx serve .output/public
 ```
 
@@ -148,7 +148,7 @@ npx serve .output/public
 
 For full provider support including OpenAI without CORS limitations, deploy to a platform with a Node server (Vercel, Netlify, etc.) so `/api/stream` is available:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ale94lko/llm-playground-os)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ale94lko/llm-workbench)
 
 ```bash
 npm run build
@@ -179,7 +179,7 @@ app/
 │   └── layout/          # Header with desktop nav + mobile menu
 ├── composables/         # LLM streaming, cost calculator, code exporter
 ├── lib/                 # Crypto, errors, metrics, stream providers, provider models, logger, validation
-├── pages/               # Playground, history, metrics, settings
+├── pages/               # Compare, history, metrics, settings
 ├── stores/              # Provider & prompt state (persisted)
 └── plugins/             # Vault bootstrap + client error tracking
 server/api/              # Stream proxy, health, and metrics (local dev / Node / Docker)
@@ -206,9 +206,9 @@ docker compose up --build
 
 API keys are encrypted client-side using **AES-256-GCM** with a key derived from your master password (PBKDF2, 100k iterations). Only the encrypted payload is persisted in localStorage.
 
-Keys also live in sessionStorage for the current browser session. Locking the vault **only hides key values in Settings** — the playground keeps working with keys already loaded in memory.
+Keys also live in sessionStorage for the current browser session. Locking the vault **only hides key values in Settings** — the workbench keeps working with keys already loaded in memory.
 
-> **Note:** In production (GitHub Pages), API keys are sent directly from your browser to the LLM provider. This is intentional for a local-first playground, but never share your machine or browser session with untrusted parties.
+> **Note:** In production (GitHub Pages), API keys are sent directly from your browser to the LLM provider. This is intentional for a local-first workbench, but never share your machine or browser session with untrusted parties.
 
 The **code exporter** never embeds stored API keys. Generated JavaScript, Python, cURL, and PHP snippets always read credentials from the environment (`process.env.OPENAI_API_KEY`, `os.environ['OPENAI_API_KEY']`, `$OPENAI_API_KEY`, `getenv('OPENAI_API_KEY')`).
 
@@ -226,4 +226,4 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) and op
 
 ## License
 
-**llm-playground-os** is source-available under the terms in [`LICENSE`](LICENSE): use, modification, and distribution are allowed, but using this software or its documentation to train, fine-tune, evaluate, or synthesize AI/ML/LLM systems requires a separate paid written agreement with the copyright holder.
+**llm-workbench** is source-available under the terms in [`LICENSE`](LICENSE): use, modification, and distribution are allowed, but using this software or its documentation to train, fine-tune, evaluate, or synthesize AI/ML/LLM systems requires a separate paid written agreement with the copyright holder.

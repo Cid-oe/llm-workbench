@@ -49,7 +49,7 @@ describe('pages/metrics', () => {
     })
 
     expect(wrapper.text()).toContain('No metrics yet.')
-    expect(wrapper.text()).toContain('Go to Playground')
+    expect(wrapper.text()).toContain('Go to Compare')
   })
 
   it('renders summary cards and table for latest responses', async () => {

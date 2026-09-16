@@ -123,7 +123,7 @@ const costChart = computed(() =>
       <MetricsMetricBarChart
         title="Latency"
         :items="latencyChart"
-        empty-message="No latency data. Run models from the Playground."
+        empty-message="No latency data. Run models from Compare."
       />
       <MetricsMetricBarChart
         title="Time to first token (TTFT)"
@@ -192,9 +192,9 @@ const costChart = computed(() =>
       class="text-center py-16 text-muted-foreground"
     >
       <p class="text-sm">No metrics yet.</p>
-      <p class="text-xs mt-1">Run a comparison in the Playground to populate charts.</p>
+      <p class="text-xs mt-1">Run a comparison on Compare to populate charts.</p>
       <UiButton class="mt-4" size="sm" @click="navigateTo('/')">
-        Go to Playground
+        Go to Compare
       </UiButton>
     </div>
   </div>

@@ -8,7 +8,7 @@ body:
       value: |
         Thanks for taking the time to report a bug!
 
-        Before you begin, **please search [existing issues](https://github.com/ale94lko/llm-playground-os/issues)** (open and closed) to avoid duplicates.
+        Before you begin, **please search [existing issues](https://github.com/ale94lko/llm-workbench/issues)** (open and closed) to avoid duplicates.
 
         > **Security:** Never paste API keys, master passwords, or encrypted vault payloads in this form.
         ---
@@ -17,7 +17,7 @@ body:
     id: conduct
     attributes:
       label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/ale94lko/llm-playground-os/blob/main/.github/CODE_OF_CONDUCT.md).
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/ale94lko/llm-workbench/blob/main/.github/CODE_OF_CONDUCT.md).
       options:
         - label: I agree to follow this project's Code of Conduct
           required: true
@@ -40,7 +40,7 @@ body:
     attributes:
       label: Affected area
       options:
-        - Playground (prompts, variables, parallel runs)
+        - Compare (prompts, variables, parallel runs)
         - Metrics (charts, timeline, comparison table)
         - History (past runs, reload)
         - Settings (vault, API keys, providers)
@@ -90,7 +90,7 @@ body:
       placeholder: |
         1. Go to Settings and unlock the vault
         2. Add a Groq API key
-        3. Select GPT-OSS 120B in the Playground
+        3. Select GPT-OSS 120B on Compare
         4. Click Run All
         5. See error: ...
     validations:

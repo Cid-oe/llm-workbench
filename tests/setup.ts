@@ -23,13 +23,20 @@ vi.stubGlobal('useProviderStore', useProviderStore)
 vi.stubGlobal('useSecurityStore', useSecurityStore)
 
 const memory = new Map<string, string>()
+const sessionMemory = new Map<string, string>()
+
+function storageStub(store: Map<string, string>) {
+  return {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => { store.set(key, value) },
+    removeItem: (key: string) => { store.delete(key) },
+    clear: () => { store.clear() },
+  }
+}
 
 beforeEach(() => {
   memory.clear()
-  vi.stubGlobal('localStorage', {
-    getItem: (key: string) => memory.get(key) ?? null,
-    setItem: (key: string, value: string) => { memory.set(key, value) },
-    removeItem: (key: string) => { memory.delete(key) },
-    clear: () => { memory.clear() },
-  })
+  sessionMemory.clear()
+  vi.stubGlobal('localStorage', storageStub(memory))
+  vi.stubGlobal('sessionStorage', storageStub(sessionMemory))
 })

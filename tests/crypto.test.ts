@@ -1,11 +1,15 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
+  clearSessionCryptoKey,
   decryptJson,
   deriveKey,
   encryptJson,
   generateSalt,
   hashPassword,
+  loadPersistedCryptoKey,
+  loadSessionCryptoKey,
   parseSalt,
+  saveSessionCryptoKey,
   verifyPassword,
   type ApiKeysPayload,
 } from '../app/lib/crypto'
@@ -17,6 +21,10 @@ describe('crypto', () => {
     geminiKey: 'AIza-test',
     groqKey: 'gsk_test',
   }
+
+  beforeEach(() => {
+    clearSessionCryptoKey()
+  })
 
   it('encrypts and decrypts API keys payload', async () => {
     const salt = parseSalt(generateSalt())
@@ -39,5 +47,35 @@ describe('crypto', () => {
     const a = await encryptJson(key, sampleKeys)
     const b = await encryptJson(key, sampleKeys)
     expect(a.data).not.toBe(b.data)
+  })
+
+  it('persists and reloads the session crypto key from session and local storage', async () => {
+    const key = await deriveKey('session-pass', parseSalt(generateSalt()))
+    await saveSessionCryptoKey(key)
+
+    const fromSession = await loadSessionCryptoKey()
+    const fromPersisted = await loadPersistedCryptoKey()
+    expect(fromSession).not.toBeNull()
+    expect(fromPersisted).not.toBeNull()
+
+    const roundTrip = await encryptJson(fromSession!, sampleKeys)
+    await expect(decryptJson<ApiKeysPayload>(fromPersisted!, roundTrip)).resolves.toEqual(sampleKeys)
+  })
+
+  it('clearSessionCryptoKey removes both storages', async () => {
+    const key = await deriveKey('session-pass', parseSalt(generateSalt()))
+    await saveSessionCryptoKey(key)
+    clearSessionCryptoKey()
+
+    expect(await loadSessionCryptoKey()).toBeNull()
+    expect(await loadPersistedCryptoKey()).toBeNull()
+  })
+
+  it('load helpers return null for missing or corrupt storage values', async () => {
+    expect(await loadSessionCryptoKey()).toBeNull()
+    expect(await loadPersistedCryptoKey()).toBeNull()
+
+    sessionStorage.setItem('llm-playground-session-key', '%%%not-base64%%%')
+    expect(await loadSessionCryptoKey()).toBeNull()
   })
 })

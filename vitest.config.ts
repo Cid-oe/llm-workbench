@@ -6,6 +6,9 @@ const appDir = fileURLToPath(new URL('./app', import.meta.url))
 
 export default defineConfig({
   plugins: [vue()],
+  define: {
+    'import.meta.client': true,
+  },
   resolve: {
     alias: {
       '~': appDir,

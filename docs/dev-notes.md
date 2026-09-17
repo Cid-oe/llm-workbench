@@ -96,7 +96,7 @@ Nuxt + Tailwind Vite pull a large transitive tree (~1000 lockfile `node_modules`
 
 Audit (#70):
 
-- Ran `npm dedupe` — small consolidation (~1034 → ~1025 lock entries in this pass).
-- Removed direct `devDependencies` `@emnapi/core` and `@emnapi/runtime`. They were previously pinned so Tailwind Oxide / WASI optional natives could resolve on some platforms; on current Node 24 + `@tailwindcss/oxide@4.3.3`, `npm ci`, `npm run build`, and `npm run test:coverage` succeed without those direct pins.
+- Ran `npm dedupe` — small consolidation of the lockfile (fewer duplicate entries).
+- Tried removing direct `devDependencies` `@emnapi/core` and `@emnapi/runtime`. Local Windows `npm ci` / build / coverage looked fine, but **ubuntu-latest CI `npm ci` failed** with `Missing: @emnapi/core@1.11.3 from lock file` (Oxide / optional WASI resolution). **Kept the direct pins.**
 - Kept `@pinia/nuxt`, `pinia-plugin-persistedstate`, and `vue-router` as direct deps (Nuxt modules / peer — see CONTRIBUTING).
-- Re-add emnapi pins only if a future `npm ci` / Oxide install fails on a supported platform.
+- Revisit only when Tailwind Oxide no longer needs these pins on Linux CI.

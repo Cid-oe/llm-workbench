@@ -107,9 +107,10 @@ Examples:
 
 ### Feature + test pairing
 
-- Ship each **feature** or **fix** with the **tests that pin it** in the same PR (and preferably the same focused commit).
+- Ship each **feature** or **fix** with the **tests that pin it** in the same PR (and preferably the same focused commit). Example: `app/lib/*.ts` with `tests/*.test.ts`.
 - Prefer small, reviewable PRs. Do **not** mix bulk formatting, unrelated refactors, and features in one change.
 - If a change is docs- or CI-only, a `docs:` / `ci:` commit without new product tests is fine.
+- **Sustained history:** keep this pairing over weeks and months so the repo shows incremental, testable maintenance — not a one-sprint burst. Do **not** farm artificial commits or fake co-authors. See [`docs/maintenance.md`](docs/maintenance.md).
 
 Pull request commits are checked by the `commitlint` CI job (Dependabot PRs are exempt).
 

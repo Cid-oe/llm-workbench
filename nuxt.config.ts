@@ -43,4 +43,11 @@ export default defineNuxtConfig({
   piniaPluginPersistedstate: {
     storage: 'localStorage',
   },
+
+  runtimeConfig: {
+    public: {
+      // Overridden by NUXT_PUBLIC_SENTRY_DSN when set. Empty = no remote tracking.
+      sentryDsn: '',
+    },
+  },
 })

@@ -75,21 +75,32 @@ Open [http://localhost:3000](http://localhost:3000).
 The browser **Settings vault** is the primary place for API keys. Leave the provider env vars empty for a normal local run; `npm run dev` does not require them.
 ### Docker (one command)
 
+Copy env defaults (provider keys stay empty — not required for boot):
+
 ```bash
+cp .env.example .env
 docker compose up --build
 ```
 
-The production server listens on [http://localhost:3000](http://localhost:3000) and exposes:
+Compose sets `NUXT_APP_BASE_URL=/`, `NUXT_DEVTOOLS=false`, `HOST=0.0.0.0`, and `PORT=3000`. The production server listens on [http://localhost:3000](http://localhost:3000) and exposes:
 
-- `GET /api/health` — liveness
+- `GET /api/health` — liveness (also used by the image `HEALTHCHECK`)
 - `GET /api/metrics` — process uptime and stream counters
 - `POST /api/stream` — LLM stream proxy (no CORS)
+
+Smoke check after boot:
+
+```bash
+curl -fsS http://localhost:3000/api/health
+```
 
 Optional local Ollama:
 
 ```bash
 docker compose --profile ollama up --build
 ```
+
+CI also gates a clean-machine install via the `fresh` job (`npm run verify:fresh`). See [docs/dev-notes.md](docs/dev-notes.md).
 
 ### Configure providers
 
@@ -202,8 +213,10 @@ npm run lint         # ESLint
 npm run typecheck    # vue-tsc via Nuxt
 npm test             # Run unit tests
 npm run test:coverage
+npm run verify:fresh # Clean install → build → coverage (also CI `fresh` job)
 npm run test:watch   # Watch mode
 docker compose up --build
+curl -fsS http://localhost:3000/api/health
 ```
 
 ## Security

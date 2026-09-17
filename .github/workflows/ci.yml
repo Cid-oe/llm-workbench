@@ -37,6 +37,23 @@ jobs:
       - name: Test
         run: npm run test:coverage
 
+  # Dedicated clean-runner gate: do NOT nest verify:fresh after quality's npm ci.
+  # The script itself runs npm ci → build → test:coverage and fails the job on error.
+  fresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Fresh clone verify
+        run: npm run verify:fresh
+
   commitlint:
     if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest

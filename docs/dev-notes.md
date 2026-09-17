@@ -21,6 +21,20 @@ The script runs, in order, and **exits non-zero** on the first failure:
 2. `npm run build` — production Nuxt build
 3. `npm run test:coverage` — unit suite + coverage thresholds
 
+CI runs the same command on a **dedicated** `fresh` job in `.github/workflows/ci.yml` (clean runner — not nested after the `quality` job’s `npm ci`). A failure fails the workflow.
+
+### Docker Compose boot
+
+Production-like stack without live providers:
+
+```bash
+cp .env.example .env   # optional overrides; compose already sets NUXT_* / HOST / PORT
+docker compose up --build
+curl -fsS http://localhost:3000/api/health
+```
+
+Port **3000** must be free. Ollama is optional (`docker compose --profile ollama up --build`).
+
 ### Offline unit tests (no Ollama / API keys)
 
 The default Vitest suite (`npm test`, `npm run test:coverage`) uses **happy-dom** and **mocked `fetch`**. Specs such as `tests/toolCall.test.ts`, `tests/localDiscovery.test.ts`, and provider/stream tests do **not** require:

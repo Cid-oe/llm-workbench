@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- CI `fresh` job gates `npm run verify:fresh`; Docker Compose boot docs aligned ([#67](https://github.com/ale94lko/llm-workbench/issues/67))
 - Sustained paired feature+test history guidance (`docs/maintenance.md` + PR checklist) ([#66](https://github.com/ale94lko/llm-workbench/issues/66))
 - Stream API malformed-input tests and contributor note for POST boundary validation ([#59](https://github.com/ale94lko/llm-workbench/issues/59))
 

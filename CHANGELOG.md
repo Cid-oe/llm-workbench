@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unused direct dependency `class-variance-authority` ([#11](https://github.com/ale94lko/llm-workbench/issues/11))
 
 ### Added
+- Merge requirements in CONTRIBUTING (required `quality` + `commitlint`, optional smoke) ([#58](https://github.com/ale94lko/llm-workbench/issues/58))
 - Fresh-clone verify script (`npm run verify:fresh`) and clean-install notes ([#56](https://github.com/ale94lko/llm-workbench/issues/56))
 - Mock tool/function results for multi-turn Compare follows ([#33](https://github.com/ale94lko/llm-workbench/issues/33))
 - One-click local LLM discovery (Ollama + LM Studio) and air-gapped mode ([#34](https://github.com/ale94lko/llm-workbench/issues/34))

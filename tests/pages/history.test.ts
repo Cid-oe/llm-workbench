@@ -158,4 +158,140 @@ describe('pages/history', () => {
     expect(promptStore.systemPrompt).toBe('From history')
     expect(promptStore.variables.topic).toBe('loaded')
   })
+
+  it('shows assertion PASS/FAIL badges on history entries', async () => {
+    const { wrapper, promptStore } = mountPage()
+    promptStore.$patch({
+      history: [
+        {
+          id: 'pass-h',
+          systemPrompt: 'Sys',
+          userPrompt: 'Passed run',
+          variables: {},
+          models: [],
+          responses: [],
+          assertionSummary: 'pass',
+          createdAt: '2026-09-16T11:00:00.000Z',
+        },
+        {
+          id: 'fail-h',
+          systemPrompt: 'Sys',
+          userPrompt: 'Failed run',
+          variables: {},
+          models: [],
+          responses: [],
+          assertionSummary: 'fail',
+          createdAt: '2026-09-16T10:00:00.000Z',
+        },
+      ],
+    })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('PASS')
+    expect(wrapper.text()).toContain('FAIL')
+  })
+
+  it('exports JSON backup via download click', async () => {
+    const { wrapper, promptStore } = mountPage()
+    promptStore.$patch({
+      history: [{
+        id: 'h1',
+        systemPrompt: 'Sys',
+        userPrompt: 'Export me',
+        variables: {},
+        models: [],
+        responses: [],
+        createdAt: '2026-09-16T11:00:00.000Z',
+      }],
+    })
+
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:backup')
+    const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const click = vi.fn()
+    const originalCreate = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      const el = originalCreate(tag)
+      if (tag === 'a') {
+        Object.defineProperty(el, 'click', { value: click })
+      }
+      return el
+    })
+
+    const exportBtn = wrapper.findAll('button').find(b => b.text().includes('Export JSON'))
+    await exportBtn!.trigger('click')
+    await flushPromises()
+
+    expect(createObjectURL).toHaveBeenCalled()
+    expect(click).toHaveBeenCalled()
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:backup')
+    expect(wrapper.text()).toMatch(/Backup exported/i)
+  })
+
+  it('deletes a saved prompt from the library tab', async () => {
+    const { wrapper, promptStore } = mountPage()
+    promptStore.$patch({
+      savedPrompts: [{
+        id: 's1',
+        name: 'Delete me',
+        systemPrompt: 'Sys',
+        userPrompt: 'Saved prompt',
+        tags: ['demo'],
+        version: 1,
+        createdAt: '2026-09-16T10:00:00.000Z',
+        updatedAt: '2026-09-16T10:00:00.000Z',
+        variables: {},
+        revisions: [],
+      }],
+    })
+    await flushPromises()
+
+    const savedTab = wrapper.findAll('button').find(b => b.text().includes('Saved'))
+    await savedTab!.trigger('click')
+    expect(wrapper.text()).toContain('Delete me')
+
+    // Delete control is icon-only (Trash2), so the button text is empty
+    const deleteBtn = wrapper.findAll('button').find(b => b.text().trim() === '')
+    expect(deleteBtn).toBeTruthy()
+    await deleteBtn!.trigger('click')
+    expect(promptStore.savedPrompts).toHaveLength(0)
+  })
+
+  it('downloads a .prompt file for a saved prompt', async () => {
+    const { wrapper, promptStore } = mountPage()
+    promptStore.$patch({
+      savedPrompts: [{
+        id: 's1',
+        name: 'Pack',
+        systemPrompt: 'Sys',
+        userPrompt: 'Saved body',
+        tags: [],
+        version: 2,
+        createdAt: '2026-09-16T10:00:00.000Z',
+        updatedAt: '2026-09-16T10:00:00.000Z',
+        variables: {},
+        revisions: [],
+      }],
+    })
+    await flushPromises()
+
+    const savedTab = wrapper.findAll('button').find(b => b.text().includes('Saved'))
+    await savedTab!.trigger('click')
+
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:prompt')
+    const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const click = vi.fn()
+    const originalCreate = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      const el = originalCreate(tag)
+      if (tag === 'a') Object.defineProperty(el, 'click', { value: click })
+      return el
+    })
+
+    const downloadBtn = wrapper.findAll('button').find(b => b.text().includes('.prompt'))
+    await downloadBtn!.trigger('click')
+
+    expect(createObjectURL).toHaveBeenCalled()
+    expect(click).toHaveBeenCalled()
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:prompt')
+  })
 })

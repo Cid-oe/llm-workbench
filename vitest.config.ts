@@ -38,13 +38,13 @@ export default defineConfig({
         'app/components/playground/PromptVersionDiff.vue',
       ],
       // Global gates (not per-file). Unmet thresholds make Vitest exit non-zero → CI fails.
-      // Branches stay at 50% (honest floor); see #29 / #68.
+      // Raised after hotspot coverage pass (#71); branches stay below lines on purpose.
       thresholds: {
         perFile: false,
-        lines: 60,
-        functions: 60,
-        statements: 60,
-        branches: 50,
+        lines: 70,
+        functions: 70,
+        statements: 70,
+        branches: 55,
       },
     },
   },

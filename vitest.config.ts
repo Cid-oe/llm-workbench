@@ -37,7 +37,10 @@ export default defineConfig({
         'app/components/metrics/LatencyTimeline.vue',
         'app/components/playground/PromptVersionDiff.vue',
       ],
+      // Global gates (not per-file). Unmet thresholds make Vitest exit non-zero → CI fails.
+      // Branches stay at 50% (honest floor); see #29 / #68.
       thresholds: {
+        perFile: false,
         lines: 60,
         functions: 60,
         statements: 60,

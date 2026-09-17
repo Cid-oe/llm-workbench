@@ -23,6 +23,23 @@ The script runs, in order, and **exits non-zero** on the first failure:
 
 CI runs the same command on a **dedicated** `fresh` job in `.github/workflows/ci.yml` (clean runner — not nested after the `quality` job’s `npm ci`). A failure fails the workflow.
 
+### Coverage thresholds (fail the build)
+
+`vitest.config.ts` sets global thresholds (`perFile: false`):
+
+| Metric | Minimum |
+| :--- | ---: |
+| lines / functions / statements | 60% |
+| branches | 50% |
+
+If any threshold is unmet, Vitest exits **non-zero**. That fails:
+
+- local `npm run test:coverage`
+- CI `quality` Test step
+- CI `fresh` (`verify:fresh` includes coverage)
+
+Do not lower these numbers to greenwash; raise them only when the suite sustains the higher floor.
+
 ### Docker Compose boot
 
 Production-like stack without live providers:

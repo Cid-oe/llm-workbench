@@ -58,7 +58,7 @@ CI runs lint, typecheck, tests with coverage, `npm audit --audit-level=high`, an
 - **`Deploy to GitHub Pages`** (`.github/workflows/deploy-pages.yml`) does **not** re-run that gate on push to `main`. It starts via `workflow_run` after a successful **CI** run that was a **push to `main`**, checks out that exact commit, then only generates and publishes the static site.
 - Failed CI on `main` blocks deploy. Manual `workflow_dispatch` on the deploy workflow still runs the full quality steps before `npm run generate`, so a broken site cannot be published that way either.
 - Vitest uses `pool: 'threads'` with `isolate: false` to cut happy-dom startup cost; `tests/setup.ts` resets storage per test. Prefer not to rely on order-dependent global state.
-- Coverage thresholds enforce lines/functions/statements (≥60%) and branches (≥50%).
+- Coverage thresholds enforce lines/functions/statements (≥60%) and branches (≥50%) via `vitest.config.ts` (`perFile: false`). Unmet thresholds make `npm run test:coverage` exit non-zero, so the CI `quality` / `fresh` jobs fail. Do not lower thresholds just to pass.
 
 ### Smoke E2E (static Pages output)
 

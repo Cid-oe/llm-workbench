@@ -75,4 +75,45 @@ describe('validateStreamRequest', () => {
       ollamaUrl: 'not-a-url',
     }).ok).toBe(false)
   })
+
+  it('rejects invalid LM Studio URLs and non-string apiKey', () => {
+    const badLm = validateStreamRequest({
+      provider: 'lmstudio',
+      model: 'local',
+      systemPrompt: '',
+      userPrompt: 'Hi',
+      lmStudioUrl: 'ftp://localhost:1234',
+    })
+    expect(badLm.ok).toBe(false)
+    if (!badLm.ok) expect(badLm.error).toMatch(/lmStudioUrl/i)
+
+    const badKey = validateStreamRequest({ ...valid, apiKey: 42 })
+    expect(badKey.ok).toBe(false)
+    if (!badKey.ok) expect(badKey.error).toMatch(/apiKey/i)
+  })
+
+  it('returns structured error messages for null/primitive bodies', () => {
+    expect(validateStreamRequest(null)).toEqual({
+      ok: false,
+      error: 'Request body must be an object',
+    })
+    expect(validateStreamRequest('oops')).toEqual({
+      ok: false,
+      error: 'Request body must be an object',
+    })
+    expect(validateStreamRequest(undefined)).toEqual({
+      ok: false,
+      error: 'Request body must be an object',
+    })
+  })
+
+  it('rejects NaN and Infinity sampling fields with field names', () => {
+    const hot = validateStreamRequest({ ...valid, temperature: Number.NaN })
+    expect(hot.ok).toBe(false)
+    if (!hot.ok) expect(hot.error).toBe('temperature must be a finite number')
+
+    const huge = validateStreamRequest({ ...valid, maxTokens: Number.POSITIVE_INFINITY })
+    expect(huge.ok).toBe(false)
+    if (!huge.ok) expect(huge.error).toBe('maxTokens must be a finite number')
+  })
 })

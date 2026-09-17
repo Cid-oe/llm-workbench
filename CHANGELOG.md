@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Stream API malformed-input tests and contributor note for POST boundary validation ([#59](https://github.com/ale94lko/llm-workbench/issues/59))
+
 ## [0.2.0] - 2026-09-17
 
 Second tagged milestone: Compare power tools, vault UX, local discovery, CI/docs hardening, and file-size refactors.

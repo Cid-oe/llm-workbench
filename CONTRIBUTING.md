@@ -155,7 +155,18 @@ Settings UI: [Branch protection rules](https://github.com/ale94lko/llm-workbench
 
 ## Releases
 
-This project uses [Semantic Versioning](https://semver.org/). Notable changes live in [`CHANGELOG.md`](CHANGELOG.md). Maintainers cut annotated tags (`v0.1.0`, …) from `main` and publish matching GitHub Releases from the changelog section.
+This project uses [Semantic Versioning](https://semver.org/). Notable changes live in [`CHANGELOG.md`](CHANGELOG.md).
+
+**Cadence:** cut a tag when a meaningful batch has landed on `main` (for example `v0.2.0`, `v0.3.0`, …). Prefer small focused PRs between cuts; do not farm artificial commits for history.
+
+**Process (summary):**
+
+1. Move `[Unreleased]` entries into a dated `## [X.Y.Z] - YYYY-MM-DD` section in `CHANGELOG.md`; leave an empty `[Unreleased]`.
+2. Bump `"version"` in `package.json` to `X.Y.Z`.
+3. Merge that release PR to `main`, then create an annotated tag `vX.Y.Z` and push it.
+4. Publish a GitHub Release whose notes are the matching changelog section.
+
+Full maintainer steps and checklist: [`docs/releasing.md`](docs/releasing.md).
 
 ## Dependencies
 

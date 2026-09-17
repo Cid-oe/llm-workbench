@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-17
+
+Second tagged milestone: Compare power tools, vault UX, local discovery, CI/docs hardening, and file-size refactors.
+
 ### Changed
 - Split oversized `useCodeExporter` into `app/lib/exporters/*` and extract Compare run orchestration into `useCompareRunner` so both stay under ~500 LOC ([#57](https://github.com/ale94lko/llm-workbench/issues/57))
 - Pages deploy waits on successful CI for `main` instead of re-running the quality gate; Vitest uses shared-thread pool; branch coverage threshold ≥50% ([#29](https://github.com/ale94lko/llm-workbench/issues/29))
@@ -21,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unused direct dependency `class-variance-authority` ([#11](https://github.com/ale94lko/llm-workbench/issues/11))
 
 ### Added
+- Documented release cadence and maintainer cut steps ([#60](https://github.com/ale94lko/llm-workbench/issues/60))
 - Merge requirements in CONTRIBUTING (required `quality` + `commitlint`, optional smoke) ([#58](https://github.com/ale94lko/llm-workbench/issues/58))
 - Fresh-clone verify script (`npm run verify:fresh`) and clean-install notes ([#56](https://github.com/ale94lko/llm-workbench/issues/56))
 - Mock tool/function results for multi-turn Compare follows ([#33](https://github.com/ale94lko/llm-workbench/issues/33))
@@ -71,5 +76,6 @@ First tagged milestone after env onboarding docs, Vue coverage, typed stream err
 - Code exporter now emits environment-variable placeholders (`process.env.*`, `os.environ[...]`, `$VAR`, `getenv(...)`) instead of interpolating API keys into snippets
 - Stream/client failures use typed `StreamError` with log-safe serialization; logger redaction documented in the README ([#10](https://github.com/ale94lko/llm-workbench/issues/10))
 
-[Unreleased]: https://github.com/ale94lko/llm-workbench/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/ale94lko/llm-workbench/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/ale94lko/llm-workbench/releases/tag/v0.2.0
 [0.1.0]: https://github.com/ale94lko/llm-workbench/releases/tag/v0.1.0

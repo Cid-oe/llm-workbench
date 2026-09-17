@@ -180,7 +180,7 @@ Full maintainer steps and checklist: [`docs/releasing.md`](docs/releasing.md).
 - Direct packages that look unused to static scanners but are required:
   - `@pinia/nuxt` and `pinia-plugin-persistedstate` — loaded as Nuxt modules in `nuxt.config.ts`
   - `vue-router` — Nuxt peer / runtime router (not imported directly in app code)
-  - `@emnapi/core` and `@emnapi/runtime` — required so `npm ci` can resolve Tailwind Oxide / WASI optional deps in the lockfile
+  - `@emnapi/core` and `@emnapi/runtime` — direct pins so Linux `npm ci` can resolve Tailwind Oxide / WASI optional natives in the lockfile (do not remove without verifying CI on ubuntu-latest)
 ## Security reports
 
 Please do not open public issues for vulnerabilities. Follow [SECURITY.md](SECURITY.md).

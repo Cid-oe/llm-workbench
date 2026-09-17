@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Audited transitive deps: `npm dedupe` on the lockfile; kept `@emnapi/*` direct pins (required for Linux `npm ci` / Oxide lock sync) ([#70](https://github.com/ale94lko/llm-workbench/issues/70))
+
 ### Added
 - Documented that Vitest coverage thresholds fail CI (`perFile: false` + ci.yml comment) ([#68](https://github.com/ale94lko/llm-workbench/issues/68))
 - CI `fresh` job gates `npm run verify:fresh`; Docker Compose boot docs aligned ([#67](https://github.com/ale94lko/llm-workbench/issues/67))

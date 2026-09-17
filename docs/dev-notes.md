@@ -32,3 +32,29 @@ The default Vitest suite (`npm test`, `npm run test:coverage`) uses **happy-dom*
 Optional runtime features (Detect local LLMs, Compare against cloud providers, Playwright smoke against static Pages) need a browser and/or local servers; they are outside this fresh-clone gate.
 
 Playwright smoke (`npm run test:e2e:smoke`) needs a prior `npm run generate` and Chromium; it is covered separately by `.github/workflows/smoke-e2e.yml` (non-blocking).
+
+## API input validation
+
+Every **POST** (or other body-bearing) Nitro handler under `server/api/` must validate the body at the boundary before calling providers or mutating state.
+
+Pattern used by `server/api/stream.post.ts`:
+
+1. `const body = await readBody(event)`
+2. Run a dedicated validator (for stream: `validateStreamRequest` in `app/lib/validateStreamRequest.ts`)
+3. On failure: `throw createError({ statusCode: 400, message: parsed.error })` — structured client error, not an unhandled throw
+4. Only then call upstream `fetch` / business logic
+
+Coverage lives in:
+
+- `tests/api/stream.test.ts` — malformed bodies → structured 400, no upstream fetch
+- `tests/validateStreamRequest.test.ts` — validator edge cases
+- `tests/server/stream.post.test.ts` — happy path + upstream error mapping
+
+### GET-only routes (no body schema)
+
+These handlers take **no request body** today; do not invent a body schema for them unless they gain write semantics:
+
+- `server/api/health.get.ts` — liveness/uptime snapshot
+- `server/api/metrics.get.ts` — runtime counters
+
+If you add a new write endpoint, copy the stream validation pattern (or share a small schema helper) and add a paired unit test for the 400 path.

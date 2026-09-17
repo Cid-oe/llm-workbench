@@ -113,6 +113,37 @@ Examples:
 
 Pull request commits are checked by the `commitlint` CI job (Dependabot PRs are exempt).
 
+## Merge requirements
+
+Merges into `main` go through a pull request. Do not push directly to `main`.
+
+### Required status checks
+
+These CI jobs from [`.github/workflows/ci.yml`](.github/workflows/ci.yml) must be green before merge:
+
+| Check | What it enforces |
+| :--- | :--- |
+| `quality` | `npm audit --audit-level=high`, lint, typecheck, and `npm run test:coverage` |
+| `commitlint` | Conventional Commits on PR commits (Dependabot PRs are exempt; see [Commit style](#commit-style-conventional-commits)) |
+
+Also follow [Feature + test pairing](#feature--test-pairing): ship behavior changes with the tests that pin them in the same PR.
+
+### Optional / non-blocking
+
+- **`smoke`** (`.github/workflows/smoke-e2e.yml`) — Playwright smoke against static `generate` output. Uses `continue-on-error: true` and must **not** be a required status check until it is promoted.
+- **Dependency freshness** — weekly `npm outdated` summary; never blocks merge.
+
+### Maintainer: branch protection on `main`
+
+Branch protection is configured in GitHub **Settings → Branches** (not fully expressible in-repo). Maintainers should keep:
+
+- [ ] Require a pull request before merging
+- [ ] Require status checks to pass before merging: `quality`, `commitlint`
+- [ ] Do **not** require `smoke` (optional / `continue-on-error`)
+- [ ] Prefer squash merges so `main` history stays linear and changelog-friendly
+
+Settings UI: [Branch protection rules](https://github.com/ale94lko/llm-workbench/settings/branches).
+
 ## Workflow
 
 1. Search [existing issues](https://github.com/ale94lko/llm-workbench/issues) before opening a new one. Use an [issue form](https://github.com/ale94lko/llm-workbench/issues/new/choose) when creating one.

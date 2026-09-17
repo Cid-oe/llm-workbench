@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- Direct `@emnapi/core` / `@emnapi/runtime` pins after confirming Oxide install works without them ([#70](https://github.com/ale94lko/llm-workbench/issues/70))
+
+### Changed
+- Deduped `package-lock.json` (~9 fewer `node_modules` entries) ([#70](https://github.com/ale94lko/llm-workbench/issues/70))
+
 ### Added
 - Documented that Vitest coverage thresholds fail CI (`perFile: false` + ci.yml comment) ([#68](https://github.com/ale94lko/llm-workbench/issues/68))
 - CI `fresh` job gates `npm run verify:fresh`; Docker Compose boot docs aligned ([#67](https://github.com/ale94lko/llm-workbench/issues/67))

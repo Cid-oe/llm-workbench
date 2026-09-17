@@ -89,3 +89,14 @@ These handlers take **no request body** today; do not invent a body schema for t
 - `server/api/metrics.get.ts` — runtime counters
 
 If you add a new write endpoint, copy the stream validation pattern (or share a small schema helper) and add a paired unit test for the 400 path.
+
+## Dependency audit notes
+
+Nuxt + Tailwind Vite pull a large transitive tree (~1000 lockfile `node_modules` entries). That is expected for this stack; we keep a **single npm lockfile** and do not chase yarn/pnpm solely for optics.
+
+Audit (#70):
+
+- Ran `npm dedupe` — small consolidation (~1034 → ~1025 lock entries in this pass).
+- Removed direct `devDependencies` `@emnapi/core` and `@emnapi/runtime`. They were previously pinned so Tailwind Oxide / WASI optional natives could resolve on some platforms; on current Node 24 + `@tailwindcss/oxide@4.3.3`, `npm ci`, `npm run build`, and `npm run test:coverage` succeed without those direct pins.
+- Kept `@pinia/nuxt`, `pinia-plugin-persistedstate`, and `vue-router` as direct deps (Nuxt modules / peer — see CONTRIBUTING).
+- Re-add emnapi pins only if a future `npm ci` / Oxide install fails on a supported platform.

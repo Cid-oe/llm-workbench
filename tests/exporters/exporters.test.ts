@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { envVarName, exportCode } from '~/lib/exporters'
 import type { ExportLanguage } from '~/lib/exporters'
+import {
+  formatCurlHeaders,
+  formatJsHeaders,
+  getBaseUrl,
+  phpHeadersArray,
+} from '~/lib/exporters/shared'
+import type { ProviderId } from '~/types/llm'
 
 describe('lib/exporters', () => {
   const baseOpts = {
@@ -11,11 +18,157 @@ describe('lib/exporters', () => {
   }
 
   const languages: ExportLanguage[] = ['javascript', 'python', 'curl', 'php']
+  const providers: ProviderId[] = ['openai', 'anthropic', 'gemini', 'groq', 'ollama', 'lmstudio']
 
   it.each(languages)('exports a non-empty %s snippet for OpenAI', (language) => {
     const code = exportCode(language, baseOpts)
     expect(code.length).toBeGreaterThan(20)
     expect(code).toContain('gpt-4o-mini')
+  })
+
+  it.each(providers)('javascript covers provider %s', (provider) => {
+    const code = exportCode('javascript', {
+      ...baseOpts,
+      provider,
+      model: provider === 'ollama' ? 'llama3.2' : provider === 'lmstudio' ? 'local-model' : baseOpts.model,
+      ollamaUrl: 'http://localhost:11434',
+      lmStudioUrl: 'http://localhost:1234',
+    })
+    expect(code.length).toBeGreaterThan(20)
+    expect(code).toContain('fetch(')
+
+    if (provider === 'ollama') {
+      expect(code).toContain('http://localhost:11434/api/chat')
+      expect(code).toContain('num_predict')
+    }
+    else if (provider === 'lmstudio') {
+      expect(code).toContain('http://localhost:1234/v1/chat/completions')
+      expect(code).toContain("Authorization: 'Bearer lm-studio'")
+    }
+    else if (provider === 'anthropic') {
+      expect(code).toContain('https://api.anthropic.com/v1/messages')
+      expect(code).toContain('process.env.ANTHROPIC_API_KEY')
+      expect(code).toContain("'anthropic-version': '2023-06-01'")
+    }
+    else if (provider === 'gemini') {
+      expect(code).toContain('generativelanguage.googleapis.com')
+      expect(code).toContain('process.env.GEMINI_API_KEY')
+      expect(code).toContain('systemInstruction')
+    }
+    else if (provider === 'groq') {
+      expect(code).toContain('https://api.groq.com/openai/v1/chat/completions')
+      expect(code).toContain('process.env.GROQ_API_KEY')
+    }
+    else {
+      expect(code).toContain('process.env.OPENAI_API_KEY')
+      expect(code).toContain('https://api.openai.com/v1/chat/completions')
+    }
+  })
+
+  it.each(providers)('curl covers provider %s', (provider) => {
+    const code = exportCode('curl', {
+      ...baseOpts,
+      provider,
+      model: provider === 'gemini' ? 'gemini-2.0-flash' : baseOpts.model,
+      ollamaUrl: 'http://localhost:11434',
+      lmStudioUrl: 'http://localhost:1234',
+    })
+    expect(code).toMatch(/^curl /)
+
+    if (provider === 'ollama') {
+      expect(code).toContain('http://localhost:11434/api/chat')
+    }
+    else if (provider === 'lmstudio') {
+      expect(code).toContain('http://localhost:1234/v1/chat/completions')
+      expect(code).toContain('Authorization: Bearer lm-studio')
+    }
+    else if (provider === 'gemini') {
+      expect(code).toContain('generativelanguage.googleapis.com')
+      expect(code).toContain('$GEMINI_API_KEY')
+      expect(code).toContain('systemInstruction')
+    }
+    else if (provider === 'anthropic') {
+      expect(code).toContain('https://api.anthropic.com/v1/messages')
+      expect(code).toContain('$ANTHROPIC_API_KEY')
+      expect(code).toContain('anthropic-version: 2023-06-01')
+    }
+    else if (provider === 'groq') {
+      expect(code).toContain('https://api.groq.com/openai/v1/chat/completions')
+      expect(code).toContain('$GROQ_API_KEY')
+    }
+    else {
+      expect(code).toContain('https://api.openai.com')
+      expect(code).toContain('$OPENAI_API_KEY')
+    }
+  })
+
+  it.each(providers)('php covers provider %s', (provider) => {
+    const code = exportCode('php', {
+      ...baseOpts,
+      provider,
+      ollamaUrl: 'http://localhost:11434',
+      lmStudioUrl: 'http://localhost:1234',
+    })
+    expect(code).toContain('curl_init')
+    expect(code).toContain('CURLOPT_HTTPHEADER')
+
+    if (provider === 'ollama') {
+      expect(code).toContain('http://localhost:11434/api/chat')
+      expect(code).toContain('num_predict')
+    }
+    else if (provider === 'lmstudio') {
+      expect(code).toContain('http://localhost:1234/v1/chat/completions')
+      expect(code).toContain('Authorization: Bearer lm-studio')
+    }
+    else if (provider === 'anthropic') {
+      expect(code).toContain("getenv('ANTHROPIC_API_KEY')")
+      expect(code).toContain('anthropic-version: 2023-06-01')
+    }
+    else if (provider === 'gemini') {
+      expect(code).toContain("getenv('GEMINI_API_KEY')")
+      expect(code).toContain('systemInstruction')
+    }
+    else if (provider === 'groq') {
+      expect(code).toContain("getenv('GROQ_API_KEY')")
+    }
+    else {
+      expect(code).toContain("getenv('OPENAI_API_KEY')")
+    }
+  })
+
+  it.each(providers)('python covers provider %s', (provider) => {
+    const code = exportCode('python', {
+      ...baseOpts,
+      provider,
+      ollamaUrl: 'http://localhost:11434',
+      lmStudioUrl: 'http://localhost:1234',
+    })
+    expect(code.length).toBeGreaterThan(20)
+
+    if (provider === 'openai') {
+      expect(code).toContain("os.environ['OPENAI_API_KEY']")
+      expect(code).toContain('from openai import OpenAI')
+    }
+    else if (provider === 'anthropic') {
+      expect(code).toContain("os.environ['ANTHROPIC_API_KEY']")
+      expect(code).toContain('import anthropic')
+    }
+    else if (provider === 'groq') {
+      expect(code).toContain("os.environ['GROQ_API_KEY']")
+      expect(code).toContain('https://api.groq.com/openai/v1')
+    }
+    else if (provider === 'gemini') {
+      expect(code).toContain("os.environ['GEMINI_API_KEY']")
+      expect(code).toContain('from google import genai')
+    }
+    else if (provider === 'ollama') {
+      expect(code).toContain('http://localhost:11434/api/chat')
+      expect(code).toContain('import requests')
+    }
+    else {
+      expect(code).toContain('http://localhost:1234/v1/chat/completions')
+      expect(code).toContain('Bearer lm-studio')
+    }
   })
 
   it('javascript uses process.env placeholder', () => {
@@ -47,5 +200,43 @@ describe('lib/exporters', () => {
     expect(envVarName('anthropic')).toBe('ANTHROPIC_API_KEY')
     expect(envVarName('gemini')).toBe('GEMINI_API_KEY')
     expect(envVarName('groq')).toBe('GROQ_API_KEY')
+  })
+})
+
+describe('lib/exporters/shared', () => {
+  it('getBaseUrl returns provider endpoints', () => {
+    expect(getBaseUrl('openai')).toBe('https://api.openai.com/v1/chat/completions')
+    expect(getBaseUrl('anthropic')).toBe('https://api.anthropic.com/v1/messages')
+    expect(getBaseUrl('groq')).toBe('https://api.groq.com/openai/v1/chat/completions')
+    expect(getBaseUrl('gemini', 'gemini-2.0-flash')).toContain('gemini-2.0-flash:streamGenerateContent')
+    expect(getBaseUrl('lmstudio', undefined, 'http://localhost:1234/')).toBe(
+      'http://localhost:1234/v1/chat/completions',
+    )
+    expect(getBaseUrl('ollama')).toBe('')
+  })
+
+  it('formatJsHeaders for each cloud provider', () => {
+    expect(formatJsHeaders('openai')).toContain("Authorization: 'Bearer ' + process.env.OPENAI_API_KEY")
+    expect(formatJsHeaders('groq')).toContain("Authorization: 'Bearer ' + process.env.GROQ_API_KEY")
+    expect(formatJsHeaders('anthropic')).toContain("'x-api-key': process.env.ANTHROPIC_API_KEY")
+    expect(formatJsHeaders('anthropic')).toContain("'anthropic-version': '2023-06-01'")
+    expect(formatJsHeaders('gemini')).toContain("'x-goog-api-key': process.env.GEMINI_API_KEY")
+  })
+
+  it('formatCurlHeaders for each cloud provider', () => {
+    expect(formatCurlHeaders('openai')).toContain('-H "Authorization: Bearer $OPENAI_API_KEY"')
+    expect(formatCurlHeaders('groq')).toContain('-H "Authorization: Bearer $GROQ_API_KEY"')
+    expect(formatCurlHeaders('anthropic')).toContain('-H "x-api-key: $ANTHROPIC_API_KEY"')
+    expect(formatCurlHeaders('anthropic')).toContain('-H "anthropic-version: 2023-06-01"')
+    expect(formatCurlHeaders('gemini')).toContain('-H "x-goog-api-key: $GEMINI_API_KEY"')
+  })
+
+  it('phpHeadersArray for cloud, ollama, and lmstudio', () => {
+    expect(phpHeadersArray('openai')).toContain("Authorization: Bearer ' . getenv('OPENAI_API_KEY')")
+    expect(phpHeadersArray('groq')).toContain("Authorization: Bearer ' . getenv('GROQ_API_KEY')")
+    expect(phpHeadersArray('anthropic')).toContain("x-api-key: ' . getenv('ANTHROPIC_API_KEY')")
+    expect(phpHeadersArray('gemini')).toContain("x-goog-api-key: ' . getenv('GEMINI_API_KEY')")
+    expect(phpHeadersArray('lmstudio')).toContain("'Authorization: Bearer lm-studio'")
+    expect(phpHeadersArray('ollama')).toBe("[\n    'Content-Type: application/json',\n]")
   })
 })

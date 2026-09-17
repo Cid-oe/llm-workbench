@@ -27,8 +27,14 @@ vi.stubGlobal('useSecurityStore', useSecurityStore)
 const memory = new Map<string, string>()
 const sessionMemory = new Map<string, string>()
 
-function storageStub(store: Map<string, string>) {
+function storageStub(store: Map<string, string>): Storage {
   return {
+    get length() {
+      return store.size
+    },
+    key(index: number) {
+      return [...store.keys()][index] ?? null
+    },
     getItem: (key: string) => store.get(key) ?? null,
     setItem: (key: string, value: string) => { store.set(key, value) },
     removeItem: (key: string) => { store.delete(key) },

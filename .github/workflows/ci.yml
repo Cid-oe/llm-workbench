@@ -34,7 +34,7 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      # Coverage thresholds (vitest.config.ts): lines/functions/statements ≥60%, branches ≥50%.
+      # Coverage thresholds (vitest.config.ts): lines/functions/statements ≥70%, branches ≥55%.
       # Vitest exits non-zero if unmet → this step fails the quality job (and thus the workflow).
       - name: Test
         run: npm run test:coverage

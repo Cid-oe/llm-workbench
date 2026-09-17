@@ -146,4 +146,57 @@ describe('streamClient', () => {
     expect(callbacks.error?.code).toBe('validation')
     expect(callbacks.error?.message).toMatch(/provider/i)
   })
+
+  it('rejects missing model with validation error', async () => {
+    const callbacks = collectCallbacks()
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+
+    await streamCompletionDirect({
+      ...openaiRequest,
+      model: '   ',
+    }, callbacks)
+
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(callbacks.error?.code).toBe('validation')
+    expect(callbacks.error?.message).toMatch(/model/i)
+  })
+
+  it('reports no_stream when response has no body', async () => {
+    const callbacks = collectCallbacks()
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 200 })))
+
+    await streamCompletionDirect(openaiRequest, callbacks)
+
+    expect(callbacks.error).toBeInstanceOf(StreamError)
+    expect(callbacks.error?.code).toBe('no_stream')
+    expect(callbacks.error?.message).toMatch(/no response stream/i)
+    expect(callbacks.done).toBe(false)
+  })
+
+  it('maps network TypeError to cors hint', async () => {
+    const callbacks = collectCallbacks()
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      throw new TypeError('Failed to fetch')
+    }))
+
+    await streamCompletionDirect(openaiRequest, callbacks)
+
+    expect(callbacks.error).toBeInstanceOf(StreamError)
+    expect(callbacks.error?.code).toBe('network')
+    expect(callbacks.error?.message).toMatch(/Network error:/)
+    expect(callbacks.error?.message).toMatch(/stream proxy|browser requests/i)
+  })
+
+  it('maps Ollama network TypeError to OLLAMA_ORIGINS hint', async () => {
+    const callbacks = collectCallbacks()
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      throw new TypeError('Failed to fetch')
+    }))
+
+    await streamCompletionDirect(ollamaRequest, callbacks)
+
+    expect(callbacks.error?.code).toBe('network')
+    expect(callbacks.error?.message).toMatch(/OLLAMA_ORIGINS/)
+  })
 })

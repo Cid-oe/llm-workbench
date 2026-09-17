@@ -1,6 +1,7 @@
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue'
 import { beforeEach, vi } from 'vitest'
 import { useCodeExporter } from '../app/composables/useCodeExporter'
+import { useCompareRunner } from '../app/composables/useCompareRunner'
 import { useCostCalculator } from '../app/composables/useCostCalculator'
 import { usePromptStore } from '../app/stores/usePromptStore'
 import { useProviderStore } from '../app/stores/useProviderStore'
@@ -18,6 +19,7 @@ vi.stubGlobal('definePageMeta', () => undefined)
 vi.stubGlobal('navigateTo', vi.fn())
 vi.stubGlobal('useCostCalculator', useCostCalculator)
 vi.stubGlobal('useCodeExporter', useCodeExporter)
+vi.stubGlobal('useCompareRunner', useCompareRunner)
 vi.stubGlobal('usePromptStore', usePromptStore)
 vi.stubGlobal('useProviderStore', useProviderStore)
 vi.stubGlobal('useSecurityStore', useSecurityStore)

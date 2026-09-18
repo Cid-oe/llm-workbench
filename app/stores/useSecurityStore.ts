@@ -11,6 +11,7 @@ import {
   purgeLegacyPersistedCryptoKey,
   type ApiKeysPayload,
 } from '~/lib/crypto'
+import { useVaultStore } from './useVaultStore'
 
 export const useSecurityStore = defineStore('security', {
   state: () => ({
@@ -52,7 +53,7 @@ export const useSecurityStore = defineStore('security', {
       this.isUnlocked = true
 
       await saveSessionCryptoKey(key)
-      await useProviderStore().encryptAndPersistKeys()
+      await useVaultStore().encryptAndPersistKeys()
     },
 
     async unlock(password: string): Promise<boolean> {
@@ -64,9 +65,9 @@ export const useSecurityStore = defineStore('security', {
       this.isUnlocked = true
       await saveSessionCryptoKey(key)
 
-      const provider = useProviderStore()
-      if (provider.encryptedPayload) {
-        await provider.decryptKeys(key)
+      const vault = useVaultStore()
+      if (vault.encryptedPayload) {
+        await vault.decryptKeys(key)
       }
       return true
     },
@@ -99,18 +100,18 @@ export const useSecurityStore = defineStore('security', {
       // Drop the previous session key before writing the rotated one.
       clearSessionCryptoKey()
       await saveSessionCryptoKey(key)
-      await useProviderStore().encryptAndPersistKeys()
+      await useVaultStore().encryptAndPersistKeys()
       return true
     },
 
     /** Restore sessionStorage key only — cold starts require an explicit unlock */
     async bootstrapKeys(): Promise<void> {
-      const provider = useProviderStore()
+      const vault = useVaultStore()
       const hasAnyKey = !!(
-        provider.openaiKey
-        || provider.anthropicKey
-        || provider.geminiKey
-        || provider.groqKey
+        vault.openaiKey
+        || vault.anthropicKey
+        || vault.geminiKey
+        || vault.groqKey
       )
 
       if (!this.hasMasterPassword) return
@@ -122,8 +123,8 @@ export const useSecurityStore = defineStore('security', {
 
       this._cryptoKey = cryptoKey
 
-      if (!hasAnyKey && provider.encryptedPayload) {
-        await provider.decryptKeys(cryptoKey)
+      if (!hasAnyKey && vault.encryptedPayload) {
+        await vault.decryptKeys(cryptoKey)
       }
     },
   },

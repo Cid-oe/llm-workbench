@@ -72,6 +72,57 @@ jobs:
       - name: Fresh clone verify
         run: npm run verify:fresh
 
+  # Documented Compose path: .env.example → .env, no Ollama profile, /api/health must respond.
+  # Runs in parallel with quality/test/fresh (does not wait on them); still fails the workflow.
+  docker-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build app image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: llm-workbench:local
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Copy env defaults
+        run: cp .env.example .env
+
+      - name: Start Compose
+        run: docker compose up -d --no-build
+
+      - name: Wait for /api/health
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 36); do
+            if curl -fsS http://localhost:3000/api/health; then
+              echo
+              curl -fsS -o /dev/null -w "GET / → %{http_code}\n" http://localhost:3000/
+              exit 0
+            fi
+            echo "attempt ${i}/36: /api/health not ready yet"
+            sleep 5
+          done
+          echo "::error::Compose /api/health did not become ready in time"
+          docker compose ps
+          docker compose logs
+          exit 1
+
+      - name: Tear down Compose
+        if: always()
+        run: docker compose down -v
+
   commitlint:
     if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest

@@ -10,7 +10,7 @@ LLM Workbench follows [Semantic Versioning](https://semver.org/) and [Keep a Cha
 
 ## Steps (maintainers)
 
-1. Ensure `main` is green (`quality`, `test`, and `fresh` CI) and you are on an up-to-date local `main`.
+1. Ensure `main` is green (`quality`, `test`, `fresh`, and `docker-smoke` CI) and you are on an up-to-date local `main`.
 2. Open a short release PR that:
    - Moves entries under `## [Unreleased]` into a new dated section `## [X.Y.Z] - YYYY-MM-DD`.
    - Leaves an empty `## [Unreleased]` heading for the next cycle.

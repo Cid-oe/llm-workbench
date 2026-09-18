@@ -54,7 +54,7 @@ CI runs lint, typecheck, tests with coverage, `npm audit --audit-level=high`, an
 
 ### CI vs GitHub Pages deploy
 
-- **`CI`** (`.github/workflows/ci.yml`) is the quality gate on pull requests and pushes to `main`: `quality` (audit, lint, typecheck), a dedicated `test` job (`npm run test:coverage`), plus `fresh` (`npm run verify:fresh` on a clean runner).
+- **`CI`** (`.github/workflows/ci.yml`) is the quality gate on pull requests and pushes to `main`: `quality` (audit, lint, typecheck), a dedicated `test` job (`npm run test:coverage`), `fresh` (`npm run verify:fresh` on a clean runner), plus `docker-smoke` (Compose boot + `/api/health`).
 - **`Deploy to GitHub Pages`** (`.github/workflows/deploy-pages.yml`) does **not** re-run that gate on push to `main`. It starts via `workflow_run` after a successful **CI** run that was a **push to `main`**, checks out that exact commit, then only generates and publishes the static site.
 - Failed CI on `main` blocks deploy. Manual `workflow_dispatch` on the deploy workflow still runs the full quality steps before `npm run generate`, so a broken site cannot be published that way either.
 - Vitest uses `pool: 'threads'` with `isolate: false` to cut happy-dom startup cost; `tests/setup.ts` resets storage per test. Prefer not to rely on order-dependent global state.
@@ -129,6 +129,7 @@ These CI jobs from [`.github/workflows/ci.yml`](.github/workflows/ci.yml) must b
 | `quality` | `npm audit --audit-level=high`, lint, and typecheck |
 | `test` | `npm run test:coverage` (Vitest thresholds fail the job) |
 | `fresh` | Clean-runner `npm run verify:fresh` (`npm ci` → build → coverage); fails the workflow on error |
+| `docker-smoke` | Compose boot from `.env.example` → `.env`; fails if `/api/health` never becomes ready |
 | `commitlint` | Conventional Commits on PR commits (Dependabot PRs are exempt; see [Commit style](#commit-style-conventional-commits)) |
 
 Also follow [Feature + test pairing](#feature--test-pairing): ship behavior changes with the tests that pin them in the same PR.
@@ -143,7 +144,7 @@ Also follow [Feature + test pairing](#feature--test-pairing): ship behavior chan
 Branch protection is configured in GitHub **Settings → Branches** (not fully expressible in-repo). Maintainers should keep:
 
 - [ ] Require a pull request before merging
-- [ ] Require status checks to pass before merging: `quality`, `test`, `fresh`, `commitlint`
+- [ ] Require status checks to pass before merging: `quality`, `test`, `fresh`, `docker-smoke`, `commitlint`
 - [ ] Do **not** require `smoke` (optional / `continue-on-error`)
 - [ ] Prefer squash merges so `main` history stays linear and changelog-friendly
 

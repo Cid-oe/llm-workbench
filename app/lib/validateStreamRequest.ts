@@ -1,3 +1,4 @@
+import * as v from 'valibot'
 import type { ProviderId, StreamRequest } from '~/types/llm'
 import { resolveGenerationParams } from '~/lib/generation'
 
@@ -21,76 +22,67 @@ export function isAllowedUrl(value: string): boolean {
   }
 }
 
-function optionalFiniteNumber(value: unknown, field: string): { ok: true, value?: number } | { ok: false, error: string } {
-  if (value === undefined) return { ok: true }
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
-    return { ok: false, error: `${field} must be a finite number` }
-  }
-  return { ok: true, value }
+/** First actionable issue message; never includes raw input (avoids leaking apiKey). */
+export function firstSchemaIssue(issues: v.BaseIssue<unknown>[]): string {
+  const issue = issues[0]
+  if (!issue) return 'Invalid input'
+  return issue.message
 }
 
-export function validateStreamRequest(body: unknown): ValidationResult {
-  if (body === null || typeof body !== 'object') {
-    return { ok: false, error: 'Request body must be an object' }
-  }
+const finiteNumber = (field: string) =>
+  v.pipe(
+    v.number(`${field} must be a finite number`),
+    v.finite(`${field} must be a finite number`),
+  )
 
-  const input = body as Record<string, unknown>
+const httpUrl = (field: string) =>
+  v.pipe(
+    v.string(`Invalid ${field}`),
+    v.check(isAllowedUrl, `Invalid ${field}`),
+  )
 
-  if (!isProviderId(input.provider)) {
-    return { ok: false, error: 'Invalid or missing provider' }
-  }
-
-  if (typeof input.model !== 'string' || input.model.trim().length === 0) {
-    return { ok: false, error: 'Missing model' }
-  }
-
-  if (typeof input.systemPrompt !== 'string') {
-    return { ok: false, error: 'systemPrompt must be a string' }
-  }
-
-  if (typeof input.userPrompt !== 'string') {
-    return { ok: false, error: 'userPrompt must be a string' }
-  }
-
-  if (input.apiKey !== undefined && typeof input.apiKey !== 'string') {
-    return { ok: false, error: 'apiKey must be a string' }
-  }
-
-  if (input.ollamaUrl !== undefined) {
-    if (typeof input.ollamaUrl !== 'string' || !isAllowedUrl(input.ollamaUrl)) {
-      return { ok: false, error: 'Invalid ollamaUrl' }
-    }
-  }
-
-  if (input.lmStudioUrl !== undefined) {
-    if (typeof input.lmStudioUrl !== 'string' || !isAllowedUrl(input.lmStudioUrl)) {
-      return { ok: false, error: 'Invalid lmStudioUrl' }
-    }
-  }
-
-  const temperatureResult = optionalFiniteNumber(input.temperature, 'temperature')
-  if (!temperatureResult.ok) return temperatureResult
-
-  const maxTokensResult = optionalFiniteNumber(input.maxTokens, 'maxTokens')
-  if (!maxTokensResult.ok) return maxTokensResult
-
-  const generation = resolveGenerationParams({
-    temperature: temperatureResult.value,
-    maxTokens: maxTokensResult.value,
-  })
-
-  return {
-    ok: true,
-    value: {
+export const streamRequestSchema = v.pipe(
+  v.object(
+    {
+      provider: v.picklist(PROVIDER_IDS, 'Invalid or missing provider'),
+      model: v.pipe(
+        v.string('Missing model'),
+        v.transform(value => value.trim()),
+        v.minLength(1, 'Missing model'),
+      ),
+      systemPrompt: v.string('systemPrompt must be a string'),
+      userPrompt: v.string('userPrompt must be a string'),
+      apiKey: v.optional(v.string('apiKey must be a string')),
+      ollamaUrl: v.optional(httpUrl('ollamaUrl')),
+      lmStudioUrl: v.optional(httpUrl('lmStudioUrl')),
+      temperature: v.optional(finiteNumber('temperature')),
+      maxTokens: v.optional(finiteNumber('maxTokens')),
+    },
+    'Request body must be an object',
+  ),
+  v.transform((input): StreamRequest => {
+    const generation = resolveGenerationParams({
+      temperature: input.temperature,
+      maxTokens: input.maxTokens,
+    })
+    return {
       provider: input.provider,
-      model: input.model.trim(),
+      model: input.model,
       systemPrompt: input.systemPrompt,
       userPrompt: input.userPrompt,
-      apiKey: typeof input.apiKey === 'string' ? input.apiKey : undefined,
-      ollamaUrl: typeof input.ollamaUrl === 'string' ? input.ollamaUrl : undefined,
-      lmStudioUrl: typeof input.lmStudioUrl === 'string' ? input.lmStudioUrl : undefined,
+      apiKey: input.apiKey,
+      ollamaUrl: input.ollamaUrl,
+      lmStudioUrl: input.lmStudioUrl,
       temperature: generation.temperature,
       maxTokens: generation.maxTokens,
-    },
+    }
+  }),
+)
+
+export function validateStreamRequest(body: unknown): ValidationResult {
+  const result = v.safeParse(streamRequestSchema, body)
+  if (!result.success) {
+    return { ok: false, error: firstSchemaIssue(result.issues) }
   }
+  return { ok: true, value: result.output }
 }

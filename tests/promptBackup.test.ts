@@ -76,6 +76,24 @@ describe('promptBackup', () => {
     expect(() => parsePromptBackup(JSON.stringify({ version: 99, history: [], savedPrompts: [] }))).toThrow(/unsupported/i)
   })
 
+  it('schema-validates backup envelopes with valibot safeParse', async () => {
+    const { promptBackupSchema } = await import('../app/lib/schemas/promptBackup')
+    const { safeParse } = await import('valibot')
+
+    const ok = safeParse(promptBackupSchema, {
+      version: 1,
+      history: [],
+      savedPrompts: [],
+    })
+    expect(ok.success).toBe(true)
+
+    const bad = safeParse(promptBackupSchema, { version: 2 })
+    expect(bad.success).toBe(false)
+    if (!bad.success) {
+      expect(JSON.stringify(bad.issues)).not.toMatch(/apiKey|sk-/i)
+    }
+  })
+
   it('merges by id without dropping local-only items', () => {
     const current = {
       history: [historyEntry('local-h')],

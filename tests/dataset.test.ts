@@ -49,6 +49,17 @@ describe('dataset', () => {
     expect(() => parseDataset(JSON.stringify([1, 2]), 'bad.json')).toThrow(/object/i)
   })
 
+  it('schema-validates JSON datasets via valibot safeParse', async () => {
+    const { datasetJsonSchema } = await import('../app/lib/schemas/dataset')
+    const { safeParse } = await import('valibot')
+
+    const ok = safeParse(datasetJsonSchema, [{ topic: 'a' }])
+    expect(ok.success).toBe(true)
+
+    const bad = safeParse(datasetJsonSchema, { notRows: true })
+    expect(bad.success).toBe(false)
+  })
+
   it('serializes bulk results and truncates previews', () => {
     expect(truncatePreview('a'.repeat(200)).endsWith('…')).toBe(true)
 

@@ -97,4 +97,24 @@ Do the thing
     expect(promptFileName('My Prompt Pack')).toBe('my-prompt-pack.prompt')
     expect(promptFileName('')).toBe('prompt.prompt')
   })
+
+  it('schema-validates frontmatter via valibot safeParse', async () => {
+    const { promptFileDataSchema } = await import('../app/lib/schemas/promptFile')
+    const { safeParse } = await import('valibot')
+
+    const ok = safeParse(promptFileDataSchema, {
+      name: 'Demo',
+      provider: 'openai',
+      temperature: 0.5,
+      variables: { topic: 'x', api_key: 'should-be-stripped-by-caller' },
+      systemPrompt: 'Sys',
+      userPrompt: 'User',
+    })
+    expect(ok.success).toBe(true)
+    if (ok.success) {
+      expect(ok.output.provider).toBe('openai')
+      expect(ok.output.generation?.temperature).toBe(0.5)
+      expect(ok.output.variables).toEqual({ topic: 'x' })
+    }
+  })
 })

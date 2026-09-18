@@ -1,6 +1,9 @@
+import * as v from 'valibot'
 import type { PromptVariables, StreamStatus } from '~/types/llm'
+import { MAX_DATASET_ROWS } from '~/lib/datasetLimits'
+import { datasetJsonSchema, firstSchemaIssue } from '~/lib/schemas/dataset'
 
-export const MAX_DATASET_ROWS = 50
+export { MAX_DATASET_ROWS }
 
 export class DatasetError extends Error {
   constructor(message: string) {
@@ -58,36 +61,22 @@ export function parseJsonDataset(content: string): DatasetTable {
     throw new DatasetError('Invalid JSON dataset')
   }
 
-  let rowsRaw: unknown[]
-  if (Array.isArray(parsed)) {
-    rowsRaw = parsed
-  }
-  else if (parsed && typeof parsed === 'object' && Array.isArray((parsed as { rows?: unknown }).rows)) {
-    rowsRaw = (parsed as { rows: unknown[] }).rows
-  }
-  else {
-    throw new DatasetError('JSON dataset must be an array of objects or { "rows": [...] }')
+  const result = v.safeParse(datasetJsonSchema, parsed)
+  if (!result.success) {
+    throw new DatasetError(firstSchemaIssue(result.issues))
   }
 
-  if (!rowsRaw.length) throw new DatasetError('Dataset has no rows')
-
+  const rowsRaw = result.output
   const rows: Record<string, string>[] = []
   const columnSet = new Set<string>()
 
   for (const item of rowsRaw) {
-    if (!item || typeof item !== 'object' || Array.isArray(item)) {
-      throw new DatasetError('Each JSON row must be an object')
-    }
     const row: Record<string, string> = {}
-    for (const [key, value] of Object.entries(item as Record<string, unknown>)) {
+    for (const [key, value] of Object.entries(item)) {
       columnSet.add(key)
       row[key] = value == null ? '' : String(value)
     }
     rows.push(row)
-  }
-
-  if (rows.length > MAX_DATASET_ROWS) {
-    throw new DatasetError(`Dataset exceeds the ${MAX_DATASET_ROWS}-row limit`)
   }
 
   return { columns: [...columnSet], rows, source: 'json' }

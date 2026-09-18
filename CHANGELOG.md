@@ -7,19 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-- Revert to MIT License to meet OpenSSF Best Practices FLOSS requirements
-- Add OpenSSF Best Practices badge to README
-- Raised Vitest coverage gates to lines/functions/statements ≥70% and branches ≥55% after hotspot tests ([#71](https://github.com/ale94lko/llm-workbench/issues/71))
-- Audited transitive deps: `npm dedupe` on the lockfile; kept `@emnapi/*` direct pins (required for Linux `npm ci` / Oxide lock sync) ([#70](https://github.com/ale94lko/llm-workbench/issues/70))
-
 ### Added
+- OpenSSF Silver project docs: governance, roadmap, architecture, assurance case, hardening, accessibility, achievements, and evidence map
+- English i18n catalog (`app/i18n/en.ts`) with skip-to-content and `html lang="en"`
+- CSP and related security headers in `nuxt.config.ts`
+- Signed-release process (`git tag -s`) documented in `docs/releasing.md`
 - Hotspot unit tests for `sessionStore`, exporters (all providers), provider-store edges, streamClient failures, and History UI ([#71](https://github.com/ale94lko/llm-workbench/issues/71))
 - Optional Sentry browser error tracking via `NUXT_PUBLIC_SENTRY_DSN` ([#69](https://github.com/ale94lko/llm-workbench/issues/69))
 - Documented that Vitest coverage thresholds fail CI (`perFile: false` + ci.yml comment) ([#68](https://github.com/ale94lko/llm-workbench/issues/68))
 - CI `fresh` job gates `npm run verify:fresh`; Docker Compose boot docs aligned ([#67](https://github.com/ale94lko/llm-workbench/issues/67))
 - Sustained paired feature+test history guidance (`docs/maintenance.md` + PR checklist) ([#66](https://github.com/ale94lko/llm-workbench/issues/66))
 - Stream API malformed-input tests and contributor note for POST boundary validation ([#59](https://github.com/ale94lko/llm-workbench/issues/59))
+
+### Changed
+- Raised Vitest coverage gates to lines/functions/statements ≥80% and branches ≥65% for OpenSSF Silver (`test_statement_coverage80`)
+- Pin GitHub Actions to commit SHAs; add OpenSSF Scorecard and DCO CI jobs (CodeQL stays on GitHub default setup)
+- Upgrade Code of Conduct to Contributor Covenant 2.1 at the repository root
+- Revert to MIT License to meet OpenSSF Best Practices FLOSS requirements
+- Add OpenSSF Best Practices badge to README
+- Audited transitive deps: `npm dedupe` on the lockfile; kept `@emnapi/*` direct pins (required for Linux `npm ci` / Oxide lock sync) ([#70](https://github.com/ale94lko/llm-workbench/issues/70))
 
 ## [0.2.0] - 2026-09-17
 

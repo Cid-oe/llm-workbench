@@ -38,13 +38,13 @@ export default defineConfig({
         'app/components/playground/PromptVersionDiff.vue',
       ],
       // Global gates (not per-file). Unmet thresholds make Vitest exit non-zero → CI fails.
-      // Raised after hotspot coverage pass (#71); branches stay below lines on purpose.
+      // OpenSSF Silver requires ≥80% statement coverage (test_statement_coverage80).
       thresholds: {
         perFile: false,
-        lines: 70,
-        functions: 70,
-        statements: 70,
-        branches: 55,
+        lines: 80,
+        functions: 80,
+        statements: 80,
+        branches: 65,
       },
     },
   },

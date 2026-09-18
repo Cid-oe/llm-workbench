@@ -8,6 +8,27 @@ function envEnabled(value: string | undefined, fallback: boolean): boolean {
 // https://nuxt.com/docs/api/configuration/nuxt-config
 const baseURL = process.env.NUXT_APP_BASE_URL || '/'
 
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self'",
+  "connect-src 'self' https: http://127.0.0.1:* http://localhost:*",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ')
+
+const securityHeaders = {
+  'Content-Security-Policy': contentSecurityPolicy,
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'X-Frame-Options': 'DENY',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+}
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: envEnabled(process.env.NUXT_DEVTOOLS, true) },
@@ -26,13 +47,22 @@ export default defineNuxtConfig({
   app: {
     baseURL,
     head: {
+      htmlAttrs: { lang: 'en' },
       title: 'LLM Workbench',
       meta: [
         { name: 'description', content: 'Local-first multi-LLM workbench for prompt comparison' },
+        { 'http-equiv': 'Content-Security-Policy', content: contentSecurityPolicy },
+        { 'http-equiv': 'X-Content-Type-Options', content: 'nosniff' },
       ],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: `${baseURL}favicon.svg` },
       ],
+    },
+  },
+
+  nitro: {
+    routeRules: {
+      '/**': { headers: securityHeaders },
     },
   },
 

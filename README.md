@@ -198,14 +198,18 @@ app/
 │   ├── metrics/         # Bar charts and latency timeline
 │   ├── settings/        # API key manager, encrypted vault
 │   └── layout/          # Header with desktop nav + mobile menu
-├── composables/         # LLM streaming, cost calculator, code exporter
+├── composables/         # LLM streaming, cost calculator, code exporter, i18n
+├── i18n/                # English message catalog (localization-ready)
 ├── lib/                 # Crypto, errors, metrics, stream providers, provider models, logger, validation
 ├── pages/               # Compare, history, metrics, settings
 ├── stores/              # Provider & prompt state (persisted)
 └── plugins/             # Vault bootstrap + client error tracking
 server/api/              # Stream proxy, health, and metrics (local dev / Node / Docker)
 docs/
-└── screenshots/         # README example images
+├── architecture.md  # High-level design and trust boundaries
+├── assurance-case.md
+├── roadmap.md
+└── screenshots/     # README example images
 ```
 
 ## Development
@@ -243,7 +247,9 @@ Client and stream failures use a typed `StreamError` (`app/lib/errors.ts`). Befo
 
 ## Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) and open an issue first to discuss what you'd like to change.
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md), [GOVERNANCE.md](GOVERNANCE.md), and the [Code of Conduct](CODE_OF_CONDUCT.md). Open an issue first to discuss what you'd like to change.
+
+Project docs: [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), [security assurance case](docs/assurance-case.md), [OpenSSF Silver evidence](docs/openssf-silver.md).
 
 1. Fork the repo
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)

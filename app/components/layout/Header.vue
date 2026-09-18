@@ -3,13 +3,14 @@ import { BarChart3, Cpu, History, Menu, Settings, X } from '@lucide/vue'
 
 const route = useRoute()
 const menuOpen = ref(false)
+const { t } = useI18n()
 
-const links = [
-  { to: '/', label: 'Compare', icon: Cpu },
-  { to: '/history', label: 'History', icon: History },
-  { to: '/metrics', label: 'Metrics', icon: BarChart3 },
-  { to: '/settings', label: 'Settings', icon: Settings },
-]
+const links = computed(() => [
+  { to: '/', label: t('nav.compare'), icon: Cpu },
+  { to: '/history', label: t('nav.history'), icon: History },
+  { to: '/metrics', label: t('nav.metrics'), icon: BarChart3 },
+  { to: '/settings', label: t('nav.settings'), icon: Settings },
+])
 
 watch(() => route.path, () => {
   menuOpen.value = false
@@ -32,7 +33,7 @@ onUnmounted(() => {
         variant="ghost"
         size="sm"
         class="sm:hidden shrink-0 -ml-1"
-        aria-label="Open menu"
+        :aria-label="t('nav.openMenu')"
         @click="menuOpen = true"
       >
         <Menu class="h-5 w-5" />
@@ -40,7 +41,7 @@ onUnmounted(() => {
 
       <NuxtLink to="/" class="flex min-w-0 items-center gap-2 font-semibold text-foreground">
         <Cpu class="h-5 w-5 shrink-0 text-primary" />
-        <span class="truncate">LLM Workbench</span>
+        <span class="truncate">{{ t('nav.appName') }}</span>
       </NuxtLink>
 
       <nav class="ml-auto hidden items-center gap-1 sm:flex">
@@ -65,7 +66,7 @@ onUnmounted(() => {
         class="fixed inset-0 z-50 sm:hidden"
         role="dialog"
         aria-modal="true"
-        aria-label="Navigation menu"
+        :aria-label="t('nav.navigationMenu')"
       >
         <div
           class="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -76,12 +77,12 @@ onUnmounted(() => {
           <div class="flex h-14 items-center justify-between border-b border-border px-4">
             <div class="flex items-center gap-2 font-semibold">
               <Cpu class="h-5 w-5 text-primary" />
-              <span>Menu</span>
+              <span>{{ t('nav.menu') }}</span>
             </div>
             <UiButton
               variant="ghost"
               size="sm"
-              aria-label="Close menu"
+              :aria-label="t('nav.closeMenu')"
               @click="menuOpen = false"
             >
               <X class="h-5 w-5" />

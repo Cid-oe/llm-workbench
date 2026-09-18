@@ -1,6 +1,6 @@
 # Contributing to LLM Workbench
 
-Thanks for helping improve this project. Please also read the [Code of Conduct](.github/CODE_OF_CONDUCT.md).
+Thanks for helping improve this project. Please also read the [Code of Conduct](CODE_OF_CONDUCT.md) and [GOVERNANCE.md](GOVERNANCE.md).
 
 ## Development setup
 
@@ -58,7 +58,7 @@ CI runs lint, typecheck, tests with coverage, `npm audit --audit-level=high`, an
 - **`Deploy to GitHub Pages`** (`.github/workflows/deploy-pages.yml`) does **not** re-run that gate on push to `main`. It starts via `workflow_run` after a successful **CI** run that was a **push to `main`**, checks out that exact commit, then only generates and publishes the static site.
 - Failed CI on `main` blocks deploy. Manual `workflow_dispatch` on the deploy workflow still runs the full quality steps before `npm run generate`, so a broken site cannot be published that way either.
 - Vitest uses `pool: 'threads'` with `isolate: false` to cut happy-dom startup cost; `tests/setup.ts` resets storage per test. Prefer not to rely on order-dependent global state.
-- Coverage thresholds enforce lines/functions/statements (≥70%) and branches (≥55%) via `vitest.config.ts` (`perFile: false`). Unmet thresholds make `npm run test:coverage` exit non-zero, so the CI `test` / `fresh` jobs fail. Do not lower thresholds just to pass.
+- Coverage thresholds enforce lines/functions/statements (≥80%) and branches (≥65%) via `vitest.config.ts` (`perFile: false`). Unmet thresholds make `npm run test:coverage` exit non-zero, so the CI `test` / `fresh` jobs fail. Do not lower thresholds just to pass.
 
 ### Smoke E2E (static Pages output)
 
@@ -116,6 +116,48 @@ Examples:
 
 Pull request commits are checked by the `commitlint` CI job (Dependabot PRs are exempt).
 
+## Coding standards
+
+Primary languages are TypeScript, Vue 3 SFC, and JavaScript:
+
+- **TypeScript / Vue / JavaScript** — ESLint flat config [`eslint.config.mjs`](eslint.config.mjs) via `@nuxt/eslint` (`npm run lint`). CI fails on lint errors.
+- **Types** — `npm run typecheck` (`nuxt typecheck` / vue-tsc). Treat new type errors as failures, not as something to `as any` away.
+- **User-facing strings** — add chrome copy to [`app/i18n/en.ts`](app/i18n/en.ts) and read it through `useI18n()` so the UI stays localizable.
+
+Contributions must generally comply with these tools. Do not disable rules to hide new issues without maintainer review. Rare exceptions MUST be documented at the location (ESLint comment with a reason).
+
+## Developer Certificate of Origin (DCO)
+
+By contributing, you certify that you have the right to submit the work under the project license. Include a Signed-off-by line in each commit (see the [DCO](https://developercertificate.org/)):
+
+```text
+Signed-off-by: Your Name <you@example.com>
+```
+
+Example: `git commit -s -m "feat: …"`.
+
+The CI `dco` job runs [`scripts/check-dco.mjs`](scripts/check-dco.mjs) on pull request commits (Dependabot PRs are exempt).
+
+## Formal test policy
+
+As **major new functionality** is added, tests for that functionality **MUST** be added to the automated suite (Vitest under `tests/**/*.test.ts`). Ship each feature or fix with the tests that pin the new behavior in the **same** focused commit or PR.
+
+Prefer **regression tests** when fixing bugs. Target: at least **50%** of bugs fixed in any six-month window get an automated regression test. Do not rewrite old history to invent that pairing.
+
+Statement coverage is enforced at **≥ 80%** statements/lines/functions (and **≥ 65%** branches) via Vitest thresholds in [`vitest.config.ts`](vitest.config.ts) (`npm run test:coverage`).
+
+## Project docs
+
+- [GOVERNANCE.md](GOVERNANCE.md) — decision model, roles, access continuity, DCO, 2FA
+- [docs/roadmap.md](docs/roadmap.md) — next-year plans
+- [docs/architecture.md](docs/architecture.md) — high-level design
+- [docs/assurance-case.md](docs/assurance-case.md) — security assurance case
+- [docs/hardening.md](docs/hardening.md) — hardening mechanisms
+- [docs/accessibility.md](docs/accessibility.md) — WCAG-oriented practices and i18n
+- [docs/achievements.md](docs/achievements.md) — public badges
+- [docs/openssf-silver.md](docs/openssf-silver.md) — OpenSSF Silver evidence map
+- [SECURITY.md](SECURITY.md) — vulnerability reporting and response
+
 ## Merge requirements
 
 Merges into `main` go through a pull request. Do not push directly to `main`.
@@ -131,6 +173,7 @@ These CI jobs from [`.github/workflows/ci.yml`](.github/workflows/ci.yml) must b
 | `fresh` | Clean-runner `npm run verify:fresh` (`npm ci` → build → coverage); fails the workflow on error |
 | `docker-smoke` | Compose boot from `.env.example` → `.env`; fails if `/api/health` never becomes ready |
 | `commitlint` | Conventional Commits on PR commits (Dependabot PRs are exempt; see [Commit style](#commit-style-conventional-commits)) |
+| `dco` | Developer Certificate of Origin `Signed-off-by` on PR commits (Dependabot PRs are exempt) |
 
 Also follow [Feature + test pairing](#feature--test-pairing): ship behavior changes with the tests that pin them in the same PR.
 
@@ -144,7 +187,7 @@ Also follow [Feature + test pairing](#feature--test-pairing): ship behavior chan
 Branch protection is configured in GitHub **Settings → Branches** (not fully expressible in-repo). Maintainers should keep:
 
 - [ ] Require a pull request before merging
-- [ ] Require status checks to pass before merging: `quality`, `test`, `fresh`, `docker-smoke`, `commitlint`
+- [ ] Require status checks to pass before merging: `quality`, `test`, `fresh`, `docker-smoke`, `commitlint`, `dco`
 - [ ] Do **not** require `smoke` (optional / `continue-on-error`)
 - [ ] Prefer squash merges so `main` history stays linear and changelog-friendly
 
@@ -155,7 +198,7 @@ Settings UI: [Branch protection rules](https://github.com/ale94lko/llm-workbench
 1. Search [existing issues](https://github.com/ale94lko/llm-workbench/issues) before opening a new one. Use an [issue form](https://github.com/ale94lko/llm-workbench/issues/new/choose) when creating one.
 2. Fork the repository and create a focused branch.
 3. Add or update tests for the behavior you change (same PR as the source change).
-4. Use Conventional Commit messages (`feat:`, `fix:`, `test:`, …).
+4. Use Conventional Commit messages (`feat:`, `fix:`, `test:`, …) and **sign off** (`git commit -s`).
 5. Open a pull request and [link it to the issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue).
 6. Enable [allow maintainer edits](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork) so the branch can be updated for a merge.
 
@@ -169,7 +212,7 @@ This project uses [Semantic Versioning](https://semver.org/). Notable changes li
 
 1. Move `[Unreleased]` entries into a dated `## [X.Y.Z] - YYYY-MM-DD` section in `CHANGELOG.md`; leave an empty `[Unreleased]`.
 2. Bump `"version"` in `package.json` to `X.Y.Z`.
-3. Merge that release PR to `main`, then create an annotated tag `vX.Y.Z` and push it.
+3. Merge that release PR to `main`, then create a **signed** annotated tag `vX.Y.Z` (`git tag -s`) and push it.
 4. Publish a GitHub Release whose notes are the matching changelog section.
 
 Full maintainer steps and checklist: [`docs/releasing.md`](docs/releasing.md).
@@ -183,6 +226,7 @@ Full maintainer steps and checklist: [`docs/releasing.md`](docs/releasing.md).
   - `@pinia/nuxt` and `pinia-plugin-persistedstate` — loaded as Nuxt modules in `nuxt.config.ts`
   - `vue-router` — Nuxt peer / runtime router (not imported directly in app code)
   - `@emnapi/core` and `@emnapi/runtime` — direct pins so Linux `npm ci` can resolve Tailwind Oxide / WASI optional natives in the lockfile (do not remove without verifying CI on ubuntu-latest)
+
 ## Security reports
 
 Please do not open public issues for vulnerabilities. Follow [SECURITY.md](SECURITY.md).

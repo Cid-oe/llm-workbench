@@ -5,12 +5,15 @@ import {
   hashPassword,
   parseSalt,
   verifyPassword,
-  saveSessionCryptoKey,
-  loadSessionCryptoKey,
-  clearSessionCryptoKey,
-  purgeLegacyPersistedCryptoKey,
   type ApiKeysPayload,
 } from '~/lib/crypto'
+import { localStore } from '~/lib/browserStorage'
+import {
+  dropSessionCryptoKey,
+  persistSessionCryptoKey,
+  purgeLegacyVaultKey,
+  restoreSessionCryptoKey,
+} from '~/lib/vaultService'
 import { useVaultStore } from './useVaultStore'
 
 export const useSecurityStore = defineStore('security', {
@@ -52,7 +55,7 @@ export const useSecurityStore = defineStore('security', {
       this._cryptoKey = key
       this.isUnlocked = true
 
-      await saveSessionCryptoKey(key)
+      await persistSessionCryptoKey(key)
       await useVaultStore().encryptAndPersistKeys()
     },
 
@@ -63,7 +66,7 @@ export const useSecurityStore = defineStore('security', {
       const key = await deriveKey(password, parseSalt(this.salt))
       this._cryptoKey = key
       this.isUnlocked = true
-      await saveSessionCryptoKey(key)
+      await persistSessionCryptoKey(key)
 
       const vault = useVaultStore()
       if (vault.encryptedPayload) {
@@ -98,8 +101,8 @@ export const useSecurityStore = defineStore('security', {
       this.isUnlocked = true
 
       // Drop the previous session key before writing the rotated one.
-      clearSessionCryptoKey()
-      await saveSessionCryptoKey(key)
+      dropSessionCryptoKey()
+      await persistSessionCryptoKey(key)
       await useVaultStore().encryptAndPersistKeys()
       return true
     },
@@ -117,8 +120,8 @@ export const useSecurityStore = defineStore('security', {
       if (!this.hasMasterPassword) return
 
       // Drop any pre-#21 raw key left in localStorage; never auto-load from it.
-      purgeLegacyPersistedCryptoKey()
-      const cryptoKey = await loadSessionCryptoKey()
+      purgeLegacyVaultKey()
+      const cryptoKey = await restoreSessionCryptoKey()
       if (!cryptoKey) return
 
       this._cryptoKey = cryptoKey
@@ -131,6 +134,7 @@ export const useSecurityStore = defineStore('security', {
 
   persist: {
     pick: ['salt', 'passwordVerifier'],
+    storage: localStore,
   },
 })
 

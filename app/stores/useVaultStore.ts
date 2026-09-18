@@ -1,13 +1,14 @@
 import { defineStore } from 'pinia'
 import type { ProviderId } from '~/types/llm'
+import type { ApiKeysPayload, EncryptedPayload } from '~/lib/crypto'
+import { PROVIDER_PERSIST_KEYS } from '~/lib/providerPersist'
 import {
-  decryptJson,
-  encryptJson,
-  type ApiKeysPayload,
-  type EncryptedPayload,
-} from '~/lib/crypto'
-import { COMBINED_PROVIDER_PERSIST_KEY, PROVIDER_PERSIST_KEYS } from '~/lib/providerPersist'
-import { sessionStore } from '~/lib/sessionStore'
+  decryptKeys,
+  encryptKeys,
+  localStore,
+  readLegacyPlaintextKeys,
+  sessionStore,
+} from '~/lib/vaultService'
 import { useSecurityStore } from './useSecurityStore'
 
 export const useVaultStore = defineStore('provider-vault', {
@@ -50,13 +51,12 @@ export const useVaultStore = defineStore('provider-vault', {
       const security = useSecurityStore()
       const key = security.getCryptoKey()
       if (!key) return
-      this.encryptedPayload = await encryptJson(key, this.keysPayload)
+      this.encryptedPayload = await encryptKeys(key, this.keysPayload)
     },
 
     async decryptKeys(cryptoKey: CryptoKey) {
       if (!this.encryptedPayload) return
-      const keys = await decryptJson<ApiKeysPayload>(cryptoKey, this.encryptedPayload)
-      this.applyKeys(keys)
+      this.applyKeys(await decryptKeys(cryptoKey, this.encryptedPayload))
     },
 
     setApiKey(provider: ProviderId, value: string) {
@@ -83,28 +83,10 @@ export const useVaultStore = defineStore('provider-vault', {
     },
 
     migrateLegacyStorage() {
-      if (typeof localStorage === 'undefined') return
-
-      try {
-        const raw = localStorage.getItem(COMBINED_PROVIDER_PERSIST_KEY)
-        if (!raw) return
-
-        const parsed = JSON.parse(raw) as Record<string, unknown>
-        const legacy = (parsed.state ?? parsed) as Record<string, string>
-
-        if (this.encryptedPayload) return
-        if (!legacy.openaiKey && !legacy.anthropicKey && !legacy.geminiKey && !legacy.groqKey) return
-
-        this.applyKeys({
-          openaiKey: legacy.openaiKey ?? '',
-          anthropicKey: legacy.anthropicKey ?? '',
-          geminiKey: legacy.geminiKey ?? '',
-          groqKey: legacy.groqKey ?? '',
-        })
-      }
-      catch {
-        // ignore corrupt legacy data
-      }
+      if (this.encryptedPayload) return
+      const legacy = readLegacyPlaintextKeys()
+      if (!legacy) return
+      this.applyKeys(legacy)
     },
   },
 
@@ -112,6 +94,7 @@ export const useVaultStore = defineStore('provider-vault', {
     {
       key: PROVIDER_PERSIST_KEYS.vault,
       pick: ['encryptedPayload'],
+      storage: localStore,
     },
     {
       key: PROVIDER_PERSIST_KEYS.session,

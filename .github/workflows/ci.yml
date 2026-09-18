@@ -34,12 +34,28 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      # Coverage thresholds (vitest.config.ts): lines/functions/statements ≥70%, branches ≥55%.
-      # Vitest exits non-zero if unmet → this step fails the quality job (and thus the workflow).
-      - name: Test
+  # First-class coverage gate (job id `test` for ci_runs_tests / status checks).
+  # Coverage thresholds (vitest.config.ts): lines/functions/statements ≥70%, branches ≥55%.
+  # Vitest exits non-zero if unmet → this job fails the workflow.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test with coverage
         run: npm run test:coverage
 
-  # Dedicated clean-runner gate: do NOT nest verify:fresh after quality's npm ci.
+  # Dedicated clean-runner gate: do NOT nest verify:fresh after quality/test npm ci.
   # The script itself runs npm ci → build → test:coverage and fails the job on error.
   fresh:
     runs-on: ubuntu-latest

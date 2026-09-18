@@ -21,7 +21,7 @@ The script runs, in order, and **exits non-zero** on the first failure:
 2. `npm run build` — production Nuxt build
 3. `npm run test:coverage` — unit suite + coverage thresholds
 
-CI runs the same command on a **dedicated** `fresh` job in `.github/workflows/ci.yml` (clean runner — not nested after the `quality` job’s `npm ci`). A failure fails the workflow.
+CI runs the same command on a **dedicated** `fresh` job in `.github/workflows/ci.yml` (clean runner — not nested after the `quality` / `test` jobs’ `npm ci`). A failure fails the workflow.
 
 ### Coverage thresholds (fail the build)
 
@@ -35,7 +35,7 @@ CI runs the same command on a **dedicated** `fresh` job in `.github/workflows/ci
 If any threshold is unmet, Vitest exits **non-zero**. That fails:
 
 - local `npm run test:coverage`
-- CI `quality` Test step
+- CI `test` job
 - CI `fresh` (`verify:fresh` includes coverage)
 
 Do not lower these numbers to greenwash; raise them only when the suite sustains the higher floor.

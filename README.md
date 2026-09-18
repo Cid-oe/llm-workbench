@@ -1,4 +1,4 @@
-# LLM Workbench
+# <img src="public/favicon.svg" width="32" height="32" alt="" /> LLM Workbench
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14694/badge)](https://www.bestpractices.dev/projects/14694)

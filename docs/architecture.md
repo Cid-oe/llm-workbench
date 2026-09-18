@@ -1,0 +1,51 @@
+# Architecture
+
+High-level design of **llm-workbench**, a local-first Nuxt 4 / Vue 3 SPA for designing prompts, running them in parallel against up to four LLM providers, and comparing latency/cost metrics.
+
+## Components
+
+```text
+Browser (SPA, ssr: false)
+    │  Pinia stores (prompt, providers, vault, history)
+    │  AES-256-GCM vault  ── localStorage (ciphertext) + sessionStorage (tab key)
+    │
+    ├─ Production (GitHub Pages)
+    │     └─ HTTPS fetch ──► OpenAI / Anthropic / Gemini / Groq / local Ollama
+    │
+    └─ Dev / Docker / Node (`npm run dev` or `npm run build`)
+          └─ POST /api/stream (Nitro) ── allowlist Valibot schema ──► provider HTTPS
+          └─ GET  /api/health
+          └─ GET  /api/metrics
+```
+
+| Area | Location | Role |
+| --- | --- | --- |
+| Pages | `app/pages/` | Compare, History, Metrics, Settings |
+| UI | `app/components/` | Prompt editor, response cards, charts, vault UI, layout |
+| State | `app/stores/` | Pinia + persistedstate (never persists raw API keys) |
+| Crypto | `app/lib/crypto.ts` | PBKDF2 + AES-256-GCM vault (versioned payload `v: 1`) |
+| Streaming | `app/lib/streamProviders.ts`, `app/composables/useLLMStream.ts` | Browser-direct or proxy stream |
+| Validation | `app/lib/validateStreamRequest.ts`, `app/lib/schemas/` | Allowlist schemas (Valibot) |
+| Exporters | `app/lib/exporters/` | Code snippets that read keys from the environment |
+| Proxy | `server/api/stream.post.ts` | Dev/Node stream proxy; fail-closed on invalid input |
+| i18n | `app/i18n/en.ts` | English message catalog (localization-ready) |
+
+## Trust boundaries
+
+1. **User's browser** — the only place decrypted API keys exist. The vault ciphertext may sit in `localStorage`; the derived CryptoKey is tab-scoped (`sessionStorage`).
+2. **This application** — validates stream payloads with an allowlist before any upstream call. Loggers redact secrets.
+3. **LLM providers** — untrusted networks; production talks to them over HTTPS from the browser (or from Nitro in Docker/Node). Certificate verification is the platform TLS stack (browser / Node).
+4. **Local Ollama / LM Studio** — optional HTTP to loopback; user-configured URLs must pass `http:`/`https:` allowlist checks.
+5. **GitHub Pages / npm / git** — distribution over HTTPS. Release tags are cryptographically signed (see [releasing.md](releasing.md)).
+
+See [SECURITY.md](../SECURITY.md) and [assurance-case.md](assurance-case.md) for the security argument.
+
+## Build
+
+- Source of truth is TypeScript/Vue under `app/` and `server/`.
+- `npm ci` (lockfile) → `npm run build` (Node) or `npm run generate` (static Pages).
+- Repeatable install: committed `package-lock.json`. CI `fresh` re-runs `npm ci` → build → coverage on a clean runner.
+
+## Non-goals
+
+This is not a multi-tenant cloud that stores customer secrets. Distribution is the git repo, GitHub Pages SPA, and optional Docker image — not a hosted key vault.

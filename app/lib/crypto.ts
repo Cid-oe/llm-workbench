@@ -1,7 +1,10 @@
 import { localStore, sessionStore } from '~/lib/browserStorage'
 
+/** Vault crypto generation. v1 = AES-256-GCM + PBKDF2-SHA-256. Bump to introduce Argon2id or SHA-3 without rewriting this module's call sites. */
+export const VAULT_CRYPTO_VERSION = 1 as const
+
 export interface EncryptedPayload {
-  v: 1
+  v: typeof VAULT_CRYPTO_VERSION
   iv: string
   data: string
 }
@@ -63,7 +66,7 @@ export async function encryptJson(key: CryptoKey, payload: unknown): Promise<Enc
   const encoded = new TextEncoder().encode(JSON.stringify(payload))
   const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded)
   return {
-    v: 1,
+    v: VAULT_CRYPTO_VERSION,
     iv: toBase64(iv),
     data: toBase64(new Uint8Array(ciphertext)),
   }

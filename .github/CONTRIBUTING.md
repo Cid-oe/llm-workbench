@@ -4,7 +4,7 @@ Thank you for investing your time in contributing to our project! Contributions 
 
 The canonical guide lives in the repository root: [CONTRIBUTING.md](../CONTRIBUTING.md).
 
-Read our [Code of Conduct](https://github.com/ale94lko/llm-workbench/blob/main/.github/CODE_OF_CONDUCT.md) to keep our community approachable and respectable.
+Read our [Code of Conduct](../CODE_OF_CONDUCT.md) to keep our community approachable and respectable.
 
 ## Getting started
 

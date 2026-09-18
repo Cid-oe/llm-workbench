@@ -1,4 +1,5 @@
 import type { EncryptedPayload } from '~/lib/crypto'
+import { VAULT_CRYPTO_VERSION } from '~/lib/crypto'
 import { localStore } from '~/lib/browserStorage'
 
 /** Pre-split Pinia persist key used by the combined `provider` store. */
@@ -40,5 +41,5 @@ export function markProviderPersistSplit(): void {
 export function isEncryptedPayload(value: unknown): value is EncryptedPayload {
   if (!value || typeof value !== 'object') return false
   const payload = value as EncryptedPayload
-  return payload.v === 1 && typeof payload.iv === 'string' && typeof payload.data === 'string'
+  return payload.v === VAULT_CRYPTO_VERSION && typeof payload.iv === 'string' && typeof payload.data === 'string'
 }

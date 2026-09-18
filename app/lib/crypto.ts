@@ -1,3 +1,5 @@
+import { localStore, sessionStore } from '~/lib/browserStorage'
+
 export interface EncryptedPayload {
   v: 1
   iv: string
@@ -84,9 +86,7 @@ const SESSION_CRYPTO_KEY = 'llm-playground-session-key'
 const LEGACY_PERSISTED_CRYPTO_KEY = 'llm-playground-vault-key'
 
 function clearLegacyPersistedCryptoKey(): void {
-  if (import.meta.client) {
-    localStorage.removeItem(LEGACY_PERSISTED_CRYPTO_KEY)
-  }
+  localStore.removeItem(LEGACY_PERSISTED_CRYPTO_KEY)
 }
 
 /** Remove any pre-#21 raw AES key left in localStorage (never used for unlock). */
@@ -97,15 +97,12 @@ export function purgeLegacyPersistedCryptoKey(): void {
 export async function saveSessionCryptoKey(key: CryptoKey): Promise<void> {
   const raw = await crypto.subtle.exportKey('raw', key)
   const encoded = toBase64(new Uint8Array(raw))
-  if (import.meta.client) {
-    sessionStorage.setItem(SESSION_CRYPTO_KEY, encoded)
-    clearLegacyPersistedCryptoKey()
-  }
+  sessionStore.setItem(SESSION_CRYPTO_KEY, encoded)
+  clearLegacyPersistedCryptoKey()
 }
 
 export async function loadSessionCryptoKey(): Promise<CryptoKey | null> {
-  if (!import.meta.client) return null
-  return importRawKey(sessionStorage.getItem(SESSION_CRYPTO_KEY))
+  return importRawKey(sessionStore.getItem(SESSION_CRYPTO_KEY))
 }
 
 async function importRawKey(encoded: string | null): Promise<CryptoKey | null> {
@@ -126,14 +123,11 @@ async function importRawKey(encoded: string | null): Promise<CryptoKey | null> {
 }
 
 export function clearSessionCryptoKey(): void {
-  if (import.meta.client) {
-    sessionStorage.removeItem(SESSION_CRYPTO_KEY)
-    clearLegacyPersistedCryptoKey()
-  }
+  sessionStore.removeItem(SESSION_CRYPTO_KEY)
+  clearLegacyPersistedCryptoKey()
 }
 
 /** True when a legacy raw key still sits in localStorage (should be purged, never used). */
 export function hasLegacyPersistedCryptoKey(): boolean {
-  if (!import.meta.client) return false
-  return localStorage.getItem(LEGACY_PERSISTED_CRYPTO_KEY) != null
+  return localStore.getItem(LEGACY_PERSISTED_CRYPTO_KEY) != null
 }

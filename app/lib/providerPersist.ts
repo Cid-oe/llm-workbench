@@ -1,4 +1,5 @@
 import type { EncryptedPayload } from '~/lib/crypto'
+import { localStore } from '~/lib/browserStorage'
 
 /** Pre-split Pinia persist key used by the combined `provider` store. */
 export const COMBINED_PROVIDER_PERSIST_KEY = 'provider'
@@ -14,10 +15,8 @@ export const PROVIDER_PERSIST_KEYS = {
 } as const
 
 export function readCombinedProviderPersist(): Record<string, unknown> | null {
-  if (typeof localStorage === 'undefined') return null
-
   try {
-    const raw = localStorage.getItem(COMBINED_PROVIDER_PERSIST_KEY)
+    const raw = localStore.getItem(COMBINED_PROVIDER_PERSIST_KEY)
     if (!raw) return null
 
     const parsed = JSON.parse(raw) as Record<string, unknown>
@@ -31,13 +30,11 @@ export function readCombinedProviderPersist(): Record<string, unknown> | null {
 }
 
 export function hasSplitProviderPersist(): boolean {
-  if (typeof localStorage === 'undefined') return false
-  return localStorage.getItem(PROVIDER_PERSIST_SPLIT_FLAG) === '1'
+  return localStore.getItem(PROVIDER_PERSIST_SPLIT_FLAG) === '1'
 }
 
 export function markProviderPersistSplit(): void {
-  if (typeof localStorage === 'undefined') return
-  localStorage.setItem(PROVIDER_PERSIST_SPLIT_FLAG, '1')
+  localStore.setItem(PROVIDER_PERSIST_SPLIT_FLAG, '1')
 }
 
 export function isEncryptedPayload(value: unknown): value is EncryptedPayload {

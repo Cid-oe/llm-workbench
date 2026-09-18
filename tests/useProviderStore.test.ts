@@ -36,8 +36,15 @@ describe('useProviderStore', () => {
     expect(store.anthropicKey).toBe('sk-ant-new')
     expect(store.geminiKey).toBe('AIza-new')
     expect(store.groqKey).toBe('gsk-new')
+    expect(store.getApiKey('openai')).toBe('sk-new')
+    expect(store.getApiKey('anthropic')).toBe('sk-ant-new')
+    expect(store.getApiKey('gemini')).toBe('AIza-new')
+    expect(store.getApiKey('groq')).toBe('gsk-new')
     expect(store.ollamaUrl).toBe('http://localhost:11434')
     expect(store.isProviderConfigured('openai')).toBe(true)
+    expect(store.isProviderConfigured('anthropic')).toBe(true)
+    expect(store.isProviderConfigured('gemini')).toBe(true)
+    expect(store.isProviderConfigured('groq')).toBe(true)
   })
 
   it('stores Ollama URL via setApiKey', () => {
@@ -66,6 +73,10 @@ describe('useProviderStore', () => {
     expect(store.isProviderConfigured('ollama')).toBe(true)
     expect(store.selectedModels.every(s => s.provider === 'ollama' || s.provider === 'lmstudio')).toBe(true)
     expect(store.streamProxyUrl).toBe('')
+
+    store.setAirGapped(false)
+    expect(store.airGapped).toBe(false)
+    expect(store.availableProviders).toContain('openai')
   })
 
   it('updateSlot refuses cloud providers when air-gapped', () => {
@@ -74,6 +85,18 @@ describe('useProviderStore', () => {
     const slotId = store.selectedModels[0]!.slotId
     store.updateSlot(slotId, 'openai', 'gpt-4o-mini')
     expect(store.selectedModels[0]!.provider).not.toBe('openai')
+  })
+
+  it('updateSlot writes provider and model when the slot exists', () => {
+    const store = useProviderStore()
+    const slotId = store.selectedModels[0]!.slotId
+    store.updateSlot(slotId, 'anthropic', 'claude-3-5-haiku-20241022')
+    expect(store.selectedModels[0]).toMatchObject({
+      provider: 'anthropic',
+      modelId: 'claude-3-5-haiku-20241022',
+    })
+    store.updateSlot('missing-slot', 'openai', 'gpt-4o')
+    expect(store.selectedModels[0]!.provider).toBe('anthropic')
   })
 
   it('encryptAndPersistKeys and decryptKeys round-trip with unlocked security store', async () => {
@@ -133,6 +156,7 @@ describe('useProviderStore', () => {
 
     expect(store.discoveredOllamaModels?.map(m => m.id)).toEqual(['phi3:latest'])
     expect(store.discoveredLmStudioModels?.map(m => m.id)).toEqual(['local-mistral'])
+    expect(store.getModel('local-mistral')?.provider).toBe('lmstudio')
     expect(store.localDiscoverError).toBe('')
     expect(store.localDiscovering).toBe(false)
   })
@@ -149,6 +173,24 @@ describe('useProviderStore', () => {
     expect(store.localDiscovering).toBe(false)
   })
 
+  it('discoverLocalLlms keeps a partial error when only one backend answers', async () => {
+    const store = useProviderStore()
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes(':11434')) {
+        return new Response(JSON.stringify({ models: [{ name: 'phi3:latest' }] }), { status: 200 })
+      }
+      throw new TypeError('Failed to fetch')
+    }))
+
+    await store.discoverLocalLlms()
+
+    expect(store.discoveredOllamaModels?.map(m => m.id)).toEqual(['phi3:latest'])
+    expect(store.discoveredLmStudioModels).toBeNull()
+    expect(store.localDiscoverError).toMatch(/LM Studio|Could not reach|Failed to fetch/i)
+    expect(store.localDiscovering).toBe(false)
+  })
+
   it('assertRequestAllowed throws for cloud providers when air-gapped', () => {
     const store = useProviderStore()
     store.setAirGapped(true)
@@ -159,9 +201,7 @@ describe('useProviderStore', () => {
   it('addSlot prefers ollama when air-gapped', () => {
     const store = useProviderStore()
     store.setAirGapped(true)
-    store.$patch({
-      selectedModels: [{ slotId: 'slot-1', provider: 'ollama', modelId: 'llama3.2' }],
-    })
+    store.selectedModels = [{ slotId: 'slot-1', provider: 'ollama', modelId: 'llama3.2' }]
     store.addSlot()
     expect(store.selectedModels.at(-1)?.provider).toBe('ollama')
   })
@@ -199,12 +239,10 @@ describe('useProviderStore', () => {
 
   it('adds slots up to 4 and refuses a fifth', () => {
     const store = useProviderStore()
-    store.$patch({
-      selectedModels: [
-        { slotId: 'slot-1', provider: 'openai', modelId: 'gpt-4o-mini' },
-        { slotId: 'slot-2', provider: 'ollama', modelId: 'llama3.2' },
-      ],
-    })
+    store.selectedModels = [
+      { slotId: 'slot-1', provider: 'openai', modelId: 'gpt-4o-mini' },
+      { slotId: 'slot-2', provider: 'ollama', modelId: 'llama3.2' },
+    ]
     expect(store.selectedModels).toHaveLength(2)
 
     store.addSlot()
@@ -218,12 +256,10 @@ describe('useProviderStore', () => {
 
   it('removes slots but keeps at least one', () => {
     const store = useProviderStore()
-    store.$patch({
-      selectedModels: [
-        { slotId: 'slot-1', provider: 'openai', modelId: 'gpt-4o-mini' },
-        { slotId: 'slot-2', provider: 'ollama', modelId: 'llama3.2' },
-      ],
-    })
+    store.selectedModels = [
+      { slotId: 'slot-1', provider: 'openai', modelId: 'gpt-4o-mini' },
+      { slotId: 'slot-2', provider: 'ollama', modelId: 'llama3.2' },
+    ]
     const firstId = store.selectedModels[0].slotId
 
     store.removeSlot(store.selectedModels[1].slotId)
@@ -257,5 +293,68 @@ describe('useProviderStore', () => {
 
     expect(store.modelsByProvider.ollama.map(m => m.id)).toEqual(['llama3.2', 'mistral'])
     expect(store.ollamaDiscoverError).toMatch(/could not reach ollama/i)
+  })
+
+  it('migrateDeprecatedModels remaps retired model IDs on slots', () => {
+    const store = useProviderStore()
+    store.selectedModels = [
+      { slotId: 'slot-1', provider: 'gemini', modelId: 'gemini-1.5-flash' },
+      { slotId: 'slot-2', provider: 'ollama', modelId: 'llama3.2' },
+    ]
+
+    store.migrateDeprecatedModels()
+
+    expect(store.selectedModels[0]?.modelId).toBe('gemini-3.6-flash')
+    expect(store.selectedModels[1]?.modelId).toBe('llama3.2')
+  })
+
+  it('hydrates vault, slots, and local discovery from the combined provider persist key', () => {
+    const store = useProviderStore()
+    memory.set('provider', JSON.stringify({
+      encryptedPayload: { v: 1, iv: 'iv', data: 'cipher' },
+      ollamaUrl: 'http://127.0.0.1:11434',
+      lmStudioUrl: 'http://127.0.0.1:1234',
+      streamProxyUrl: 'https://proxy.example/stream',
+      airGapped: true,
+      selectedModels: [
+        { slotId: 'slot-kept', provider: 'ollama', modelId: 'phi3:latest' },
+      ],
+    }))
+
+    store.migrateLegacyStorage()
+
+    expect(store.encryptedPayload).toEqual({ v: 1, iv: 'iv', data: 'cipher' })
+    expect(store.ollamaUrl).toBe('http://127.0.0.1:11434')
+    expect(store.lmStudioUrl).toBe('http://127.0.0.1:1234')
+    expect(store.streamProxyUrl).toBe('https://proxy.example/stream')
+    expect(store.airGapped).toBe(true)
+    expect(store.selectedModels).toEqual([
+      { slotId: 'slot-kept', provider: 'ollama', modelId: 'phi3:latest' },
+    ])
+    expect(memory.get('provider-persist-v2')).toBe('1')
+  })
+
+  it('does not re-copy combined persist after the split flag is set', () => {
+    const store = useProviderStore()
+    memory.set('provider-persist-v2', '1')
+    memory.set('provider', JSON.stringify({
+      ollamaUrl: 'http://should-not-apply:11434',
+      selectedModels: [
+        { slotId: 'ignored', provider: 'openai', modelId: 'gpt-4o' },
+      ],
+    }))
+
+    store.migrateLegacyStorage()
+
+    expect(store.ollamaUrl).toBe('http://localhost:11434')
+    expect(store.selectedModels.map(s => s.slotId)).toEqual(['slot-1', 'slot-2'])
+  })
+
+  it('returns cloud API keys and treats unknown local lookups as empty on the vault path', () => {
+    const store = useProviderStore()
+    store.setApiKey('openai', 'sk-cloud')
+    expect(store.getApiKey('openai')).toBe('sk-cloud')
+    expect(store.getApiKey('anthropic')).toBe('')
+    expect(store.isProviderConfigured('gemini')).toBe(false)
   })
 })

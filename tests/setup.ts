@@ -4,8 +4,11 @@ import { useCodeExporter } from '../app/composables/useCodeExporter'
 import { useCompareRunner } from '../app/composables/useCompareRunner'
 import { useCostCalculator } from '../app/composables/useCostCalculator'
 import { usePromptStore } from '../app/stores/usePromptStore'
+import { useLocalDiscoveryStore } from '../app/stores/useLocalDiscoveryStore'
+import { useModelSlotsStore } from '../app/stores/useModelSlotsStore'
 import { useProviderStore } from '../app/stores/useProviderStore'
 import { useSecurityStore } from '../app/stores/useSecurityStore'
+import { useVaultStore } from '../app/stores/useVaultStore'
 
 vi.stubGlobal('computed', computed)
 vi.stubGlobal('ref', ref)
@@ -23,6 +26,9 @@ vi.stubGlobal('useCompareRunner', useCompareRunner)
 vi.stubGlobal('usePromptStore', usePromptStore)
 vi.stubGlobal('useProviderStore', useProviderStore)
 vi.stubGlobal('useSecurityStore', useSecurityStore)
+vi.stubGlobal('useVaultStore', useVaultStore)
+vi.stubGlobal('useModelSlotsStore', useModelSlotsStore)
+vi.stubGlobal('useLocalDiscoveryStore', useLocalDiscoveryStore)
 
 const memory = new Map<string, string>()
 const sessionMemory = new Map<string, string>()

@@ -1,22 +1,13 @@
 // Copyright (c) 2026 llm-workbench contributors
 // SPDX-License-Identifier: MIT
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createTestingPinia } from '@pinia/testing'
 import { setActivePinia } from 'pinia'
 import { useLLMStream } from '../app/composables/useLLMStream'
+import * as streamClient from '../app/lib/streamClient'
 import { useProviderStore } from '../app/stores/useProviderStore'
 import type { StreamRequest } from '../app/types/llm'
-
-const streamCompletionDirect = vi.fn()
-const streamCompletionViaProxy = vi.fn()
-const resolveStreamEndpoint = vi.fn()
-
-vi.mock('../app/lib/streamClient', () => ({
-  resolveStreamEndpoint: (...args: unknown[]) => resolveStreamEndpoint(...args),
-  streamCompletionDirect: (...args: unknown[]) => streamCompletionDirect(...args),
-  streamCompletionViaProxy: (...args: unknown[]) => streamCompletionViaProxy(...args),
-}))
 
 const request: StreamRequest = {
   provider: 'openai',
@@ -36,39 +27,43 @@ const callbacks = {
 describe('useLLMStream', () => {
   beforeEach(() => {
     setActivePinia(createTestingPinia({ stubActions: false, createSpy: vi.fn }))
-    streamCompletionDirect.mockReset().mockResolvedValue(undefined)
-    streamCompletionViaProxy.mockReset().mockResolvedValue(undefined)
-    resolveStreamEndpoint.mockReset()
+    vi.spyOn(streamClient, 'streamCompletionDirect').mockResolvedValue(undefined)
+    vi.spyOn(streamClient, 'streamCompletionViaProxy').mockResolvedValue(undefined)
+    vi.spyOn(streamClient, 'resolveStreamEndpoint')
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it('routes through the proxy when a stream proxy URL is configured', async () => {
     const provider = useProviderStore()
     provider.streamProxyUrl = 'https://proxy.example/stream'
-    resolveStreamEndpoint.mockReturnValue('https://proxy.example/stream')
+    vi.mocked(streamClient.resolveStreamEndpoint).mockReturnValue('https://proxy.example/stream')
 
     const { streamCompletion } = useLLMStream()
     await streamCompletion(request, callbacks)
 
-    expect(resolveStreamEndpoint).toHaveBeenCalledWith('https://proxy.example/stream')
-    expect(streamCompletionViaProxy).toHaveBeenCalledWith(
+    expect(streamClient.resolveStreamEndpoint).toHaveBeenCalledWith('https://proxy.example/stream')
+    expect(streamClient.streamCompletionViaProxy).toHaveBeenCalledWith(
       'https://proxy.example/stream',
       request,
       callbacks,
       undefined,
     )
-    expect(streamCompletionDirect).not.toHaveBeenCalled()
+    expect(streamClient.streamCompletionDirect).not.toHaveBeenCalled()
   })
 
   it('calls providers directly when no proxy endpoint is set', async () => {
     const provider = useProviderStore()
     provider.streamProxyUrl = ''
-    resolveStreamEndpoint.mockReturnValue(null)
+    vi.mocked(streamClient.resolveStreamEndpoint).mockReturnValue(null)
 
     const { streamCompletion } = useLLMStream()
     const signal = new AbortController().signal
     await streamCompletion(request, callbacks, signal)
 
-    expect(streamCompletionDirect).toHaveBeenCalledWith(request, callbacks, signal)
-    expect(streamCompletionViaProxy).not.toHaveBeenCalled()
+    expect(streamClient.streamCompletionDirect).toHaveBeenCalledWith(request, callbacks, signal)
+    expect(streamClient.streamCompletionViaProxy).not.toHaveBeenCalled()
   })
 })

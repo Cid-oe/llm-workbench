@@ -1,8 +1,9 @@
-import type { GenerationParams, PromptFileData, PromptVariables, ProviderId } from '~/types/llm'
+import * as v from 'valibot'
+import type { PromptFileData } from '~/types/llm'
+import { isSecretFrontmatterKey } from '~/lib/promptSecrets'
+import { firstSchemaIssue, promptFileDataSchema } from '~/lib/schemas/promptFile'
 
-const PROVIDERS: ProviderId[] = ['openai', 'anthropic', 'gemini', 'groq', 'ollama']
-
-const SECRET_KEY_RE = /^(?:api[_-]?key|(?:openai|anthropic|gemini|groq)[_-]?key|.*(?:secret|password|authorization|credential).*|(?:access|auth|bearer|refresh|id)[_-]?token)$/i
+export { isSecretFrontmatterKey }
 
 const FRONTMATTER_RE = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n?([\s\S]*)$/
 
@@ -14,10 +15,6 @@ export class PromptFileError extends Error {
     super(message)
     this.name = 'PromptFileError'
   }
-}
-
-export function isSecretFrontmatterKey(key: string): boolean {
-  return SECRET_KEY_RE.test(key.trim())
 }
 
 export function promptFileName(name?: string): string {
@@ -75,47 +72,15 @@ export function parsePromptFile(markdown: string): PromptFileData {
   const matter = stripSecretKeys(parseYamlMap(rawMatter))
   const { systemPrompt, userPrompt } = parsePromptBody(body)
 
-  return {
-    name: asOptionalString(matter.name),
-    tags: asStringList(matter.tags),
-    model: asOptionalString(matter.model),
-    provider: asProvider(matter.provider),
-    generation: parseGeneration(matter),
-    variables: parseVariables(matter.variables),
+  const result = v.safeParse(promptFileDataSchema, {
+    ...matter,
     systemPrompt,
     userPrompt,
+  })
+  if (!result.success) {
+    throw new PromptFileError(firstSchemaIssue(result.issues))
   }
-}
-
-function parseGeneration(matter: Record<string, YamlValue>): GenerationParams | undefined {
-  const generation: GenerationParams = {}
-  const temperature = asOptionalNumber(matter.temperature)
-  const topP = asOptionalNumber(matter.top_p ?? matter.topP)
-  const maxTokens = asOptionalNumber(matter.max_tokens ?? matter.maxTokens)
-  if (temperature !== undefined) generation.temperature = temperature
-  if (topP !== undefined) generation.topP = topP
-  if (maxTokens !== undefined) generation.maxTokens = maxTokens
-  return Object.keys(generation).length ? generation : undefined
-}
-
-function parseVariables(value: YamlValue | undefined): PromptVariables {
-  if (value == null) return {}
-  if (Array.isArray(value)) {
-    const vars: PromptVariables = {}
-    for (const item of value) {
-      if (typeof item === 'string' && item) vars[item] = ''
-    }
-    return vars
-  }
-  if (typeof value === 'object') {
-    const vars: PromptVariables = {}
-    for (const [key, raw] of Object.entries(value)) {
-      if (isSecretFrontmatterKey(key)) continue
-      vars[key] = raw == null ? '' : String(raw)
-    }
-    return vars
-  }
-  return {}
+  return result.output
 }
 
 function parsePromptBody(body: string): { systemPrompt: string; userPrompt: string } {
@@ -274,26 +239,4 @@ function dumpScalar(value: string | number): string {
     return JSON.stringify(value)
   }
   return value
-}
-
-function asOptionalString(value: YamlValue | undefined): string | undefined {
-  if (typeof value === 'string' && value) return value
-  if (typeof value === 'number') return String(value)
-  return undefined
-}
-
-function asOptionalNumber(value: YamlValue | undefined): number | undefined {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value === 'string' && value.trim() && !Number.isNaN(Number(value))) return Number(value)
-  return undefined
-}
-
-function asStringList(value: YamlValue | undefined): string[] {
-  if (!Array.isArray(value)) return []
-  return value.filter((item): item is string => typeof item === 'string' && item.length > 0)
-}
-
-function asProvider(value: YamlValue | undefined): ProviderId | undefined {
-  if (typeof value !== 'string') return undefined
-  return PROVIDERS.includes(value as ProviderId) ? value as ProviderId : undefined
 }

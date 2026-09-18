@@ -1,4 +1,10 @@
-import { isSecretFrontmatterKey } from '~/lib/promptFile'
+import * as v from 'valibot'
+import { isSecretFrontmatterKey } from '~/lib/promptSecrets'
+import {
+  PROMPT_BACKUP_VERSION,
+  firstSchemaIssue,
+  promptBackupSchema,
+} from '~/lib/schemas/promptBackup'
 import type {
   AssertionResult,
   AssertionSummary,
@@ -14,7 +20,7 @@ import type {
   StreamStatus,
 } from '~/types/llm'
 
-export const PROMPT_BACKUP_VERSION = 1 as const
+export { PROMPT_BACKUP_VERSION }
 
 export type PromptBackupMode = 'merge' | 'replace'
 
@@ -213,21 +219,18 @@ export function parsePromptBackup(raw: string): PromptBackupPayload {
     throw new PromptBackupError('Invalid JSON backup file')
   }
 
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new PromptBackupError('Backup must be a JSON object')
+  const result = v.safeParse(promptBackupSchema, parsed)
+  if (!result.success) {
+    throw new PromptBackupError(firstSchemaIssue(result.issues))
   }
 
-  const body = parsed as Record<string, unknown>
-  if (body.version !== PROMPT_BACKUP_VERSION) {
-    throw new PromptBackupError(`Unsupported backup version: ${String(body.version)}`)
-  }
-
-  const history = Array.isArray(body.history)
-    ? body.history.map(scrubHistoryEntry).filter((e): e is ExecutionHistoryEntry => !!e)
-    : []
-  const savedPrompts = Array.isArray(body.savedPrompts)
-    ? body.savedPrompts.map(scrubSavedPrompt).filter((p): p is SavedPrompt => !!p)
-    : []
+  const body = result.output
+  const history = (body.history ?? [])
+    .map(scrubHistoryEntry)
+    .filter((e): e is ExecutionHistoryEntry => !!e)
+  const savedPrompts = (body.savedPrompts ?? [])
+    .map(scrubSavedPrompt)
+    .filter((p): p is SavedPrompt => !!p)
 
   return {
     version: PROMPT_BACKUP_VERSION,

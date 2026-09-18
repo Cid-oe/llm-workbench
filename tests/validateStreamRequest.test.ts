@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { isAllowedUrl, isProviderId, validateStreamRequest } from '../app/lib/validateStreamRequest'
+import * as v from 'valibot'
+import { isAllowedUrl, isProviderId, streamRequestSchema, validateStreamRequest } from '../app/lib/validateStreamRequest'
 
 describe('validateStreamRequest', () => {
   const valid = {
@@ -18,6 +19,16 @@ describe('validateStreamRequest', () => {
       expect(result.value.provider).toBe('openai')
       expect(result.value.temperature).toBe(0.7)
       expect(result.value.maxTokens).toBe(4096)
+    }
+  })
+
+  it('uses valibot safeParse under the hood without echoing apiKey in issues', () => {
+    const parsed = v.safeParse(streamRequestSchema, { ...valid, apiKey: 'sk-super-secret', provider: 'nope' })
+    expect(parsed.success).toBe(false)
+    if (!parsed.success) {
+      const serialized = JSON.stringify(parsed.issues.map(i => i.message))
+      expect(serialized).not.toContain('sk-super-secret')
+      expect(serialized).toMatch(/provider/i)
     }
   })
 

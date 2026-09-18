@@ -1,6 +1,7 @@
 # LLM Workbench
 
-[![License: Source-Available (AI restricted)](https://img.shields.io/badge/License-Source--Available-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14694/badge)](https://www.bestpractices.dev/projects/14694)
 [![Health Score](https://github.com/ale94lko/llm-workbench/blob/output/badge.svg)](https://github.com/ale94lko/repo-health-score)
 [![Nuxt](https://img.shields.io/badge/Nuxt-4-00DC82?logo=nuxt.js&logoColor=white)](https://nuxt.com)
 [![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org)
@@ -248,4 +249,4 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) and op
 
 ## License
 
-**llm-workbench** is source-available under the terms in [`LICENSE`](LICENSE): use, modification, and distribution are allowed, but using this software or its documentation to train, fine-tune, evaluate, or synthesize AI/ML/LLM systems requires a separate paid written agreement with the copyright holder.
+**llm-workbench** is released under the [MIT License](LICENSE).

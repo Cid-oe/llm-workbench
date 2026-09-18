@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Revert to MIT License to meet OpenSSF Best Practices FLOSS requirements
+- Add OpenSSF Best Practices badge to README
 - Raised Vitest coverage gates to lines/functions/statements ≥70% and branches ≥55% after hotspot tests ([#71](https://github.com/ale94lko/llm-workbench/issues/71))
 - Audited transitive deps: `npm dedupe` on the lockfile; kept `@emnapi/*` direct pins (required for Linux `npm ci` / Oxide lock sync) ([#70](https://github.com/ale94lko/llm-workbench/issues/70))
 

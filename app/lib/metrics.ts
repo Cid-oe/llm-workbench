@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import type { ExecutionHistoryEntry, ModelResponse, ProviderId } from '~/types/llm'
 import { PROVIDER_MODELS } from './providerModels'
 

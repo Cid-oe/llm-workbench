@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { describe, expect, it } from 'vitest'
 import * as v from 'valibot'
 import { isAllowedUrl, isProviderId, streamRequestSchema, validateStreamRequest } from '../app/lib/validateStreamRequest'

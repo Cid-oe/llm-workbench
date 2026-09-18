@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 export type ProviderId = 'openai' | 'anthropic' | 'gemini' | 'groq' | 'ollama' | 'lmstudio'
 
 export interface ProviderModel {

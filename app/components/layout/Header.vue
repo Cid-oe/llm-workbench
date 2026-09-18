@@ -1,3 +1,5 @@
+<!-- Copyright (c) 2026 llm-workbench contributors. SPDX-License-Identifier: MIT -->
+
 <script setup lang="ts">
 import { BarChart3, Cpu, History, Menu, Settings, X } from '@lucide/vue'
 

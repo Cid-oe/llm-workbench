@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { localStore, sessionStore } from '~/lib/browserStorage'
 
 /** Vault crypto generation. v1 = AES-256-GCM + PBKDF2-SHA-256. Bump to introduce Argon2id or SHA-3 without rewriting this module's call sites. */

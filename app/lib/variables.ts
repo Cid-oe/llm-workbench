@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import type { PromptVariables } from '~/types/llm'
 
 export function detectVariables(systemPrompt: string, userPrompt: string): string[] {

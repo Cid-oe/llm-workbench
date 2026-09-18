@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 export const en = {
   skipToContent: 'Skip to content',
   nav: {

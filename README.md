@@ -249,7 +249,7 @@ Client and stream failures use a typed `StreamError` (`app/lib/errors.ts`). Befo
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md), [GOVERNANCE.md](GOVERNANCE.md), and the [Code of Conduct](CODE_OF_CONDUCT.md). Open an issue first to discuss what you'd like to change.
 
-Project docs: [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), [security assurance case](docs/assurance-case.md), [OpenSSF Silver evidence](docs/openssf-silver.md).
+Project docs: [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), [security assurance case](docs/assurance-case.md), [OpenSSF Silver](docs/openssf-silver.md), [OpenSSF Gold](docs/openssf-gold.md).
 
 1. Fork the repo
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)

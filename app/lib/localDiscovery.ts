@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import type { ProviderModel } from '~/types/llm'
 import { discoverOllamaModels, type OllamaDiscoverResult } from '~/lib/ollamaModels'
 import { corsHint } from '~/lib/streamProviders'

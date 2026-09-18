@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import type { EncryptedPayload } from '~/lib/crypto'
 import { VAULT_CRYPTO_VERSION } from '~/lib/crypto'
 import { localStore } from '~/lib/browserStorage'

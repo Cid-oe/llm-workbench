@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { defineStore } from 'pinia'
 import type { ProviderId } from '~/types/llm'
 import type { ApiKeysPayload, EncryptedPayload } from '~/lib/crypto'

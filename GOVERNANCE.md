@@ -37,12 +37,23 @@ If one maintainer becomes unavailable, the other can continue those tasks within
 
 The bus factor is **2** (both CODEOWNERS maintainers). See also [access continuity](#access-continuity).
 
+## Independent maintainers
+
+The two maintainers are **not** affiliated with the same organization:
+
+| Person | GitHub | Affiliation |
+| --- | --- | --- |
+| Fidel Alejandro Fernández Arias | [@ale94lko](https://github.com/ale94lko) | Independent (no shared employer with the other maintainer) |
+| Leo Flavio | [@leoflavio1989](https://github.com/leoflavio1989) | Independent (separate GitHub account and employer) |
+
+They are distinct legal persons. This meets OpenSSF Gold `contributors_unassociated` (at least two significant contributors from different organizations).
+
 ## Two-factor authentication (2FA)
 
-Anyone with permission to push to this repository, merge to `main`, publish releases, or access private vulnerability reports **MUST** enable GitHub two-factor authentication on their account.
+Anyone with permission to push to this repository, merge to `main`, publish releases, change repository settings, or access private vulnerability reports **MUST** enable GitHub two-factor authentication on their account.
 
-- **Required:** GitHub account 2FA enabled ([GitHub 2FA docs](https://docs.github.com/en/authentication/securing-your-account-with-two-factor-authentication-2fa)).
-- **Preferred:** TOTP authenticator app and/or security keys / passkeys — not SMS-only 2FA.
+- **Required:** GitHub account 2FA enabled ([GitHub 2FA docs](https://docs.github.com/en/authentication/securing-your-account-with-two-factor-authentication-2fa)). GitHub itself [requires 2FA](https://github.blog/changelog/2023-03-09-raising-the-bar-for-software-security-github-2fa-begins-march-13/) to contribute on github.com.
+- **Required for maintainers (secure 2FA):** TOTP authenticator app and/or security keys / passkeys. **SMS-only 2FA is not accepted** for write access.
 
 ## Developer Certificate of Origin (DCO)
 
@@ -58,3 +69,4 @@ Non-trivial contributions must include a `Signed-off-by` line in each commit, as
 - [docs/hardening.md](docs/hardening.md) — hardening mechanisms
 - [docs/accessibility.md](docs/accessibility.md) — accessibility practices
 - [docs/openssf-silver.md](docs/openssf-silver.md) — OpenSSF Silver evidence map
+- [docs/openssf-gold.md](docs/openssf-gold.md) — OpenSSF Gold evidence map

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 export type JsonPreviewNode
   = | { kind: 'primitive'; key?: string; value: string; type: 'string' | 'number' | 'boolean' | 'null' }
     | { kind: 'object'; key?: string; children: JsonPreviewNode[]; collapsed?: boolean }

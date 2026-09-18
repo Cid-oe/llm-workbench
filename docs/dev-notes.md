@@ -29,8 +29,8 @@ CI runs the same command on a **dedicated** `fresh` job in `.github/workflows/ci
 
 | Metric | Minimum |
 | :--- | ---: |
-| lines / functions / statements | 80% |
-| branches | 65% |
+| lines / functions / statements | 90% |
+| branches | 80% |
 
 If any threshold is unmet, Vitest exits **non-zero**. That fails:
 

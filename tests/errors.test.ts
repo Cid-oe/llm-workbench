@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { describe, expect, it, vi } from 'vitest'
 import { StreamError, isStreamError } from '../app/lib/errors'
 import { addLogSink, logger } from '../app/lib/logger'

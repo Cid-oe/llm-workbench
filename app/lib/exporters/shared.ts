@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import type { ProviderId } from '~/types/llm'
 import { resolveGenerationParams } from '~/lib/generation'
 import type { ExportOptions } from './types'

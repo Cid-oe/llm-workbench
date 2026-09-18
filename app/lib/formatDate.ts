@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 /** Fixed-locale date formatting to avoid SSR/client hydration mismatches */
 export function formatDateTime(iso: string): string {
   const d = new Date(iso)

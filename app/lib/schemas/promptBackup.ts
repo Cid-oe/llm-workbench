@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import * as v from 'valibot'
 
 export const PROMPT_BACKUP_VERSION = 1 as const

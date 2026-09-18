@@ -41,6 +41,7 @@ Run these before opening a pull request:
 ```bash
 npm run lint
 npm run typecheck
+npm run check:headers
 npm test
 ```
 
@@ -58,7 +59,7 @@ CI runs lint, typecheck, tests with coverage, `npm audit --audit-level=high`, an
 - **`Deploy to GitHub Pages`** (`.github/workflows/deploy-pages.yml`) does **not** re-run that gate on push to `main`. It starts via `workflow_run` after a successful **CI** run that was a **push to `main`**, checks out that exact commit, then only generates and publishes the static site.
 - Failed CI on `main` blocks deploy. Manual `workflow_dispatch` on the deploy workflow still runs the full quality steps before `npm run generate`, so a broken site cannot be published that way either.
 - Vitest uses `pool: 'threads'` with `isolate: false` to cut happy-dom startup cost; `tests/setup.ts` resets storage per test. Prefer not to rely on order-dependent global state.
-- Coverage thresholds enforce lines/functions/statements (≥80%) and branches (≥65%) via `vitest.config.ts` (`perFile: false`). Unmet thresholds make `npm run test:coverage` exit non-zero, so the CI `test` / `fresh` jobs fail. Do not lower thresholds just to pass.
+- Coverage thresholds enforce lines/functions/statements (≥90%) and branches (≥80%) via `vitest.config.ts` (`perFile: false`). Unmet thresholds make `npm run test:coverage` exit non-zero, so the CI `test` / `fresh` jobs fail. Do not lower thresholds just to pass.
 
 ### Smoke E2E (static Pages output)
 
@@ -144,7 +145,36 @@ As **major new functionality** is added, tests for that functionality **MUST** b
 
 Prefer **regression tests** when fixing bugs. Target: at least **50%** of bugs fixed in any six-month window get an automated regression test. Do not rewrite old history to invent that pairing.
 
-Statement coverage is enforced at **≥ 80%** statements/lines/functions (and **≥ 65%** branches) via Vitest thresholds in [`vitest.config.ts`](vitest.config.ts) (`npm run test:coverage`).
+Statement coverage is enforced at **≥ 90%** statements/lines/functions (and **≥ 80%** branches) via Vitest thresholds in [`vitest.config.ts`](vitest.config.ts) (`npm run test:coverage`).
+
+## Small tasks
+
+The project keeps an ongoing set of **small, self-contained** tasks so new contributors can land a first change without a large design discussion.
+
+- Browse issues labeled [`good first issue`](https://github.com/ale94lko/llm-workbench/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+- Open a new one with the [Good first issue](https://github.com/ale94lko/llm-workbench/issues/new?template=good_first_issue.yml) form when you spot a docs typo, missing test, or tiny UI fix.
+- Maintainers should keep at least a few of these open (or quickly replace them when they are completed).
+
+## Code review standards
+
+Every pull request that changes product, test, or CI behavior is reviewed against this checklist before merge:
+
+1. **Scope** — the PR is focused; unrelated refactors are split out.
+2. **Tests** — new behavior has tests in the same PR; bug fixes include a regression test when reasonably possible.
+3. **Security** — no secrets in git or exporters; user input stays on allowlists; CSP/headers and vault crypto are not weakened.
+4. **License** — new source files include `Copyright (c) YYYY` and `SPDX-License-Identifier: MIT` (see `npm run check:headers`).
+5. **Commits** — Conventional Commits + DCO `Signed-off-by`.
+6. **Docs** — user-visible or process changes update README / CONTRIBUTING / `docs/` in the same PR.
+
+Reviewers leave comments on the GitHub PR. Authors should not merge until required checks are green and the review below is satisfied.
+
+## Two-person review
+
+Modifications reach `main` only through a pull request. **At least one maintainer who is not the author** must approve before merge (GitHub: require 1 approving review + require review from Code Owners; [`.github/CODEOWNERS`](.github/CODEOWNERS)).
+
+- Dependabot and other bots still need a human approval.
+- Trivial typo-only docs PRs follow the same rule so the history stays uniformly reviewed.
+- Direct pushes to `main` are forbidden.
 
 ## Project docs
 
@@ -156,6 +186,9 @@ Statement coverage is enforced at **≥ 80%** statements/lines/functions (and **
 - [docs/accessibility.md](docs/accessibility.md) — WCAG-oriented practices and i18n
 - [docs/achievements.md](docs/achievements.md) — public badges
 - [docs/openssf-silver.md](docs/openssf-silver.md) — OpenSSF Silver evidence map
+- [docs/openssf-gold.md](docs/openssf-gold.md) — OpenSSF Gold evidence map
+- [docs/reproducible-build.md](docs/reproducible-build.md) — how to rebuild a tagged release
+- [docs/security-review-2026-09.md](docs/security-review-2026-09.md) — latest dated security design review
 - [SECURITY.md](SECURITY.md) — vulnerability reporting and response
 
 ## Merge requirements
@@ -184,14 +217,15 @@ Also follow [Feature + test pairing](#feature--test-pairing): ship behavior chan
 
 ### Maintainer: branch protection on `main`
 
-Branch protection is configured in GitHub **Settings → Branches** (not fully expressible in-repo). Maintainers should keep:
+Branch protection / rulesets are configured in GitHub **Settings → Rules** (not fully expressible in-repo). Maintainers should keep:
 
-- [ ] Require a pull request before merging
-- [ ] Require status checks to pass before merging: `quality`, `test`, `fresh`, `docker-smoke`, `commitlint`, `dco`
-- [ ] Do **not** require `smoke` (optional / `continue-on-error`)
-- [ ] Prefer squash merges so `main` history stays linear and changelog-friendly
+- [x] Require a pull request before merging
+- [x] Require at least **1** approving review from a Code Owner other than the author
+- [x] Require status checks to pass before merging: `quality`, `test`, `fresh`, `docker-smoke`, `commitlint`, `dco`
+- [x] Do **not** require `smoke` (optional / `continue-on-error`)
+- [x] Prefer squash merges so `main` history stays linear and changelog-friendly
 
-Settings UI: [Branch protection rules](https://github.com/ale94lko/llm-workbench/settings/branches).
+Settings UI: [Rulesets](https://github.com/ale94lko/llm-workbench/settings/rules).
 
 ## Workflow
 

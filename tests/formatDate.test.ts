@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { describe, expect, it } from 'vitest'
 import { formatDateTime } from '../app/lib/formatDate'
 

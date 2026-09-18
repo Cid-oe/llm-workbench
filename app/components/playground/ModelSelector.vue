@@ -1,3 +1,5 @@
+<!-- Copyright (c) 2026 llm-workbench contributors. SPDX-License-Identifier: MIT -->
+
 <script setup lang="ts">
 import { Plus, Radar, RefreshCw, Trash2 } from '@lucide/vue'
 import type { ProviderId } from '~/types/llm'

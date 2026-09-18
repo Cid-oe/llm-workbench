@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { logger } from '~/lib/logger'
 import { recordStreamError, recordStreamRequest } from '~/lib/runtimeMetrics'
 import { buildProviderRequest, parseProviderError } from '~/lib/streamProviders'

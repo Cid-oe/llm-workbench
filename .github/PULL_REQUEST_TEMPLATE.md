@@ -31,6 +31,9 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 - [ ] Feature/fix changes include paired tests in this PR (or this is docs/CI-only)
 - [ ] Bug fixes include a regression test when reasonably possible
 - [ ] Commits are signed off (`git commit -s`, DCO)
+- [ ] New source files include `Copyright (c) YYYY` and `SPDX-License-Identifier: MIT`
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] This PR stays focused (no unrelated multi-feature squash)
+
+Reviewers: follow [code review standards](https://github.com/ale94lko/llm-workbench/blob/main/CONTRIBUTING.md#code-review-standards). Merge needs an approval from a CODEOWNER other than the author.

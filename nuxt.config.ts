@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import tailwindcss from '@tailwindcss/vite'
 
 function envEnabled(value: string | undefined, fallback: boolean): boolean {

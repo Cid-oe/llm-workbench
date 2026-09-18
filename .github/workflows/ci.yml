@@ -31,11 +31,14 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: License headers
+        run: npm run check:headers
+
       - name: Typecheck
         run: npm run typecheck
 
   # First-class coverage gate (job id `test` for ci_runs_tests / status checks).
-  # Coverage thresholds (vitest.config.ts): lines/functions/statements ≥80%, branches ≥65%.
+  # Coverage thresholds (vitest.config.ts): lines/functions/statements ≥90%, branches ≥80%.
   # Vitest exits non-zero if unmet → this job fails the workflow.
   test:
     runs-on: ubuntu-latest

@@ -1,3 +1,5 @@
+<!-- Copyright (c) 2026 llm-workbench contributors. SPDX-License-Identifier: MIT -->
+
 <script setup lang="ts">
 import { Plus, Trash2, Wrench } from '@lucide/vue'
 import { createToolSignatureId } from '~/lib/toolCall'

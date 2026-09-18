@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import type { ProviderModel } from '~/types/llm'
 import { PROVIDER_MODELS } from '~/lib/providerModels'
 import { corsHint } from '~/lib/streamProviders'

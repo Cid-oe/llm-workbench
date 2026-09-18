@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { defineStore, storeToRefs } from 'pinia'
 import type { ProviderId, SelectedModel } from '~/types/llm'
 import { isCloudProvider } from '~/lib/localDiscovery'

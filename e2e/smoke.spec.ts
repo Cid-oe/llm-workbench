@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { expect, test } from '@playwright/test'
 
 /** Provider / local LLM hosts — smoke must never hit the real network for these. */

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 // @ts-check
 import withNuxt from './.nuxt/eslint.config.mjs'
 

@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 /**
  * Fresh-clone verification: install from lockfile, build, run unit coverage.
  * Fails closed (non-zero exit) on any step failure.

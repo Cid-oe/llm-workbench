@@ -1,3 +1,5 @@
+<!-- Copyright (c) 2026 llm-workbench contributors. SPDX-License-Identifier: MIT -->
+
 <script setup lang="ts">
 import { colorForIndex, type TimelinePoint } from '~/lib/metrics'
 import { formatDateTime } from '~/lib/formatDate'

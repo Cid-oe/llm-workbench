@@ -14,7 +14,7 @@ Hardening mechanisms used so defects are less likely to become security issues.
 | `npm audit --audit-level=high` | `.github/workflows/ci.yml` `quality` job |
 | Dependabot | `.github/dependabot.yml` |
 | Pinned Actions SHAs | `.github/workflows/*` |
-| Coverage floor | `vitest.config.ts` (≥ 80% statements/lines/functions) |
+| Coverage floor | `vitest.config.ts` (≥ 90% statements/lines/functions, ≥ 80% branches) |
 | DCO sign-off | `scripts/check-dco.mjs` + CI `dco` job |
 
 Least privilege is documented separately in [GOVERNANCE.md](../GOVERNANCE.md) and workflow `permissions:` blocks; it is not counted as a hardening compiler flag here.

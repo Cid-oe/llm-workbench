@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { fileURLToPath } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vitest/config'
@@ -38,13 +41,14 @@ export default defineConfig({
         'app/components/playground/PromptVersionDiff.vue',
       ],
       // Global gates (not per-file). Unmet thresholds make Vitest exit non-zero → CI fails.
-      // OpenSSF Silver requires ≥80% statement coverage (test_statement_coverage80).
+      // OpenSSF Gold: ≥90% statements (test_statement_coverage90), ≥80% branches
+      // (test_branch_coverage80).
       thresholds: {
         perFile: false,
-        lines: 80,
-        functions: 80,
-        statements: 80,
-        branches: 65,
+        lines: 90,
+        functions: 90,
+        statements: 90,
+        branches: 80,
       },
     },
   },

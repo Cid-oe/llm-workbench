@@ -1,3 +1,5 @@
+<!-- Copyright (c) 2026 llm-workbench contributors. SPDX-License-Identifier: MIT -->
+
 <script setup lang="ts">
 import { ListChecks, Plus, Trash2 } from '@lucide/vue'
 import type { AssertionKind, AssertionRule, LengthUnit } from '~/types/llm'

@@ -1,3 +1,5 @@
+<!-- Copyright (c) 2026 llm-workbench contributors. SPDX-License-Identifier: MIT -->
+
 <script setup lang="ts">
 import { Code2, GitCompare, Play, Save, Square, Table2 } from '@lucide/vue'
 import type { ExportLanguage } from '~/composables/useCodeExporter'

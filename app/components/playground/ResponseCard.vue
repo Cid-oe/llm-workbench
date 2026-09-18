@@ -1,3 +1,5 @@
+<!-- Copyright (c) 2026 llm-workbench contributors. SPDX-License-Identifier: MIT -->
+
 <script setup lang="ts">
 import { Check, Copy, Loader2 } from '@lucide/vue'
 import type { ModelResponse } from '~/types/llm'

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { initErrorTracking, reportClientError } from '~/lib/errorTracking'
 import { logger } from '~/lib/logger'
 

@@ -58,7 +58,8 @@ Documented in [architecture.md](architecture.md): browser vault ↔ this app ↔
 
 ## Evidence
 
-- Vitest suite (`npm run test:coverage`) with statement coverage **≥ 80%**.
+- Vitest suite (`npm run test:coverage`) with statement coverage **≥ 90%** and branch coverage **≥ 80%**.
+- Dated security design review: [security-review-2026-09.md](security-review-2026-09.md).
 - ESLint + `nuxt typecheck` + GitHub CodeQL default setup.
 - OpenSSF Scorecard on `main`.
 - OpenSSF Best Practices: https://www.bestpractices.dev/projects/14694

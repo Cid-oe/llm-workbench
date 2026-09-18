@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { loadHandler, stubNitroGlobals } from '../server/nitroTestUtils'
 

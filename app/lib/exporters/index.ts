@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import type { ExportLanguage, ExportOptions } from './types'
 import { exportCurl } from './curl'
 import { exportJavaScript } from './javascript'

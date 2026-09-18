@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { describe, expect, it } from 'vitest'
 import { envVarName, useCodeExporter } from '../app/composables/useCodeExporter'
 import type { ExportLanguage } from '../app/composables/useCodeExporter'

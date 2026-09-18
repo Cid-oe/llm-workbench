@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import JsonTreeNode from '../../app/components/playground/JsonTreeNode.vue'

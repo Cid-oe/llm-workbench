@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { en } from '~/i18n/en'
 
 type NestedStringKeys<T, Prefix extends string = ''> = {

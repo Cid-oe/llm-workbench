@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { extractJsonCandidate, looksLikeJson, parseJsonPreview } from '~/lib/jsonPreview'
 
 export interface ToolSignature {

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { defineConfig, devices } from '@playwright/test'
 
 const port = 4173

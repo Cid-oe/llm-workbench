@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import type { ModelResponse } from '~/types/llm'
 
 /** Persist history only when at least one slot finished usefully (done/error). */

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import * as v from 'valibot'
 import type { PromptVariables, StreamStatus } from '~/types/llm'
 import { MAX_DATASET_ROWS } from '~/lib/datasetLimits'

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 import { describe, expect, it } from 'vitest'
 import { markInFlightAsCancelled, shouldPersistRunHistory } from '../app/lib/runHistory'
 import type { ModelResponse } from '../app/types/llm'

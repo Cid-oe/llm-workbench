@@ -1,3 +1,6 @@
+// Copyright (c) 2026 llm-workbench contributors
+// SPDX-License-Identifier: MIT
+
 /** SSR-safe wrappers around the browser Storage APIs. */
 
 function nativeStorage(kind: 'local' | 'session'): Storage | undefined {

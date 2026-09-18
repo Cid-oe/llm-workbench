@@ -1,6 +1,7 @@
 services:
   app:
     build: .
+    image: llm-workbench:local
     ports:
       - "3000:3000"
     environment:

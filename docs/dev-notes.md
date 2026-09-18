@@ -52,6 +52,8 @@ curl -fsS http://localhost:3000/api/health
 
 Port **3000** must be free. Ollama is optional (`docker compose --profile ollama up --build`).
 
+CI gates the same path on a dedicated `docker-smoke` job in `.github/workflows/ci.yml`: copy `.env.example` → `.env`, build the `app` image (Buildx GHA layer cache), `docker compose up -d` **without** the `ollama` profile, wait until `GET /api/health` succeeds (timeout fails the job), then `docker compose down`. A broken Dockerfile or port mapping fails the workflow; the job runs in parallel with `test` / `fresh` and does not wait on them.
+
 ### Offline unit tests (no Ollama / API keys)
 
 The default Vitest suite (`npm test`, `npm run test:coverage`) uses **happy-dom** and **mocked `fetch`**. Specs such as `tests/toolCall.test.ts`, `tests/localDiscovery.test.ts`, and provider/stream tests do **not** require:

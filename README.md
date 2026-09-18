@@ -106,7 +106,7 @@ Optional local Ollama:
 docker compose --profile ollama up --build
 ```
 
-CI also gates a clean-machine install via the `fresh` job (`npm run verify:fresh`). See [docs/dev-notes.md](docs/dev-notes.md).
+CI also gates a clean-machine install via the `fresh` job (`npm run verify:fresh`) and this Compose boot via the `docker-smoke` job (`.env.example` → `.env`, `/api/health`). See [docs/dev-notes.md](docs/dev-notes.md).
 
 ### Configure providers
 

@@ -68,6 +68,10 @@ Open [http://localhost:3000](http://localhost:3000).
 | :--- | :--- | :--- |
 | `NUXT_APP_BASE_URL` | `/` | Public path prefix. GitHub Pages uses `/llm-workbench/`. |
 | `NUXT_DEVTOOLS` | `false` | Enable Nuxt DevTools. Set `true` locally if you want the overlay. |
+| `CI` | _(unset)_ | Set automatically by GitHub Actions. Signals non-interactive CI to Node/Vitest/Playwright. Leave unset locally. |
+| `HOST` | `0.0.0.0` (Compose) | Bind address for the Nitro server in Docker. Documented commented in `.env.example`; Compose/Dockerfile set it. |
+| `PORT` | `3000` (Compose) | Listen port for the Nitro server in Docker. Documented commented in `.env.example`; Compose/Dockerfile set it. |
+| `NODE_ENV` | _(unset locally)_ | Docker sets `production`. Leave unset for `npm run dev`. |
 | `NUXT_PUBLIC_SENTRY_DSN` | _(empty)_ | Optional. Browser Sentry DSN for production SPA error tracking. Leave empty locally. |
 | `OPENAI_API_KEY` | _(empty)_ | Optional. Used by exporter snippets / local tooling. Get a key at [platform.openai.com](https://platform.openai.com/api-keys). |
 | `ANTHROPIC_API_KEY` | _(empty)_ | Optional. Same as above for Anthropic ([console.anthropic.com](https://console.anthropic.com/settings/keys)). |

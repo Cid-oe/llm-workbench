@@ -26,7 +26,7 @@ jobs:
         run: npm ci
 
       - name: Audit dependencies
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=moderate
 
       - name: Lint
         run: npm run lint
@@ -141,7 +141,11 @@ jobs:
 
       - name: Lint commit messages
         # wagoid/commitlint-github-action@v6.2.1
+        # Uses commitlint.config.js — allows Conventional types including `merge:`
+        # for conflict-resolution commits on PR branches.
         uses: wagoid/commitlint-github-action@b948419dd99f3fd78a6548d48f94e3df7f6bf3ed
+        with:
+          configFile: commitlint.config.js
 
   dco:
     if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'

@@ -29,6 +29,7 @@ export function useCompareRunner() {
   const promptStore = usePromptStore()
   const providerStore = useProviderStore()
   const mcpStore = useMcpStore()
+  const ragStore = useRagStore()
   const { streamCompletion } = useLLMStream()
   const { estimateTokens, calculateCost } = useCostCalculator()
 
@@ -294,9 +295,24 @@ export function useCompareRunner() {
     )
     promptStore.setResponses(initialResponses)
 
-    const prompts = {
+    const baseVars = { ...promptStore.variables }
+    const queryText = interpolateVariables(promptStore.userPrompt, baseVars)
+    let prompts = {
       systemPrompt: promptStore.interpolatedSystemPrompt,
       userPrompt: promptStore.interpolatedUserPrompt,
+    }
+
+    if (ragStore.enabled && ragStore.chunks.length) {
+      const prepared = await ragStore.preparePrompts({
+        systemPrompt: promptStore.systemPrompt,
+        userPrompt: promptStore.userPrompt,
+        variables: baseVars,
+        queryText,
+      })
+      prompts = {
+        systemPrompt: interpolateVariables(prepared.systemPrompt, prepared.variables),
+        userPrompt: interpolateVariables(prepared.userPrompt, prepared.variables),
+      }
     }
 
     await Promise.allSettled(

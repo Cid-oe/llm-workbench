@@ -25,8 +25,14 @@ function lookup(source: unknown, key: string): string | undefined {
 /** English catalog today; extra locale files can be selected without rewriting call sites. */
 export function useI18n() {
   const locale = 'en'
-  function t(key: MessageKey | string): string {
-    return lookup(en, key) ?? key
+  function t(key: MessageKey | string, params?: Record<string, string | number>): string {
+    let msg = lookup(en, key) ?? key
+    if (params) {
+      for (const [name, value] of Object.entries(params)) {
+        msg = msg.replaceAll(`{${name}}`, String(value))
+      }
+    }
+    return msg
   }
   return { locale, t }
 }

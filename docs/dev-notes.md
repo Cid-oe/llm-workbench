@@ -74,6 +74,7 @@ The default Vitest suite (`npm test`, `npm run test:coverage`, `npm run test:off
 | Injected `fetchImpl` | Arg to `discoverOllamaModels` / `discoverLocalLlms` | `ollamaModels.test.ts`, `localDiscovery.test.ts` |
 | Provider URL builders only | Pure functions in `app/lib/streamProviders.ts` | `streamProviders.test.ts` (no network) |
 | Injected `fetchImpl` | Arg to MCP HTTP client / `probeMcpCapabilities` | `tests/mcp/*` |
+| Injected `fetchImpl` | Arg to `embedText(..., 'ollama')` | `tests/rag.test.ts` |
 | MCP stdio bridge factory | `runStdioSession(request, factory)` | `tests/server/mcpStdio.test.ts` |
 
 CI proves the suite stays offline: the `test` job runs `npm run test:offline` after coverage, which on Ubuntu CI wraps Vitest in `sudo unshare --net` (network namespace; GHA blocks unprivileged user namespaces). Locally on Windows/macOS, `npm run test:offline` runs the same Vitest command and relies on the fetch guard + stubs above — full namespace denial is the Ubuntu CI check.

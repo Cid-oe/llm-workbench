@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Export official TypeScript SDKs, Vercel AI SDK, and LangChain (TS/Python) snippets from Compare ([#111](https://github.com/ale94lko/llm-workbench/issues/111))
 - In-browser RAG playground: upload TXT/MD/PDF, local or Ollama embeddings, top-K retrieval and prompt injection on Compare ([#110](https://github.com/ale94lko/llm-workbench/issues/110))
 - LLM-as-a-Judge: optional evaluator model, rubrics, Compare + bulk scoring, aggregates, and CSV/JSON export fields ([#109](https://github.com/ale94lko/llm-workbench/issues/109))
 - MCP client: Settings server manager, HTTP/SSE in the browser, stdio via Nitro + `@modelcontextprotocol/sdk`, live tool execution on Compare ([#108](https://github.com/ale94lko/llm-workbench/issues/108))

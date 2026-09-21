@@ -17,7 +17,16 @@ describe('useCodeExporter', () => {
     apiKey: secret,
   }
 
-  const languages: ExportLanguage[] = ['javascript', 'python', 'curl', 'php']
+  const languages: ExportLanguage[] = [
+    'javascript',
+    'python',
+    'curl',
+    'php',
+    'sdk-typescript',
+    'vercel-ai',
+    'langchain-ts',
+    'langchain-py',
+  ]
 
   it.each(languages)('never interpolates the apiKey into %s snippets', (language) => {
     const code = exportCode(language, baseOpts)
@@ -134,5 +143,35 @@ describe('useCodeExporter', () => {
     expect(envVarName('anthropic')).toBe('ANTHROPIC_API_KEY')
     expect(envVarName('gemini')).toBe('GEMINI_API_KEY')
     expect(envVarName('groq')).toBe('GROQ_API_KEY')
+  })
+
+  it('exports TypeScript SDK snippet for OpenAI', () => {
+    const code = exportCode('sdk-typescript', baseOpts)
+    expect(code).toContain("import OpenAI from 'openai'")
+    expect(code).toContain('process.env.OPENAI_API_KEY')
+    expect(code).toContain('stream: true')
+    expect(code).not.toContain(secret)
+  })
+
+  it('exports Vercel AI SDK snippet', () => {
+    const code = exportCode('vercel-ai', baseOpts)
+    expect(code).toContain("from 'ai'")
+    expect(code).toContain('@ai-sdk/openai')
+    expect(code).toContain('streamText')
+    expect(code).toContain('process.env.OPENAI_API_KEY')
+    expect(code).not.toContain(secret)
+  })
+
+  it('exports LangChain TypeScript and Python snippets', () => {
+    const ts = exportCode('langchain-ts', baseOpts)
+    expect(ts).toContain('@langchain/openai')
+    expect(ts).toContain('ChatOpenAI')
+    expect(ts).not.toContain(secret)
+
+    const py = exportCode('langchain-py', baseOpts)
+    expect(py).toContain('langchain_openai')
+    expect(py).toContain('ChatOpenAI')
+    expect(py).toContain('OPENAI_API_KEY')
+    expect(py).not.toContain(secret)
   })
 })

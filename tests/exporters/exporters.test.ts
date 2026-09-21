@@ -20,13 +20,107 @@ describe('lib/exporters', () => {
     userPrompt: 'Say hi',
   }
 
-  const languages: ExportLanguage[] = ['javascript', 'python', 'curl', 'php']
+  const languages: ExportLanguage[] = [
+    'javascript',
+    'python',
+    'curl',
+    'php',
+    'sdk-typescript',
+    'vercel-ai',
+    'langchain-ts',
+    'langchain-py',
+  ]
   const providers: ProviderId[] = ['openai', 'anthropic', 'gemini', 'groq', 'ollama', 'lmstudio']
 
   it.each(languages)('exports a non-empty %s snippet for OpenAI', (language) => {
     const code = exportCode(language, baseOpts)
     expect(code.length).toBeGreaterThan(20)
     expect(code).toContain('gpt-4o-mini')
+  })
+
+  it.each(providers)('sdk-typescript covers provider %s without secrets', (provider) => {
+    const code = exportCode('sdk-typescript', {
+      ...baseOpts,
+      provider,
+      model: provider === 'ollama' ? 'llama3.2' : provider === 'lmstudio' ? 'local-model' : baseOpts.model,
+      ollamaUrl: 'http://localhost:11434',
+      lmStudioUrl: 'http://localhost:1234',
+      apiKey: 'sk-should-never-appear',
+    })
+    expect(code).not.toContain('sk-should-never-appear')
+
+    if (provider === 'openai') {
+      expect(code).toContain("import OpenAI from 'openai'")
+      expect(code).toContain('process.env.OPENAI_API_KEY')
+    }
+    else if (provider === 'anthropic') {
+      expect(code).toContain('@anthropic-ai/sdk')
+      expect(code).toContain('process.env.ANTHROPIC_API_KEY')
+    }
+    else if (provider === 'gemini') {
+      expect(code).toContain('@google/genai')
+      expect(code).toContain('process.env.GEMINI_API_KEY')
+    }
+    else if (provider === 'groq') {
+      expect(code).toContain('groq-sdk')
+      expect(code).toContain('process.env.GROQ_API_KEY')
+    }
+    else if (provider === 'ollama') {
+      expect(code).toContain('http://localhost:11434/v1')
+    }
+    else {
+      expect(code).toContain('http://localhost:1234/v1')
+      expect(code).toContain('lm-studio')
+    }
+  })
+
+  it.each(providers)('vercel-ai covers provider %s', (provider) => {
+    const code = exportCode('vercel-ai', {
+      ...baseOpts,
+      provider,
+      ollamaUrl: 'http://127.0.0.1:11434',
+      lmStudioUrl: 'http://127.0.0.1:1234',
+    })
+    expect(code).toContain('streamText')
+    expect(code).toContain("from 'ai'")
+    if (provider === 'anthropic') expect(code).toContain('@ai-sdk/anthropic')
+    if (provider === 'gemini') expect(code).toContain('@ai-sdk/google')
+    if (provider === 'openai' || provider === 'groq' || provider === 'ollama' || provider === 'lmstudio') {
+      expect(code).toContain('@ai-sdk/openai')
+    }
+  })
+
+  it.each(providers)('langchain-ts covers provider %s', (provider) => {
+    const code = exportCode('langchain-ts', {
+      ...baseOpts,
+      provider,
+      ollamaUrl: 'http://localhost:11434',
+      lmStudioUrl: 'http://localhost:1234',
+    })
+    expect(code).toContain('@langchain/core/messages')
+    if (provider === 'openai') expect(code).toContain('@langchain/openai')
+    if (provider === 'anthropic') expect(code).toContain('@langchain/anthropic')
+    if (provider === 'gemini') expect(code).toContain('@langchain/google-genai')
+    if (provider === 'groq') expect(code).toContain('@langchain/groq')
+    if (provider === 'ollama') expect(code).toContain('@langchain/ollama')
+    if (provider === 'lmstudio') expect(code).toContain('lm-studio')
+  })
+
+  it.each(providers)('langchain-py covers provider %s with env placeholders', (provider) => {
+    const code = exportCode('langchain-py', {
+      ...baseOpts,
+      provider,
+      ollamaUrl: 'http://localhost:11434',
+      lmStudioUrl: 'http://localhost:1234',
+      apiKey: 'secret-key-value',
+    })
+    expect(code).not.toContain('secret-key-value')
+    expect(code).toContain('langchain_core.messages')
+    if (provider === 'openai') expect(code).toContain('OPENAI_API_KEY')
+    if (provider === 'anthropic') expect(code).toContain('ANTHROPIC_API_KEY')
+    if (provider === 'gemini') expect(code).toContain('GEMINI_API_KEY')
+    if (provider === 'groq') expect(code).toContain('GROQ_API_KEY')
+    if (provider === 'ollama') expect(code).toContain('langchain_ollama')
   })
 
   it.each(providers)('javascript covers provider %s', (provider) => {

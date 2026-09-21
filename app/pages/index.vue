@@ -114,11 +114,17 @@ async function copyExport() {
   await navigator.clipboard.writeText(exportSnippet.value)
 }
 
-const languages: { id: ExportLanguage; label: string }[] = [
-  { id: 'javascript', label: 'JavaScript' },
-  { id: 'python', label: 'Python' },
-  { id: 'curl', label: 'cURL' },
-  { id: 'php', label: 'PHP' },
+const { t } = useI18n()
+
+const languages: { id: ExportLanguage, labelKey: string }[] = [
+  { id: 'javascript', labelKey: 'export.javascript' },
+  { id: 'python', labelKey: 'export.python' },
+  { id: 'curl', labelKey: 'export.curl' },
+  { id: 'php', labelKey: 'export.php' },
+  { id: 'sdk-typescript', labelKey: 'export.sdkTypescript' },
+  { id: 'vercel-ai', labelKey: 'export.vercelAi' },
+  { id: 'langchain-ts', labelKey: 'export.langchainTs' },
+  { id: 'langchain-py', labelKey: 'export.langchainPy' },
 ]
 </script>
 
@@ -190,7 +196,8 @@ const languages: { id: ExportLanguage; label: string }[] = [
       </div>
 
       <template v-if="exportTab === 'code'">
-        <div class="flex gap-2 mb-4">
+        <p class="text-xs text-muted-foreground mb-3">{{ t('export.hint') }}</p>
+        <div class="flex flex-wrap gap-2 mb-4">
           <UiButton
             v-for="lang in languages"
             :key="lang.id"
@@ -198,7 +205,7 @@ const languages: { id: ExportLanguage; label: string }[] = [
             size="sm"
             @click="exportLang = lang.id"
           >
-            {{ lang.label }}
+            {{ t(lang.labelKey) }}
           </UiButton>
         </div>
         <pre class="rounded-md bg-muted p-4 text-xs overflow-auto max-h-80 font-mono">{{ exportSnippet }}</pre>

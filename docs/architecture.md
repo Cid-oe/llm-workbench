@@ -30,7 +30,7 @@ Browser (SPA, ssr: false)
 | Crypto | `app/lib/crypto.ts` | PBKDF2 + AES-256-GCM vault (versioned payload `v: 1`) |
 | Streaming | `app/lib/streamProviders.ts`, `app/composables/useLLMStream.ts` | Browser-direct or proxy stream |
 | Validation | `app/lib/validateStreamRequest.ts`, `app/lib/schemas/` | Allowlist schemas (Valibot) |
-| Exporters | `app/lib/exporters/` | Code snippets that read keys from the environment |
+| Exporters | `app/lib/exporters/` | Fetch, official SDK, Vercel AI, and LangChain snippets (env keys only) |
 | Proxy | `server/api/stream.post.ts` | Dev/Node stream proxy; fail-closed on invalid input |
 | MCP | `app/lib/mcp/`, `app/stores/useMcpStore.ts`, `server/api/mcp/` | Live MCP tools (HTTP/SSE in browser; stdio via Nitro) |
 | Judge | `app/lib/judge.ts`, `PlaygroundJudgePanel` | Optional LLM-as-a-Judge rubrics on Compare / bulk runs |

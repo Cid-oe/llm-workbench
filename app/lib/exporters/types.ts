@@ -3,7 +3,15 @@
 
 import type { ProviderId } from '~/types/llm'
 
-export type ExportLanguage = 'javascript' | 'python' | 'curl' | 'php'
+export type ExportLanguage =
+  | 'javascript'
+  | 'python'
+  | 'curl'
+  | 'php'
+  | 'sdk-typescript'
+  | 'vercel-ai'
+  | 'langchain-ts'
+  | 'langchain-py'
 
 export interface ExportOptions {
   provider: ProviderId

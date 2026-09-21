@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Issue self-assign via `/assign` / `/unassign` comments so fork contributors can claim work without Write access
 - Workflow `issue-in-progress.yml`: when a PR/branch links an issue, label `status: In Progress` and assign the author
 
+### Fixed
+- `issue-in-progress.yml`: treat label/assign as best-effort so fork PRs do not fail the check when `GITHUB_TOKEN` lacks issues write
+
 ## [1.0.0] - 2026-09-21
 
 First **stable major** release of LLM Workbench: local-first Compare with MCP tools, RAG, LLM-as-a-Judge, production-shaped SDK exports, and OpenSSF Gold-oriented quality gates.

@@ -77,7 +77,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `HOST` | `0.0.0.0` (Compose) | Bind address for the Nitro server in Docker. Documented commented in `.env.example`; Compose/Dockerfile set it. |
 | `PORT` | `3000` (Compose) | Listen port for the Nitro server in Docker. Documented commented in `.env.example`; Compose/Dockerfile set it. |
 | `NODE_ENV` | _(unset locally)_ | Docker sets `production`. Leave unset for `npm run dev`. |
-| `NUXT_PUBLIC_SENTRY_DSN` | _(empty)_ | Optional. Browser Sentry DSN for production SPA error tracking. Leave empty locally. |
+| `NUXT_PUBLIC_SENTRY_DSN` | _(empty)_ | Optional. Sentry DSN for production browser and Nitro server error tracking. Leave empty to disable remote tracking. |
 | `OPENAI_API_KEY` | _(empty)_ | Optional. Used by exporter snippets / local tooling. Get a key at [platform.openai.com](https://platform.openai.com/api-keys). |
 | `ANTHROPIC_API_KEY` | _(empty)_ | Optional. Same as above for Anthropic ([console.anthropic.com](https://console.anthropic.com/settings/keys)). |
 | `GEMINI_API_KEY` | _(empty)_ | Optional. Same as above for Google Gemini ([aistudio.google.com](https://aistudio.google.com/apikey)). |

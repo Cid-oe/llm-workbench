@@ -5,6 +5,9 @@
 # Coverage:
 #   - pull_request opened/edited/… → closing keywords, GraphQL linked issues, branch name
 #   - create (branch) → issue number from branch name (e.g. feat/66-slug)
+#
+# Fork PRs: GITHUB_TOKEN cannot write issues on the base repo (addLabelsToLabelable /
+# addAssignees). Label/assign are best-effort warnings so the check stays green.
 name: Issue in progress on link
 
 on:
@@ -113,13 +116,16 @@ jobs:
             fi
 
             echo "Marking #$issue → label '$LABEL', assignee '${assignee:-none}'"
-            gh issue edit "$issue" --repo "$REPO" --add-label "$LABEL"
+            # Fork PRs lack issues:write on the base repo; do not fail the job.
+            if ! gh issue edit "$issue" --repo "$REPO" --add-label "$LABEL"; then
+              echo "Warning: could not label #$issue with '$LABEL'"
+            fi
 
             if [[ -z "$assignee" || "$assignee" == *'[bot]' ]]; then
               echo "Skip assignee for #$issue"
               return 0
             fi
-            # Non-collaborators cannot be assigned; do not fail the job.
+            # Non-collaborators / fork tokens cannot be assigned; do not fail the job.
             if ! gh issue edit "$issue" --repo "$REPO" --add-assignee "$assignee"; then
               echo "Warning: could not assign @$assignee to #$issue"
             fi

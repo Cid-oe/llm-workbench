@@ -26,16 +26,23 @@ jobs:
         run: npm ci
 
       - name: Report npm outdated
-        continue-on-error: true
         run: |
+          set +e
+          npm outdated --long --json > outdated.json 2> outdated-error.txt
+          outdated_status=$?
+          set -e
+
+          if [ "$outdated_status" -ne 0 ] && [ ! -s outdated.json ]; then
+            cat outdated-error.txt
+            exit "$outdated_status"
+          fi
+
           {
             echo '## npm outdated'
             echo
-            echo 'Informational only — this step uses `continue-on-error: true` so outdated packages never fail the workflow. Dependabot still opens weekly update PRs.'
+            echo 'TypeScript 7 is currently allowlisted because package.json pins the Nuxt toolchain to TypeScript 5.9.x; all other multi-major drift fails.'
             echo
-            echo '```'
-            npm outdated --long 2>&1 || true
-            echo '```'
+            node scripts/check-dependency-drift.mjs outdated.json
           } | tee outdated-report.txt >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload outdated report
@@ -43,6 +50,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: npm-outdated
-          path: outdated-report.txt
+          path: |
+            outdated-report.txt
+            outdated.json
+            outdated-error.txt
           if-no-files-found: warn
           retention-days: 30

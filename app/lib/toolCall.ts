@@ -9,6 +9,8 @@ export interface ToolSignature {
   description?: string
   /** Free-form JSON Schema / parameters description shown to the user */
   parametersJson?: string
+  source?: 'local' | 'mcp'
+  serverId?: string
 }
 
 export interface DetectedToolCall {

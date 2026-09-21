@@ -73,7 +73,8 @@ The default Vitest suite (`npm test`, `npm run test:coverage`, `npm run test:off
 | Global `fetch` for SSE / HTTP | `vi.stubGlobal('fetch', …)` | `streamClient`, `server/api/stream`, `useProviderStore`, ModelSelector |
 | Injected `fetchImpl` | Arg to `discoverOllamaModels` / `discoverLocalLlms` | `ollamaModels.test.ts`, `localDiscovery.test.ts` |
 | Provider URL builders only | Pure functions in `app/lib/streamProviders.ts` | `streamProviders.test.ts` (no network) |
-| Exporter snippets | String assertions on generated code | `exporters/*`, `codeExporter` (URLs appear in source text only) |
+| Injected `fetchImpl` | Arg to MCP HTTP client / `probeMcpCapabilities` | `tests/mcp/*` |
+| MCP stdio bridge factory | `runStdioSession(request, factory)` | `tests/server/mcpStdio.test.ts` |
 
 CI proves the suite stays offline: the `test` job runs `npm run test:offline` after coverage, which on Ubuntu CI wraps Vitest in `sudo unshare --net` (network namespace; GHA blocks unprivileged user namespaces). Locally on Windows/macOS, `npm run test:offline` runs the same Vitest command and relies on the fetch guard + stubs above — full namespace denial is the Ubuntu CI check.
 
@@ -104,6 +105,12 @@ These handlers take **no request body** today; do not invent a body schema for t
 
 - `server/api/health.get.ts` — liveness/uptime snapshot
 - `server/api/metrics.get.ts` — runtime counters
+- `server/api/mcp/status.get.ts` — whether stdio / HTTP MCP proxy is available (always true on Node; 404 on GitHub Pages)
+
+Write endpoints:
+
+- `POST /api/mcp/stdio` — allowlisted `npx`/`node`/`python`/… spawn via `@modelcontextprotocol/sdk` (`validateMcpStdioRequest`)
+- `POST /api/mcp/http` — allowlisted `http:`/`https:` MCP JSON-RPC proxy (`validateMcpHttpRequest`)
 
 If you add a new write endpoint, copy the stream validation pattern (or share a small schema helper) and add a paired unit test for the 400 path.
 

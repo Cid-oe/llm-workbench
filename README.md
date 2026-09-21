@@ -48,6 +48,7 @@ Store API keys locally with AES-256-GCM encryption and an optional master passwo
 - **`.prompt` files** — Export and import Git-friendly Markdown with YAML frontmatter (no API keys)
 - **Prompt version diff** — Highlight drift between the editor and a saved or history version
 - **History & library** — Save prompts with versioning and browse past executions
+- **MCP tools** — Connect HTTP, SSE, or local stdio Model Context Protocol servers and run live tools from Compare (stdio needs Node/Docker)
 - **Mobile-friendly** — Hamburger navigation menu on small screens
 
 ## Quick Start

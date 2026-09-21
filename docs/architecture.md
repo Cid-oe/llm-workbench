@@ -6,16 +6,20 @@ High-level design of **llm-workbench**, a local-first Nuxt 4 / Vue 3 SPA for des
 
 ```text
 Browser (SPA, ssr: false)
-    │  Pinia stores (prompt, providers, vault, history)
+    │  Pinia stores (prompt, providers, vault, history, MCP)
     │  AES-256-GCM vault  ── localStorage (ciphertext) + sessionStorage (tab key)
     │
     ├─ Production (GitHub Pages)
     │     └─ HTTPS fetch ──► OpenAI / Anthropic / Gemini / Groq / local Ollama
+    │     └─ HTTP/SSE MCP ──► user-configured MCP servers (no stdio)
     │
     └─ Dev / Docker / Node (`npm run dev` or `npm run build`)
           └─ POST /api/stream (Nitro) ── allowlist Valibot schema ──► provider HTTPS
           └─ GET  /api/health
           └─ GET  /api/metrics
+          └─ GET  /api/mcp/status
+          └─ POST /api/mcp/stdio (allowlisted spawn, @modelcontextprotocol/sdk)
+          └─ POST /api/mcp/http  (allowlisted URL proxy)
 ```
 
 | Area | Location | Role |
@@ -28,6 +32,7 @@ Browser (SPA, ssr: false)
 | Validation | `app/lib/validateStreamRequest.ts`, `app/lib/schemas/` | Allowlist schemas (Valibot) |
 | Exporters | `app/lib/exporters/` | Code snippets that read keys from the environment |
 | Proxy | `server/api/stream.post.ts` | Dev/Node stream proxy; fail-closed on invalid input |
+| MCP | `app/lib/mcp/`, `app/stores/useMcpStore.ts`, `server/api/mcp/` | Live MCP tools (HTTP/SSE in browser; stdio via Nitro) |
 | i18n | `app/i18n/en.ts` | English message catalog (localization-ready) |
 
 ## Trust boundaries
@@ -37,6 +42,7 @@ Browser (SPA, ssr: false)
 3. **LLM providers** — untrusted networks; production talks to them over HTTPS from the browser (or from Nitro in Docker/Node). Certificate verification is the platform TLS stack (browser / Node).
 4. **Local Ollama / LM Studio** — optional HTTP to loopback; user-configured URLs must pass `http:`/`https:` allowlist checks.
 5. **GitHub Pages / npm / git** — distribution over HTTPS. Release tags are cryptographically signed (see [releasing.md](releasing.md)).
+6. **MCP servers** — user-configured. HTTP/SSE URLs must be `http:`/`https:`. stdio commands are allowlisted (`npx`, `node`, `python`, …) and spawned with argv (no shell). Auth headers stay in tab memory, never in `localStorage`. GitHub Pages has no stdio proxy.
 
 See [SECURITY.md](../SECURITY.md) and [assurance-case.md](assurance-case.md) for the security argument.
 

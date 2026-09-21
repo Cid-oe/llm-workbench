@@ -44,6 +44,18 @@ const httpUrl = (field: string) =>
     v.check(isAllowedUrl, `Invalid ${field}`),
   )
 
+const mcpToolSchema = v.object({
+  name: v.pipe(
+    v.string('mcp tool name must be a string'),
+    v.transform(value => value.trim()),
+    v.minLength(1, 'mcp tool name is required'),
+  ),
+  description: v.optional(v.string('mcp tool description must be a string')),
+  inputSchema: v.optional(v.record(v.string(), v.unknown())),
+  serverId: v.optional(v.string()),
+  serverName: v.optional(v.string()),
+})
+
 export const streamRequestSchema = v.pipe(
   v.object(
     {
@@ -60,6 +72,7 @@ export const streamRequestSchema = v.pipe(
       lmStudioUrl: v.optional(httpUrl('lmStudioUrl')),
       temperature: v.optional(finiteNumber('temperature')),
       maxTokens: v.optional(finiteNumber('maxTokens')),
+      mcpTools: v.optional(v.array(mcpToolSchema, 'mcpTools must be an array')),
     },
     'Request body must be an object',
   ),
@@ -78,6 +91,7 @@ export const streamRequestSchema = v.pipe(
       lmStudioUrl: input.lmStudioUrl,
       temperature: generation.temperature,
       maxTokens: generation.maxTokens,
+      mcpTools: input.mcpTools,
     }
   }),
 )

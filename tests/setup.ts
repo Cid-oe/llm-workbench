@@ -12,6 +12,8 @@ import { useModelSlotsStore } from '../app/stores/useModelSlotsStore'
 import { useProviderStore } from '../app/stores/useProviderStore'
 import { useSecurityStore } from '../app/stores/useSecurityStore'
 import { useVaultStore } from '../app/stores/useVaultStore'
+import { useI18n } from '../app/composables/useI18n'
+import { useMcpStore } from '../app/stores/useMcpStore'
 import { installOfflineFetchGuard } from './offlineFetch'
 
 vi.stubGlobal('computed', computed)
@@ -31,6 +33,8 @@ vi.stubGlobal('usePromptStore', usePromptStore)
 vi.stubGlobal('useProviderStore', useProviderStore)
 vi.stubGlobal('useSecurityStore', useSecurityStore)
 vi.stubGlobal('useVaultStore', useVaultStore)
+vi.stubGlobal('useI18n', useI18n)
+vi.stubGlobal('useMcpStore', useMcpStore)
 vi.stubGlobal('useModelSlotsStore', useModelSlotsStore)
 vi.stubGlobal('useLocalDiscoveryStore', useLocalDiscoveryStore)
 

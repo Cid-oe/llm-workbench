@@ -5,13 +5,17 @@ import { Check, Copy, Loader2 } from '@lucide/vue'
 import type { ModelResponse } from '~/types/llm'
 import { PROVIDER_MODELS } from '~/stores/useProviderStore'
 import { detectToolCalls, matchRegisteredTool } from '~/lib/toolCall'
+import { matchMcpTool } from '~/lib/mcp/signatures'
 
 const props = defineProps<{ response: ModelResponse }>()
 const emit = defineEmits<{
   continueWithTool: [payload: { slotId: string, toolName: string, mockResultJson: string, assistantContent: string }]
+  continueWithMcp: [payload: { slotId: string, toolName: string, argumentsJson: string, assistantContent: string }]
 }>()
 
 const promptStore = usePromptStore()
+const mcpStore = useMcpStore()
+const { t } = useI18n()
 const { formatCost, formatLatency } = useCostCalculator()
 
 const model = computed(() => PROVIDER_MODELS.find(m => m.id === props.response.modelId))
@@ -23,9 +27,34 @@ const detectedCalls = computed(() =>
   props.response.status === 'done' ? detectToolCalls(props.response.content) : [],
 )
 
-const matchedCalls = computed(() =>
-  detectedCalls.value.filter(call => matchRegisteredTool(call, promptStore.toolSignatures)),
+const matchedMcpCalls = computed(() =>
+  detectedCalls.value.filter(call => matchMcpTool(call, mcpStore.enabledTools)),
 )
+
+const matchedCalls = computed(() => {
+  const local = detectedCalls.value.filter(call => matchRegisteredTool(call, promptStore.toolSignatures))
+  const names = new Set(local.map(call => call.name))
+  const merged = [...local]
+  for (const call of matchedMcpCalls.value) {
+    if (!names.has(call.name)) merged.push(call)
+  }
+  return merged
+})
+
+const selectedMcpCall = computed(() =>
+  matchedMcpCalls.value.find(call => call.name === selectedTool.value) ?? matchedMcpCalls.value[0],
+)
+
+function continueMcpTurn() {
+  const call = selectedMcpCall.value
+  if (!call) return
+  emit('continueWithMcp', {
+    slotId: props.response.slotId,
+    toolName: call.name,
+    argumentsJson: call.argumentsJson,
+    assistantContent: props.response.content,
+  })
+}
 
 watch(matchedCalls, (calls) => {
   if (calls[0] && !selectedTool.value) {
@@ -140,6 +169,27 @@ const statusVariant = computed(() => {
         <UiButton size="sm" :disabled="!selectedTool" @click="continueTurn">
           Continue with mock
         </UiButton>
+        <UiButton
+          v-if="matchedMcpCalls.length"
+          size="sm"
+          variant="outline"
+          :disabled="!selectedMcpCall || promptStore.isRunning"
+          @click="continueMcpTurn"
+        >
+          {{ t('mcp.runLive') }}
+        </UiButton>
+      </div>
+
+      <div
+        v-if="response.mcpInspection"
+        class="space-y-2 border-t border-border pt-3"
+      >
+        <p class="text-xs font-medium">{{ t('mcp.inspection') }} · {{ response.mcpInspection.serverName }}</p>
+        <pre class="rounded-md bg-muted p-2 text-[11px] overflow-auto max-h-32 font-mono whitespace-pre-wrap">{{ response.mcpInspection.argumentsJson }}</pre>
+        <pre
+          class="rounded-md bg-muted p-2 text-[11px] overflow-auto max-h-40 font-mono whitespace-pre-wrap"
+          :class="response.mcpInspection.error ? 'text-red-400' : ''"
+        >{{ response.mcpInspection.error || response.mcpInspection.resultJson }}</pre>
       </div>
     </div>
   </UiCard>

@@ -1,7 +1,7 @@
 // Copyright (c) 2026 llm-workbench contributors
 // SPDX-License-Identifier: MIT
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createTestingPinia } from '@pinia/testing'
 import { setActivePinia } from 'pinia'
 import { useCompareRunner } from '../app/composables/useCompareRunner'
@@ -29,6 +29,10 @@ describe('useCompareRunner', () => {
       { slotId: 'slot-1', provider: 'openai', modelId: 'gpt-4o-mini' },
     ]
     providerStore.setApiKey('openai', 'sk-test')
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it('runAll creates responses and streams completions', async () => {
@@ -112,7 +116,49 @@ describe('useCompareRunner', () => {
     expect(promptStore.isRunning).toBe(false)
   })
 
-  it('clearBulkResults resets bulk state', () => {
+  it('continueWithMcp runs a live tool then continues the slot', async () => {
+    const { useMcpStore } = await import('../app/stores/useMcpStore')
+    const runtime = await import('~/lib/mcp/runtime')
+    vi.spyOn(runtime, 'callMcpTool').mockResolvedValue('{"temp":22}')
+
+    const mcpStore = useMcpStore()
+    mcpStore.statusChecked = true
+    mcpStore.capabilities = { stdio: false, httpProxy: false }
+    mcpStore.servers = [{
+      id: 's1',
+      name: 'Weather',
+      enabled: true,
+      transport: 'http',
+      url: 'http://127.0.0.1:9/mcp',
+    }]
+    mcpStore.tools = [{ name: 'get_weather', serverId: 's1', serverName: 'Weather' }]
+
+    const promptStore = usePromptStore()
+    promptStore.setResponses([{
+      slotId: 'slot-1',
+      provider: 'openai',
+      modelId: 'gpt-4o-mini',
+      content: '{"name":"get_weather","arguments":{"city":"Madrid"}}',
+      status: 'done',
+      metrics: { latencyMs: 10, ttftMs: 5, inputTokens: 1, outputTokens: 1, costUsd: 0 },
+    }])
+
+    const { continueWithMcp } = useCompareRunner()
+    await continueWithMcp({
+      slotId: 'slot-1',
+      toolName: 'get_weather',
+      argumentsJson: '{"city":"Madrid"}',
+      assistantContent: '{"name":"get_weather","arguments":{"city":"Madrid"}}',
+    })
+
+    expect(runtime.callMcpTool).toHaveBeenCalled()
+    expect(promptStore.responses[0]?.mcpInspection?.resultJson).toContain('temp')
+    expect(streamCompletion).toHaveBeenCalled()
+    const request = streamCompletion.mock.calls[0]?.[0]
+    expect(request?.userPrompt).toContain('Tool (get_weather)')
+  })
+
+  it('clearBulkResults resets bulk state', async () => {
     const { bulkResults, bulkProgress, clearBulkResults } = useCompareRunner()
     bulkResults.value = [{
       index: 0,

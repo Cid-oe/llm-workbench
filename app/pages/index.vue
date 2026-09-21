@@ -18,6 +18,7 @@ const {
   canRun,
   runAll,
   continueWithTool,
+  continueWithMcp,
   runBulkDataset,
   stopAll,
   clearBulkResults,
@@ -171,6 +172,7 @@ const languages: { id: ExportLanguage; label: string }[] = [
       <PlaygroundComparisonGrid
         :responses="promptStore.responses"
         @continue-with-tool="continueWithTool"
+        @continue-with-mcp="continueWithMcp"
       />
     </div>
 

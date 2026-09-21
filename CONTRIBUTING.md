@@ -157,6 +157,16 @@ The project keeps an ongoing set of **small, self-contained** tasks so new contr
 - Open a new one with the [Good first issue](https://github.com/ale94lko/llm-workbench/issues/new?template=good_first_issue.yml) form when you spot a docs typo, missing test, or tiny UI fix.
 - Maintainers should keep at least a few of these open (or quickly replace them when they are completed).
 
+## Claiming an issue
+
+Fork contributors do **not** get Triage/Write on this user-owned repo, so the Assignees sidebar in the UI will not list you. To claim work:
+
+1. Comment **`/assign`** on an open issue (the comment itself makes you assignable; [self-assign.yml](.github/workflows/self-assign.yml) then assigns you).
+2. Comment **`/unassign`** if you need to release it.
+3. Prefer issues labeled [`good first issue`](https://github.com/ale94lko/llm-workbench/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) when getting started.
+
+Only claim issues you intend to open a PR for soon. If an issue already has an assignee, coordinate in the comments before taking over.
+
 ## Code review standards
 
 Every pull request that changes product, test, or CI behavior is reviewed against this checklist before merge:
@@ -232,11 +242,15 @@ Settings UI: [Rulesets](https://github.com/ale94lko/llm-workbench/settings/rules
 ## Workflow
 
 1. Search [existing issues](https://github.com/ale94lko/llm-workbench/issues) before opening a new one. Use an [issue form](https://github.com/ale94lko/llm-workbench/issues/new/choose) when creating one.
-2. Fork the repository and create a focused branch.
-3. Add or update tests for the behavior you change (same PR as the source change).
-4. Use Conventional Commit messages (`feat:`, `fix:`, `test:`, …) and **sign off** (`git commit -s`).
-5. Open a pull request and [link it to the issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue).
-6. Enable [allow maintainer edits](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork) so the branch can be updated for a merge.
+2. Claim the issue with **`/assign`** (see [Claiming an issue](#claiming-an-issue)).
+3. Fork the repository and create a focused branch named after the issue when possible:
+   - Prefer `{type}/{issue}-{slug}` (e.g. `feat/117-lm-studio-constant`, `docs/120-env-example`)
+   - Or `{type}/{slug}-{issue}` (e.g. `chore/export-constants-117`)
+   - Allowed types: `feat`, `fix`, `docs`, `ci`, `chore`, `test`, `refactor`, `security`, `perf`, `build`, `style`
+4. Add or update tests for the behavior you change (same PR as the source change).
+5. Use Conventional Commit messages (`feat:`, `fix:`, `test:`, …) and **sign off** (`git commit -s`).
+6. Open a pull request and [link it to the issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue) (`Fixes #<issue>` in the body) so [issue-in-progress](.github/workflows/issue-in-progress.yml) can label `status: In Progress` and assign the PR author.
+7. Enable [allow maintainer edits](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork) so the branch can be updated for a merge.
 
 ## Releases
 

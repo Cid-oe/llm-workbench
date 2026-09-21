@@ -9,6 +9,7 @@ body:
       value: |
         Thanks for helping. Keep the change small (docs, a test, or a tiny UI fix).
         Read [CONTRIBUTING.md](https://github.com/ale94lko/llm-workbench/blob/main/CONTRIBUTING.md#small-tasks).
+        Claim the issue by commenting `/assign` before you start.
   - type: textarea
     id: task
     attributes:

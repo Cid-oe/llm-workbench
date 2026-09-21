@@ -164,6 +164,7 @@ const languages: { id: ExportLanguage; label: string }[] = [
         <PlaygroundGenerationControls />
         <PlaygroundAssertionsPanel />
         <PlaygroundJudgePanel />
+        <PlaygroundRagDocumentsPanel />
         <PlaygroundToolMockPanel />
       </div>
       <PlaygroundModelSelector />

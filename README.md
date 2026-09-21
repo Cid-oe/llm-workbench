@@ -50,6 +50,7 @@ Store API keys locally with AES-256-GCM encryption and an optional master passwo
 - **History & library** — Save prompts with versioning and browse past executions
 - **MCP tools** — Connect HTTP, SSE, or local stdio Model Context Protocol servers and run live tools from Compare (stdio needs Node/Docker)
 - **LLM-as-a-Judge** — Optional evaluator model + rubrics on Compare and bulk dataset runs; scores stay local
+- **RAG documents** — Upload TXT/MD/PDF, embed locally (or via Ollama), retrieve top-K chunks into Compare prompts
 - **Mobile-friendly** — Hamburger navigation menu on small screens
 
 ## Quick Start

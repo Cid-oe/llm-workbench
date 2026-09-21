@@ -13,6 +13,8 @@ describe('useI18n', () => {
     expect(t('nav.settings')).toBe('Settings')
     expect(t('mcp.title')).toBe('MCP servers')
     expect(t('judge.title')).toBe('LLM-as-a-Judge')
+    expect(t('rag.title')).toBe('Context & Documents')
+    expect(t('rag.chunkCount', { count: 3 })).toBe('3 chunks indexed')
   })
 
   it('falls back to the key when a message is missing', () => {

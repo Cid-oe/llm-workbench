@@ -345,4 +345,33 @@ describe('useCompareRunner', () => {
     expect(bulkResults.value[0]?.models[0]?.content).toBeUndefined()
     expect(bulkJudgeAggregates.value[0]?.meanScore).toBe(4)
   })
+
+  it('runAll injects retrieved RAG context into the stream prompt', async () => {
+    const { useRagStore } = await import('../app/stores/useRagStore')
+    const { embedLocal } = await import('../app/lib/rag')
+    const ragStore = useRagStore()
+    ragStore.enabled = true
+    ragStore.topK = 1
+    ragStore.chunks = [{
+      id: 'c1',
+      documentId: 'd1',
+      documentName: 'policy.md',
+      index: 0,
+      text: 'Vault keys never leave the browser tab.',
+      embedding: embedLocal('Vault keys never leave the browser tab.'),
+    }]
+
+    const promptStore = usePromptStore()
+    promptStore.systemPrompt = 'You are helpful.'
+    promptStore.userPrompt = 'Where do vault keys live?'
+    promptStore.variables = {}
+
+    const { runAll } = useCompareRunner()
+    await runAll()
+
+    const req = streamCompletion.mock.calls[0]?.[0]
+    expect(req?.systemPrompt).toContain('Retrieved context')
+    expect(req?.systemPrompt).toContain('Vault keys never leave')
+    expect(ragStore.lastHits).toHaveLength(1)
+  })
 })

@@ -84,6 +84,17 @@ export const en = {
     ollamaEmbedFailed: 'Ollama embeddings request failed. Is an embedding model pulled?',
     ingestFailed: 'Could not ingest the document.',
   },
+  export: {
+    javascript: 'JavaScript (fetch)',
+    python: 'Python (SDK)',
+    curl: 'cURL',
+    php: 'PHP',
+    sdkTypescript: 'TypeScript SDK',
+    vercelAi: 'Vercel AI SDK',
+    langchainTs: 'LangChain (TS)',
+    langchainPy: 'LangChain (Python)',
+    hint: 'Snippets never include API keys — they read process.env / os.environ.',
+  },
 }
 
 export type Messages = typeof en

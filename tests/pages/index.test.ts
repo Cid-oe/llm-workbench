@@ -245,7 +245,10 @@ user from file
     const { wrapper } = mountPage()
     const exportBtn = wrapper.findAll('button').find(b => b.text().includes('Export'))
     await exportBtn!.trigger('click')
-    expect(wrapper.text()).toContain('JavaScript')
+    expect(wrapper.text()).toContain('JavaScript (fetch)')
+    expect(wrapper.text()).toContain('TypeScript SDK')
+    expect(wrapper.text()).toContain('Vercel AI SDK')
+    expect(wrapper.text()).toContain('LangChain (TS)')
     expect(wrapper.text()).toContain('fetch(')
 
     const copyBtn = wrapper.findAll('button').find(b => b.text() === 'Copy')

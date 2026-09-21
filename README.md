@@ -51,6 +51,7 @@ Store API keys locally with AES-256-GCM encryption and an optional master passwo
 - **MCP tools** — Connect HTTP, SSE, or local stdio Model Context Protocol servers and run live tools from Compare (stdio needs Node/Docker)
 - **LLM-as-a-Judge** — Optional evaluator model + rubrics on Compare and bulk dataset runs; scores stay local
 - **RAG documents** — Upload TXT/MD/PDF, embed locally (or via Ollama), retrieve top-K chunks into Compare prompts
+- **SDK export** — Official TypeScript clients, Vercel AI SDK, and LangChain snippets (plus existing fetch/cURL/PHP)
 - **Mobile-friendly** — Hamburger navigation menu on small screens
 
 ## Quick Start
@@ -244,7 +245,7 @@ While the vault is unlocked you can **Change master password** in Settings. That
 
 > **Note:** In production (GitHub Pages), API keys are sent directly from your browser to the LLM provider. This is intentional for a local-first workbench, but never share your machine or browser session with untrusted parties.
 
-The **code exporter** never embeds stored API keys. Generated JavaScript, Python, cURL, and PHP snippets always read credentials from the environment (`process.env.OPENAI_API_KEY`, `os.environ['OPENAI_API_KEY']`, `$OPENAI_API_KEY`, `getenv('OPENAI_API_KEY')`).
+The **code exporter** never embeds stored API keys. Generated fetch, official SDK, Vercel AI SDK, LangChain, cURL, and PHP snippets always read credentials from the environment (`process.env.OPENAI_API_KEY`, `os.environ['OPENAI_API_KEY']`, `$OPENAI_API_KEY`, `getenv('OPENAI_API_KEY')`).
 
 Client and stream failures use a typed `StreamError` (`app/lib/errors.ts`). Before anything is written by the structured logger (`app/lib/logger.ts`), sensitive fields (`apiKey`, `authorization`, `password`, `secret`, `token`, …) are redacted, and `StreamError.toLogFields()` only serializes safe summaries (never raw `cause` objects).
 

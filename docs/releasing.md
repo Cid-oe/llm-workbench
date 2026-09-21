@@ -1,13 +1,13 @@
 # Releasing
 
-LLM Workbench follows [Semantic Versioning](https://semver.org/) and [Keep a Changelog](https://keepachangelog.com/). Tags are `vMAJOR.MINOR.PATCH` (for example `v0.2.0`).
+LLM Workbench follows [Semantic Versioning](https://semver.org/) and [Keep a Changelog](https://keepachangelog.com/). Tags are `vMAJOR.MINOR.PATCH` (for example `v1.0.0`).
 
 Widespread releases are **cryptographically signed** git tags. The signing private key MUST stay on maintainer machines (or a hardware token) — never on GitHub Pages, npm, or CI that publishes the static site.
 
 ## Cadence
 
 - Cut a release when a meaningful batch of features/fixes has landed on `main` (prefer focused PRs; do not farm commits).
-- Prefer **minor** bumps (`0.x.0`) for user-visible batches; **patch** for fixes-only; **major** only for breaking changes once the API/product surface warrants it.
+- After **v1.0.0**, prefer **minor** bumps (`1.x.0`) for user-visible batches; **patch** for fixes-only; **major** only for breaking vault/API/product surface changes.
 - Keep shipping small PRs between cuts; the release is just the tagged snapshot + changelog section.
 
 ## Steps (maintainers)

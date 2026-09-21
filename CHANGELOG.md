@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-21
+
+First **stable major** release of LLM Workbench: local-first Compare with MCP tools, RAG, LLM-as-a-Judge, production-shaped SDK exports, and OpenSSF Gold-oriented quality gates.
+
+### Highlights
+- **MCP client** — HTTP/SSE in the browser, stdio via Nitro, live tools on Compare
+- **RAG playground** — TXT/MD/PDF ingest, local or Ollama embeddings, top-K prompt injection
+- **LLM-as-a-Judge** — evaluator model + rubrics with aggregates and export fields
+- **SDK export** — official TypeScript clients, Vercel AI SDK, and LangChain (TS/Python)
+- **Assurance** — OpenSSF Silver/Gold docs, coverage ≥90% statements / ≥80% branches, offline unit proof
+
 ### Added
 - Export official TypeScript SDKs, Vercel AI SDK, and LangChain (TS/Python) snippets from Compare ([#111](https://github.com/ale94lko/llm-workbench/issues/111))
 - In-browser RAG playground: upload TXT/MD/PDF, local or Ollama embeddings, top-K retrieval and prompt injection on Compare ([#110](https://github.com/ale94lko/llm-workbench/issues/110))
@@ -104,6 +115,7 @@ First tagged milestone after env onboarding docs, Vue coverage, typed stream err
 - Code exporter now emits environment-variable placeholders (`process.env.*`, `os.environ[...]`, `$VAR`, `getenv(...)`) instead of interpolating API keys into snippets
 - Stream/client failures use typed `StreamError` with log-safe serialization; logger redaction documented in the README ([#10](https://github.com/ale94lko/llm-workbench/issues/10))
 
-[Unreleased]: https://github.com/ale94lko/llm-workbench/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/ale94lko/llm-workbench/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/ale94lko/llm-workbench/releases/tag/v1.0.0
 [0.2.0]: https://github.com/ale94lko/llm-workbench/releases/tag/v0.2.0
 [0.1.0]: https://github.com/ale94lko/llm-workbench/releases/tag/v0.1.0

@@ -1,6 +1,6 @@
 # Architecture
 
-High-level design of **llm-workbench**, a local-first Nuxt 4 / Vue 3 SPA for designing prompts, running them in parallel against up to four LLM providers, and comparing latency/cost metrics.
+High-level design of **llm-workbench** (**v1.0**), a local-first Nuxt 4 / Vue 3 SPA for designing prompts, running them in parallel against up to four LLM providers, and comparing latency/cost metrics.
 
 ## Components
 

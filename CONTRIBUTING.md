@@ -242,7 +242,7 @@ Settings UI: [Rulesets](https://github.com/ale94lko/llm-workbench/settings/rules
 
 This project uses [Semantic Versioning](https://semver.org/). Notable changes live in [`CHANGELOG.md`](CHANGELOG.md).
 
-**Cadence:** cut a tag when a meaningful batch has landed on `main` (for example `v0.2.0`, `v0.3.0`, …). Prefer small focused PRs between cuts; do not farm artificial commits for history.
+**Cadence:** cut a tag when a meaningful batch has landed on `main` (for example `v1.0.0`, `v1.1.0`, …). Prefer small focused PRs between cuts; do not farm artificial commits for history.
 
 **Process (summary):**
 

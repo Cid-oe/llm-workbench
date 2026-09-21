@@ -48,6 +48,7 @@ import { useCompareRunner } from '../app/composables/useCompareRunner'
 import { usePromptStore } from '../app/stores/usePromptStore'
 import { useProviderStore } from '../app/stores/useProviderStore'
 import type { ExecutionHistoryEntry, ModelResponse, StreamRequest } from '../app/types/llm'
+import { LM_STUDIO_PLACEHOLDER_KEY } from '../app/lib/exporters/constants'
 
 const streamCompletion = vi.fn()
 vi.stubGlobal('useLLMStream', () => ({ streamCompletion }))
@@ -80,7 +81,7 @@ describe('OpenSSF Gold coverage gaps', () => {
         lmStudioUrl: 'http://localhost:1234///',
       })
       expect(req.url).toBe('http://localhost:1234/v1/chat/completions')
-      expect(req.headers.Authorization).toBe('Bearer lm-studio')
+      expect(req.headers.Authorization).toBe(`Bearer ${LM_STUDIO_PLACEHOLDER_KEY}`)
 
       const defaults = buildProviderRequest({
         ...openaiRequest,

@@ -47,6 +47,54 @@ export interface ModelResponse {
   error?: string
   assertionResults?: AssertionResult[]
   mcpInspection?: McpInspection
+  judgeResult?: JudgeResult
+}
+
+export type JudgeScale = 5 | 10
+
+export interface JudgeRubric {
+  id: string
+  name: string
+  description: string
+  enabled?: boolean
+}
+
+export interface JudgeConfig {
+  enabled: boolean
+  provider: ProviderId
+  modelId: string
+  scale: JudgeScale
+  /** Minimum overall (and per-rubric) score to count as pass. */
+  passThreshold?: number
+  rubrics: JudgeRubric[]
+}
+
+export interface JudgeRubricScore {
+  rubricId: string
+  name: string
+  score: number
+  rationale: string
+}
+
+export interface JudgeResult {
+  overall: number
+  pass: boolean
+  rationale: string
+  scores: JudgeRubricScore[]
+  parseError?: string
+  latencyMs?: number
+  costUsd?: number
+  judgeModelId?: string
+}
+
+export interface JudgeAggregate {
+  modelId: string
+  count: number
+  scoredCount: number
+  meanScore: number | null
+  passRate: number | null
+  meanLatencyMs: number | null
+  estimatedCostUsd: number | null
 }
 
 export type AssertionKind = 'jsonValid' | 'jsonSchema' | 'forbiddenSubstring' | 'length'

@@ -12,6 +12,7 @@ describe('useI18n', () => {
     expect(t('skipToContent')).toBe('Skip to content')
     expect(t('nav.settings')).toBe('Settings')
     expect(t('mcp.title')).toBe('MCP servers')
+    expect(t('judge.title')).toBe('LLM-as-a-Judge')
   })
 
   it('falls back to the key when a message is missing', () => {

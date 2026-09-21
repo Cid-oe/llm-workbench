@@ -33,6 +33,7 @@ Browser (SPA, ssr: false)
 | Exporters | `app/lib/exporters/` | Code snippets that read keys from the environment |
 | Proxy | `server/api/stream.post.ts` | Dev/Node stream proxy; fail-closed on invalid input |
 | MCP | `app/lib/mcp/`, `app/stores/useMcpStore.ts`, `server/api/mcp/` | Live MCP tools (HTTP/SSE in browser; stdio via Nitro) |
+| Judge | `app/lib/judge.ts`, `PlaygroundJudgePanel` | Optional LLM-as-a-Judge rubrics on Compare / bulk runs |
 | i18n | `app/i18n/en.ts` | English message catalog (localization-ready) |
 
 ## Trust boundaries

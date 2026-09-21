@@ -13,6 +13,7 @@ import { detectVariables, interpolateVariables, syncVariableKeys } from '~/lib/v
 import type {
   ExecutionHistoryEntry,
   GenerationParams,
+  JudgeConfig,
   ModelResponse,
   PromptFileData,
   PromptSnapshot,
@@ -22,6 +23,7 @@ import type {
   AssertionRule,
 } from '~/types/llm'
 import { createAssertionId } from '~/lib/assertions'
+import { createDefaultJudgeConfig, createRubricId } from '~/lib/judge'
 import {
   createToolSignatureId,
   type ToolSignature,
@@ -42,6 +44,7 @@ export const usePromptStore = defineStore('prompt', {
     savedPrompts: [] as SavedPrompt[],
     generation: { temperature: 0.7, maxTokens: 4096 } as GenerationParams,
     assertions: [] as AssertionRule[],
+    judge: createDefaultJudgeConfig() as JudgeConfig,
     toolSignatures: [] as ToolSignature[],
   }),
 
@@ -146,6 +149,30 @@ export const usePromptStore = defineStore('prompt', {
 
     removeAssertion(id: string) {
       this.assertions = this.assertions.filter(a => a.id !== id)
+    },
+
+    patchJudge(patch: Partial<JudgeConfig>) {
+      this.judge = { ...this.judge, ...patch }
+    },
+
+    addJudgeRubric(rubric?: Partial<JudgeConfig['rubrics'][number]>) {
+      this.judge.rubrics.push({
+        id: createRubricId(),
+        name: rubric?.name ?? 'Criterion',
+        description: rubric?.description ?? '',
+        enabled: rubric?.enabled !== false,
+      })
+    },
+
+    updateJudgeRubric(id: string, patch: Partial<JudgeConfig['rubrics'][number]>) {
+      const idx = this.judge.rubrics.findIndex(r => r.id === id)
+      const current = idx === -1 ? undefined : this.judge.rubrics[idx]
+      if (!current) return
+      this.judge.rubrics[idx] = { ...current, ...patch }
+    },
+
+    removeJudgeRubric(id: string) {
+      this.judge.rubrics = this.judge.rubrics.filter(r => r.id !== id)
     },
 
     addToolSignature(tool: Omit<ToolSignature, 'id'> & { id?: string }) {

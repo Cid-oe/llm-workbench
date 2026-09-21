@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- LLM-as-a-Judge: optional evaluator model, rubrics, Compare + bulk scoring, aggregates, and CSV/JSON export fields ([#109](https://github.com/ale94lko/llm-workbench/issues/109))
 - MCP client: Settings server manager, HTTP/SSE in the browser, stdio via Nitro + `@modelcontextprotocol/sdk`, live tool execution on Compare ([#108](https://github.com/ale94lko/llm-workbench/issues/108))
 - Offline unit proof: stub inventory in `docs/dev-notes.md`, deny-all `fetch` guard, and `npm run test:offline` (Linux `unshare` network namespace in CI) ([#93](https://github.com/ale94lko/llm-workbench/issues/93))
 - OpenSSF Gold evidence: SPDX/copyright headers, two-person review, 2FA policy, small tasks, dated security review, reproducible-build notes, and coverage floors ≥90% statements / ≥80% branches

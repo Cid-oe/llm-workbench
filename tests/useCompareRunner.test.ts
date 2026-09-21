@@ -159,7 +159,7 @@ describe('useCompareRunner', () => {
   })
 
   it('clearBulkResults resets bulk state', async () => {
-    const { bulkResults, bulkProgress, clearBulkResults } = useCompareRunner()
+    const { bulkResults, bulkProgress, bulkJudgeAggregates, clearBulkResults } = useCompareRunner()
     bulkResults.value = [{
       index: 0,
       variables: {},
@@ -167,8 +167,182 @@ describe('useCompareRunner', () => {
       models: [],
     }]
     bulkProgress.value = 'Finished 1 rows'
+    bulkJudgeAggregates.value = [{
+      modelId: 'gpt-4o-mini',
+      count: 1,
+      scoredCount: 1,
+      meanScore: 4,
+      passRate: 1,
+      meanLatencyMs: 10,
+      estimatedCostUsd: 0.01,
+    }]
     clearBulkResults()
     expect(bulkResults.value).toEqual([])
     expect(bulkProgress.value).toBe('')
+    expect(bulkJudgeAggregates.value).toEqual([])
+  })
+
+  it('runAll scores responses when LLM judge is enabled', async () => {
+    streamCompletion
+      .mockImplementationOnce(async (_req, handlers) => {
+        handlers.onChunk('Candidate answer')
+        handlers.onDone()
+      })
+      .mockImplementationOnce(async (_req, handlers) => {
+        handlers.onChunk(JSON.stringify({
+          scores: [{ rubricId: 'r-test', score: 5, rationale: 'Great' }],
+          overall: 5,
+          rationale: 'Excellent',
+        }))
+        handlers.onDone()
+      })
+
+    const promptStore = usePromptStore()
+    promptStore.judge = {
+      enabled: true,
+      provider: 'openai',
+      modelId: 'gpt-4o-mini',
+      scale: 5,
+      passThreshold: 3,
+      rubrics: [{
+        id: 'r-test',
+        name: 'Accuracy',
+        description: 'Correctness',
+        enabled: true,
+      }],
+    }
+
+    const { runAll } = useCompareRunner()
+    await runAll()
+
+    expect(streamCompletion).toHaveBeenCalledTimes(2)
+    const judgeReq = streamCompletion.mock.calls[1]?.[0]
+    expect(judgeReq?.systemPrompt).toMatch(/LLM-as-a-Judge/i)
+    expect(promptStore.responses[0]?.judgeResult?.overall).toBe(5)
+    expect(promptStore.responses[0]?.judgeResult?.pass).toBe(true)
+  })
+
+  it('skips judge when disabled so assertions-only paths stay intact', async () => {
+    const promptStore = usePromptStore()
+    promptStore.judge.enabled = false
+    promptStore.assertions = [{ id: 'a1', kind: 'forbiddenSubstring', substring: 'xyz', enabled: true }]
+
+    const { runAll } = useCompareRunner()
+    await runAll()
+
+    expect(streamCompletion).toHaveBeenCalledTimes(1)
+    expect(promptStore.responses[0]?.judgeResult).toBeUndefined()
+    expect(promptStore.responses[0]?.assertionResults?.[0]?.pass).toBe(true)
+  })
+
+  it('records judge failure when the evaluator call errors', async () => {
+    streamCompletion
+      .mockImplementationOnce(async (_req, handlers) => {
+        handlers.onChunk('Candidate')
+        handlers.onDone()
+      })
+      .mockImplementationOnce(async (_req, handlers) => {
+        handlers.onError(new Error('judge down'))
+      })
+
+    const promptStore = usePromptStore()
+    promptStore.judge = {
+      enabled: true,
+      provider: 'openai',
+      modelId: 'gpt-4o-mini',
+      scale: 5,
+      passThreshold: 3,
+      rubrics: [{ id: 'r1', name: 'Accuracy', description: 'x', enabled: true }],
+    }
+
+    const { runAll } = useCompareRunner()
+    await runAll()
+
+    expect(promptStore.responses[0]?.judgeResult?.parseError).toMatch(/judge down/i)
+    expect(promptStore.responses[0]?.judgeResult?.pass).toBe(false)
+  })
+
+  it('returns a structured error when judge has no enabled rubrics', async () => {
+    streamCompletion.mockImplementationOnce(async (_req, handlers) => {
+      handlers.onChunk('Candidate')
+      handlers.onDone()
+    })
+
+    const promptStore = usePromptStore()
+    promptStore.judge = {
+      enabled: true,
+      provider: 'openai',
+      modelId: 'gpt-4o-mini',
+      scale: 5,
+      rubrics: [{ id: 'r1', name: 'Accuracy', description: 'x', enabled: false }],
+    }
+
+    const { runAll } = useCompareRunner()
+    await runAll()
+
+    expect(streamCompletion).toHaveBeenCalledTimes(1)
+    expect(promptStore.responses[0]?.judgeResult?.parseError).toMatch(/no rubrics/i)
+  })
+
+  it('skips the evaluator stream when the judge provider has no key', async () => {
+    streamCompletion.mockImplementationOnce(async (_req, handlers) => {
+      handlers.onChunk('Candidate')
+      handlers.onDone()
+    })
+
+    const providerStore = useProviderStore()
+    providerStore.setApiKey('openai', 'sk-test')
+    const promptStore = usePromptStore()
+    promptStore.judge = {
+      enabled: true,
+      provider: 'anthropic',
+      modelId: 'claude-3-5-haiku-20241022',
+      scale: 5,
+      rubrics: [{ id: 'r1', name: 'Accuracy', description: 'x', enabled: true }],
+    }
+
+    const { runAll } = useCompareRunner()
+    await runAll()
+
+    expect(streamCompletion).toHaveBeenCalledTimes(1)
+    expect(promptStore.responses[0]?.judgeResult?.parseError).toMatch(/not configured/i)
+  })
+
+  it('runBulkDataset scores each row when judge is enabled', async () => {
+    streamCompletion
+      .mockImplementationOnce(async (_req, handlers) => {
+        handlers.onChunk('Answer A')
+        handlers.onDone()
+      })
+      .mockImplementationOnce(async (_req, handlers) => {
+        handlers.onChunk(JSON.stringify({
+          scores: [{ rubricId: 'r-bulk', score: 4, rationale: 'ok' }],
+          overall: 4,
+          rationale: 'Fine',
+        }))
+        handlers.onDone()
+      })
+
+    const promptStore = usePromptStore()
+    promptStore.userPrompt = 'Q {{topic}}'
+    promptStore.judge = {
+      enabled: true,
+      provider: 'openai',
+      modelId: 'gpt-4o-mini',
+      scale: 5,
+      passThreshold: 3,
+      rubrics: [{ id: 'r-bulk', name: 'Accuracy', description: 'x', enabled: true }],
+    }
+
+    const { runBulkDataset, bulkResults, bulkJudgeAggregates } = useCompareRunner()
+    await runBulkDataset({
+      rows: [{ topic: 'quantum' }],
+      mapping: { topic: 'topic' },
+    })
+
+    expect(bulkResults.value[0]?.models[0]?.judgeOverall).toBe(4)
+    expect(bulkResults.value[0]?.models[0]?.judgePass).toBe(true)
+    expect(bulkResults.value[0]?.models[0]?.content).toBeUndefined()
+    expect(bulkJudgeAggregates.value[0]?.meanScore).toBe(4)
   })
 })

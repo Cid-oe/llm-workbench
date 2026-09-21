@@ -56,6 +56,15 @@ describe('judge', () => {
     expect(bad.scores).toHaveLength(2)
     expect(bad.overall).toBe(1)
 
+    const empty = parseJudgeResponse('   ', rubrics, 5)
+    expect(empty.parseError).toBe('Empty judge response')
+
+    const asArray = parseJudgeResponse('[]', rubrics, 5)
+    expect(asArray.parseError).toBe('Judge JSON must be an object')
+
+    const asNull = parseJudgeResponse('null', rubrics, 5)
+    expect(asNull.parseError).toBe('Judge JSON must be an object')
+
     const fenced = evaluateJudgeText(
       '```json\n{"scores":[{"rubricId":"r1","score":3,"rationale":"ok"},{"rubricId":"r2","score":2,"rationale":"meh"}],"overall":2.5}\n```',
       { scale: 5, passThreshold: 4 },
@@ -65,10 +74,46 @@ describe('judge', () => {
     expect(fenced.pass).toBe(false)
   })
 
+  it('matches scores by id / name and clamps out-of-range values', () => {
+    const byIdAlias = evaluateJudgeText(
+      JSON.stringify({
+        scores: [
+          { id: 'r1', score: 99, rationale: 12 },
+          { name: 'Tone', score: 0, rationale: '  ' },
+          null,
+          'skip',
+          { score: 3 },
+        ],
+        overall: 'nope',
+      }),
+      { scale: 5, passThreshold: undefined },
+      rubrics,
+    )
+    expect(byIdAlias.scores[0]?.score).toBe(5)
+    expect(byIdAlias.scores[0]?.rationale).toBe('—')
+    expect(byIdAlias.scores[1]?.score).toBe(1)
+    expect(byIdAlias.scores[1]?.rationale).toBe('—')
+    expect(byIdAlias.pass).toBe(false)
+
+    const byNameOnly = evaluateJudgeText(
+      JSON.stringify({
+        scores: [{ name: 'accuracy', score: 4, rationale: 'solid' }],
+        rationale: 'ok overall',
+      }),
+      { scale: 5, passThreshold: 3 },
+      rubrics,
+    )
+    expect(byNameOnly.scores[0]?.score).toBe(4)
+    expect(byNameOnly.scores[1]?.score).toBe(1)
+    expect(byNameOnly.rationale).toBe('ok overall')
+  })
+
   it('resolves input / reference_answer variables', () => {
     expect(resolveJudgeInput({ input: 'from var' }, 'user prompt')).toBe('from var')
+    expect(resolveJudgeInput({ question: 'q' }, 'user prompt')).toBe('q')
     expect(resolveJudgeInput({}, 'user prompt')).toBe('user prompt')
     expect(resolveReferenceAnswer({ reference_answer: 'gold' })).toBe('gold')
+    expect(resolveReferenceAnswer({ referenceAnswer: 'gold2' })).toBe('gold2')
     expect(resolveReferenceAnswer({})).toBeUndefined()
   })
 
@@ -77,17 +122,29 @@ describe('judge', () => {
       { modelId: 'a', overall: 4, pass: true, latencyMs: 100, costUsd: 0.01 },
       { modelId: 'a', overall: 2, pass: false, latencyMs: 200, costUsd: 0.02 },
       { modelId: 'b', overall: 5, pass: true, latencyMs: 50, costUsd: 0.005 },
+      { modelId: 'c' },
     ])
     const a = aggs.find(x => x.modelId === 'a')!
     expect(a.meanScore).toBe(3)
     expect(a.passRate).toBe(0.5)
     expect(a.meanLatencyMs).toBe(150)
     expect(a.estimatedCostUsd).toBeCloseTo(0.03)
+    const c = aggs.find(x => x.modelId === 'c')!
+    expect(c.meanScore).toBeNull()
+    expect(c.passRate).toBeNull()
   })
 
-  it('defaults include one enabled rubric', () => {
+  it('defaults include one enabled rubric and skips disabled ones', () => {
     const config = createDefaultJudgeConfig()
     expect(config.enabled).toBe(false)
     expect(enabledRubrics(config)).toHaveLength(1)
+    expect(enabledRubrics({
+      ...config,
+      rubrics: [
+        { id: '1', name: 'A', description: '', enabled: false },
+        { id: '2', name: '   ', description: 'x', enabled: true },
+        { id: '3', name: 'B', description: 'y', enabled: true },
+      ],
+    })).toHaveLength(1)
   })
 })

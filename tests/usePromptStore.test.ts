@@ -174,4 +174,24 @@ imported user
     }
     expect(store.history).toHaveLength(100)
   })
+
+  it('manages judge config and rubrics', () => {
+    const store = usePromptStore()
+    expect(store.judge.enabled).toBe(false)
+    store.patchJudge({ enabled: true, scale: 10, passThreshold: 7 })
+    expect(store.judge.enabled).toBe(true)
+    expect(store.judge.scale).toBe(10)
+
+    const before = store.judge.rubrics.length
+    store.addJudgeRubric({ name: 'Tone', description: 'Friendly' })
+    expect(store.judge.rubrics).toHaveLength(before + 1)
+    const id = store.judge.rubrics.at(-1)!.id
+    store.updateJudgeRubric(id, { name: 'Clarity' })
+    expect(store.judge.rubrics.find(r => r.id === id)?.name).toBe('Clarity')
+    store.updateJudgeRubric('missing', { name: 'x' })
+    store.removeJudgeRubric(id)
+    expect(store.judge.rubrics.find(r => r.id === id)).toBeUndefined()
+    store.addJudgeRubric()
+    expect(store.judge.rubrics.at(-1)?.name).toBe('Criterion')
+  })
 })

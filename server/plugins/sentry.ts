@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import * as Sentry from '@sentry/node'
-import { createServerErrorTracker } from '~/server/lib/sentry'
+import { createServerErrorTracker } from '../lib/sentry'
 
 export default defineNitroPlugin((nitroApp) => {
   const config = useRuntimeConfig()

@@ -83,5 +83,31 @@ describe('dataset', () => {
     const csv = serializeBulkResultsCsv(results)
     expect(csv).toContain('index,status,var_topic,gpt-4o-mini_status')
     expect(csv).toContain('1,done,quantum,done,12,Hello,')
+    expect(csv).not.toContain('judge_overall')
+  })
+
+  it('includes judge columns in CSV export when present', () => {
+    const results: BulkCaseResult[] = [{
+      index: 0,
+      variables: { reference_answer: '4' },
+      status: 'done',
+      models: [{
+        modelId: 'gpt-4o-mini',
+        label: 'GPT',
+        status: 'done',
+        latencyMs: 10,
+        outputPreview: 'Four',
+        judgeOverall: 4.5,
+        judgePass: true,
+        judgeRationale: 'Good',
+        judgeScoresJson: '[{"rubricId":"r1","score":5}]',
+      }],
+    }]
+    const csv = serializeBulkResultsCsv(results)
+    expect(csv).toContain('gpt-4o-mini_judge_overall')
+    expect(csv).toContain('4.5')
+    expect(csv).toContain('true')
+    expect(serializeBulkResultsJson(results)).toContain('"judgeOverall": 4.5')
+    expect(serializeBulkResultsJson(results)).not.toMatch(/sk-|api[_-]?key/i)
   })
 })

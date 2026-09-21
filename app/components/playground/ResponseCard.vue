@@ -103,6 +103,12 @@ const statusVariant = computed(() => {
         >
           {{ response.assertionResults.every(r => r.pass) ? 'PASS' : 'FAIL' }}
         </UiBadge>
+        <UiBadge
+          v-if="response.judgeResult"
+          :variant="response.judgeResult.parseError ? 'error' : response.judgeResult.pass ? 'success' : 'warning'"
+        >
+          {{ t('judge.score') }} {{ response.judgeResult.overall.toFixed(1) }}
+        </UiBadge>
       </div>
       <UiButton variant="ghost" size="sm" :disabled="!response.content" @click="copyResponse">
         <Check v-if="copied" class="h-4 w-4 text-emerald-400" />
@@ -145,6 +151,34 @@ const statusVariant = computed(() => {
           <span class="text-muted-foreground">{{ result.message }}</span>
         </li>
       </ul>
+
+      <div
+        v-if="response.judgeResult"
+        class="space-y-2 border-t border-border pt-3"
+      >
+        <p class="text-xs font-medium">
+          {{ t('judge.score') }}
+          · {{ response.judgeResult.overall.toFixed(1) }}
+          · {{ response.judgeResult.pass ? 'PASS' : 'FAIL' }}
+        </p>
+        <p class="text-xs text-muted-foreground">{{ response.judgeResult.rationale }}</p>
+        <p v-if="response.judgeResult.parseError" class="text-xs text-destructive">
+          {{ response.judgeResult.parseError }}
+        </p>
+        <ul class="space-y-1">
+          <li
+            v-for="score in response.judgeResult.scores"
+            :key="score.rubricId"
+            class="text-xs flex gap-2"
+          >
+            <UiBadge variant="secondary" class="shrink-0">{{ score.score }}</UiBadge>
+            <span class="text-muted-foreground">
+              <span class="font-medium text-foreground">{{ score.name }}</span>
+              — {{ score.rationale }}
+            </span>
+          </li>
+        </ul>
+      </div>
 
       <div
         v-if="matchedCalls.length"

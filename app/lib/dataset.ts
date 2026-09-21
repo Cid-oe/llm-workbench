@@ -31,6 +31,16 @@ export interface BulkModelResult {
   latencyMs: number
   outputPreview: string
   error?: string
+  /** Full candidate text retained for judging / export (not truncated). */
+  content?: string
+  judgeOverall?: number
+  judgePass?: boolean
+  judgeRationale?: string
+  judgeScoresJson?: string
+  judgeError?: string
+  judgeLatencyMs?: number
+  judgeCostUsd?: number
+  costUsd?: number
 }
 
 export interface BulkCaseResult {
@@ -148,11 +158,25 @@ export function serializeBulkResultsJson(results: BulkCaseResult[]): string {
 export function serializeBulkResultsCsv(results: BulkCaseResult[]): string {
   const modelIds = [...new Set(results.flatMap(r => r.models.map(m => m.modelId)))]
   const varKeys = [...new Set(results.flatMap(r => Object.keys(r.variables)))]
+  const hasJudge = results.some(r => r.models.some(m =>
+    m.judgeOverall != null || m.judgeRationale || m.judgeError,
+  ))
   const headers = [
     'index',
     'status',
     ...varKeys.map(k => `var_${k}`),
-    ...modelIds.flatMap(id => [`${id}_status`, `${id}_latency_ms`, `${id}_preview`, `${id}_error`]),
+    ...modelIds.flatMap((id) => {
+      const base = [`${id}_status`, `${id}_latency_ms`, `${id}_preview`, `${id}_error`]
+      if (!hasJudge) return base
+      return [
+        ...base,
+        `${id}_judge_overall`,
+        `${id}_judge_pass`,
+        `${id}_judge_rationale`,
+        `${id}_judge_scores`,
+        `${id}_judge_error`,
+      ]
+    }),
   ]
 
   const lines = [headers.map(escapeCsv).join(',')]
@@ -171,6 +195,15 @@ export function serializeBulkResultsCsv(results: BulkCaseResult[]): string {
         model?.outputPreview ?? '',
         model?.error ?? '',
       )
+      if (hasJudge) {
+        cells.push(
+          model?.judgeOverall != null ? String(model.judgeOverall) : '',
+          model?.judgePass == null ? '' : model.judgePass ? 'true' : 'false',
+          model?.judgeRationale ?? '',
+          model?.judgeScoresJson ?? '',
+          model?.judgeError ?? '',
+        )
+      }
     }
     lines.push(cells.map(escapeCsv).join(','))
   }

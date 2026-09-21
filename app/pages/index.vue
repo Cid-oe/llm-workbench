@@ -15,6 +15,7 @@ const { exportCode } = useCodeExporter()
 const {
   bulkResults,
   bulkProgress,
+  bulkJudgeAggregates,
   canRun,
   runAll,
   continueWithTool,
@@ -162,6 +163,7 @@ const languages: { id: ExportLanguage; label: string }[] = [
         <PlaygroundVariablesInput />
         <PlaygroundGenerationControls />
         <PlaygroundAssertionsPanel />
+        <PlaygroundJudgePanel />
         <PlaygroundToolMockPanel />
       </div>
       <PlaygroundModelSelector />
@@ -249,6 +251,7 @@ const languages: { id: ExportLanguage; label: string }[] = [
       :is-running="promptStore.isRunning"
       :results="bulkResults"
       :progress-label="bulkProgress"
+      :judge-aggregates="bulkJudgeAggregates"
       @close="showBulk = false"
       @start="runBulkDataset"
       @stop="stopAll"

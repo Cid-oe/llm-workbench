@@ -35,6 +35,27 @@ export const en = {
     runLive: 'Run live MCP',
     inspection: 'MCP call',
   },
+  judge: {
+    title: 'LLM-as-a-Judge',
+    subtitle: 'Optional evaluator model scores each candidate with your rubrics. Scores stay local; vault keys are never sent to third-party eval SaaS.',
+    enable: 'Enable judge',
+    needKey: 'Configure an API key (or local URL) for the evaluator provider in Settings.',
+    evaluatorProvider: 'Evaluator provider',
+    evaluatorModel: 'Evaluator model',
+    scale: 'Score scale',
+    passThreshold: 'Pass threshold',
+    referenceHint: 'Map a dataset column to {{reference_answer}} (or set that variable) to score against a gold answer. {{input}} / the user prompt is the question.',
+    rubrics: 'Rubrics',
+    addRubric: 'Add rubric',
+    rubricName: 'Name (e.g. Accuracy)',
+    rubricDescription: 'What should the judge check?',
+    score: 'Judge',
+    aggregates: 'Judge aggregates',
+    meanScore: 'Mean score',
+    passRate: 'Pass rate',
+    meanLatency: 'Mean latency',
+    estCost: 'Est. cost',
+  },
 }
 
 export type Messages = typeof en

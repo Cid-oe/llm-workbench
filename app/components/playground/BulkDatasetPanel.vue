@@ -12,6 +12,7 @@ import {
   type ColumnMapping,
   type DatasetTable,
 } from '~/lib/dataset'
+import type { JudgeAggregate } from '~/types/llm'
 
 const props = defineProps<{
   open: boolean
@@ -20,7 +21,11 @@ const props = defineProps<{
   isRunning: boolean
   results: BulkCaseResult[]
   progressLabel: string
+  judgeAggregates?: JudgeAggregate[]
 }>()
+
+const { t } = useI18n()
+const { formatCost, formatLatency } = useCostCalculator()
 
 const emit = defineEmits<{
   close: []
@@ -162,6 +167,44 @@ function downloadResults(format: 'csv' | 'json') {
       {{ progressLabel }}
     </div>
 
+    <div v-if="judgeAggregates?.length" class="mb-4 space-y-2">
+      <h3 class="text-sm font-medium">{{ t('judge.aggregates') }}</h3>
+      <div class="overflow-x-auto rounded-md border border-border">
+        <table class="w-full text-xs">
+          <thead class="bg-muted/40">
+            <tr class="text-left">
+              <th class="px-2 py-1.5 font-medium">Model</th>
+              <th class="px-2 py-1.5 font-medium">{{ t('judge.meanScore') }}</th>
+              <th class="px-2 py-1.5 font-medium">{{ t('judge.passRate') }}</th>
+              <th class="px-2 py-1.5 font-medium">{{ t('judge.meanLatency') }}</th>
+              <th class="px-2 py-1.5 font-medium">{{ t('judge.estCost') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="agg in judgeAggregates"
+              :key="agg.modelId"
+              class="border-t border-border"
+            >
+              <td class="px-2 py-1.5 font-mono">{{ agg.modelId }}</td>
+              <td class="px-2 py-1.5">
+                {{ agg.meanScore == null ? '—' : agg.meanScore.toFixed(2) }}
+              </td>
+              <td class="px-2 py-1.5">
+                {{ agg.passRate == null ? '—' : `${Math.round(agg.passRate * 100)}%` }}
+              </td>
+              <td class="px-2 py-1.5">
+                {{ agg.meanLatencyMs == null ? '—' : formatLatency(agg.meanLatencyMs) }}
+              </td>
+              <td class="px-2 py-1.5">
+                {{ agg.estimatedCostUsd == null ? '—' : formatCost(agg.estimatedCostUsd) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div v-if="results.length" class="mb-4">
       <div class="flex items-center justify-between gap-2 mb-2">
         <h3 class="text-sm font-medium flex items-center gap-1.5">
@@ -204,8 +247,15 @@ function downloadResults(format: 'csv' | 'json') {
                   <span class="font-medium">{{ model.label }}</span>
                   · {{ model.status }}
                   · {{ Math.round(model.latencyMs) }}ms
+                  <span v-if="model.judgeOverall != null">
+                    · {{ t('judge.score') }} {{ model.judgeOverall.toFixed(1) }}
+                    ({{ model.judgePass ? 'PASS' : 'FAIL' }})
+                  </span>
                   <span v-if="model.error" class="text-destructive"> — {{ model.error }}</span>
                   <div v-else class="text-muted-foreground">{{ model.outputPreview || '—' }}</div>
+                  <div v-if="model.judgeRationale" class="text-muted-foreground">
+                    {{ model.judgeRationale }}
+                  </div>
                 </div>
               </td>
             </tr>

@@ -1,12 +1,13 @@
 # <img src="public/favicon.svg" width="32" height="32" alt="" /> LLM Workbench
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/ale94lko/llm-workbench?display_name=tag&sort=semver)](https://github.com/ale94lko/llm-workbench/releases/latest)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14694/badge)](https://www.bestpractices.dev/projects/14694)
 [![Health Score](https://github.com/ale94lko/llm-workbench/blob/output/badge.svg)](https://github.com/ale94lko/repo-health-score)
 [![Nuxt](https://img.shields.io/badge/Nuxt-4-00DC82?logo=nuxt.js&logoColor=white)](https://nuxt.com)
 [![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org)
 
-Source-available **multi-LLM workbench** for developers. Design prompts with dynamic variables, run them in parallel against up to 4 models, and compare responses with real-time metrics — all **local-first** in your browser.
+Source-available **multi-LLM workbench** for developers (**v1.0**). Design prompts with dynamic variables, run them in parallel against up to 4 models, and compare responses with real-time metrics — all **local-first** in your browser.
 
 **Live app:** [https://ale94lko.github.io/llm-workbench/](https://ale94lko.github.io/llm-workbench/)
 
@@ -44,7 +45,7 @@ Store API keys locally with AES-256-GCM encryption and an optional master passwo
 - **Real-time metrics** — Latency, TTFT, token counts, and estimated cost per model
 - **Metrics dashboard** — Bar charts, latency timeline, and detailed comparison table
 - **Local-first API keys** — Encrypted with AES-256-GCM + master password before localStorage
-- **Code exporter** — Generate snippets for JavaScript, Python, cURL, and PHP
+- **Code exporter** — Fetch, official TypeScript SDKs, Vercel AI SDK, LangChain, cURL, and PHP (env placeholders only)
 - **`.prompt` files** — Export and import Git-friendly Markdown with YAML frontmatter (no API keys)
 - **Prompt version diff** — Highlight drift between the editor and a saved or history version
 - **History & library** — Save prompts with versioning and browse past executions

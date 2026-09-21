@@ -13,8 +13,8 @@ Vite/Nuxt hashes in filenames are content-addressed. Bit-for-bit identity of eve
 ```bash
 git clone https://github.com/ale94lko/llm-workbench.git
 cd llm-workbench
-git checkout v0.2.0   # or another signed tag
-git verify-tag v0.2.0
+git checkout v1.0.0   # or another signed tag
+git verify-tag v1.0.0
 npm ci
 npm run generate
 ```

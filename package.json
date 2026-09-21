@@ -29,6 +29,7 @@
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@pinia/nuxt": "^1.0.2",
     "@sentry/browser": "^10.75.0",
+    "@sentry/node": "^10.75.0",
     "@tailwindcss/vite": "^4.3.3",
     "clsx": "^2.1.1",
     "nuxt": "^4.5.2",

@@ -6,6 +6,7 @@ import type { ModelResponse } from '~/types/llm'
 defineProps<{ responses: ModelResponse[] }>()
 const emit = defineEmits<{
   continueWithTool: [payload: { slotId: string, toolName: string, mockResultJson: string, assistantContent: string }]
+  continueWithMcp: [payload: { slotId: string, toolName: string, argumentsJson: string, assistantContent: string }]
 }>()
 
 const gridClass = computed(() => {
@@ -28,6 +29,7 @@ const gridClass = computed(() => {
         :key="response.slotId"
         :response="response"
         @continue-with-tool="emit('continueWithTool', $event)"
+        @continue-with-mcp="emit('continueWithMcp', $event)"
       />
     </div>
     <PlaygroundResponseDiff :responses="responses" />

@@ -27,6 +27,16 @@ export interface StreamMetrics {
 
 export type StreamStatus = 'idle' | 'streaming' | 'done' | 'error' | 'cancelled'
 
+export interface McpInspection {
+  serverId: string
+  serverName: string
+  toolName: string
+  argumentsJson: string
+  resultJson: string
+  error?: string
+  durationMs: number
+}
+
 export interface ModelResponse {
   slotId: string
   provider: ProviderId
@@ -36,6 +46,7 @@ export interface ModelResponse {
   metrics: StreamMetrics
   error?: string
   assertionResults?: AssertionResult[]
+  mcpInspection?: McpInspection
 }
 
 export type AssertionKind = 'jsonValid' | 'jsonSchema' | 'forbiddenSubstring' | 'length'
@@ -138,4 +149,12 @@ export interface StreamRequest {
   temperature?: number
   /** Max output tokens. Anthropic requires this; others map to provider equivalents. */
   maxTokens?: number
+  /** MCP tools converted per provider in buildProviderRequest. */
+  mcpTools?: Array<{
+    name: string
+    description?: string
+    inputSchema?: Record<string, unknown>
+    serverId?: string
+    serverName?: string
+  }>
 }

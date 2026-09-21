@@ -100,6 +100,29 @@ describe('streamProviders', () => {
     })
   })
 
+  it('attaches provider-specific MCP tools', () => {
+    const tools = [{ name: 'lookup', description: 'Look up', inputSchema: { type: 'object' } }]
+    const openai = JSON.parse(buildProviderRequest({
+      provider: 'openai',
+      model: 'gpt-4o-mini',
+      systemPrompt: 'Sys',
+      userPrompt: 'Hi',
+      apiKey: 'sk',
+      mcpTools: tools,
+    }).body)
+    expect(openai.tools[0].function.name).toBe('lookup')
+
+    const anthropic = JSON.parse(buildProviderRequest({
+      provider: 'anthropic',
+      model: 'claude-sonnet-4-20250514',
+      systemPrompt: 'Sys',
+      userPrompt: 'Hi',
+      apiKey: 'sk',
+      mcpTools: tools,
+    }).body)
+    expect(anthropic.tools[0].name).toBe('lookup')
+  })
+
   it('extracts chunks per provider', () => {
     expect(extractTextChunk({
       choices: [{ delta: { content: 'hello' } }],
@@ -113,5 +136,11 @@ describe('streamProviders', () => {
     expect(extractTextChunk({
       message: { content: 'local' },
     }, 'ollama')).toBe('local')
+
+    expect(JSON.parse(extractTextChunk({
+      choices: [{ delta: { tool_calls: [{ function: { name: 'lookup', arguments: '{}' } }] } }],
+    }, 'openai'))).toMatchObject({
+      tool_calls: [{ function: { name: 'lookup' } }],
+    })
   })
 })

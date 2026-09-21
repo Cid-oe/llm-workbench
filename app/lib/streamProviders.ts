@@ -3,6 +3,8 @@
 
 import type { ProviderId, StreamRequest } from '~/types/llm'
 import { resolveGenerationParams } from '~/lib/generation'
+import { applyProviderTools } from '~/lib/mcp/providerTools'
+import type { McpToolDefinition } from '~/lib/mcp/types'
 
 export type StreamFormat = 'sse' | 'ollama'
 
@@ -13,8 +15,16 @@ export interface ProviderRequest {
   format: StreamFormat
 }
 
+function withTools(
+  provider: ProviderId,
+  body: Record<string, unknown>,
+  tools: StreamRequest['mcpTools'],
+): Record<string, unknown> {
+  return applyProviderTools(body, tools as McpToolDefinition[] | undefined, provider)
+}
+
 export function buildProviderRequest(request: StreamRequest): ProviderRequest {
-  const { provider, model, systemPrompt, userPrompt, apiKey, ollamaUrl, lmStudioUrl } = request
+  const { provider, model, systemPrompt, userPrompt, apiKey, ollamaUrl, lmStudioUrl, mcpTools } = request
   const { temperature, maxTokens } = resolveGenerationParams(request)
 
   switch (provider) {
@@ -25,7 +35,7 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey ?? ''}`,
         },
-        body: JSON.stringify({
+        body: JSON.stringify(withTools(provider, {
           model,
           messages: [
             { role: 'system', content: systemPrompt },
@@ -34,7 +44,7 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
           temperature,
           max_tokens: maxTokens,
           stream: true,
-        }),
+        }, mcpTools)),
         format: 'sse',
       }
 
@@ -46,7 +56,7 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey || 'lm-studio'}`,
         },
-        body: JSON.stringify({
+        body: JSON.stringify(withTools(provider, {
           model,
           messages: [
             { role: 'system', content: systemPrompt },
@@ -55,7 +65,7 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
           temperature,
           max_tokens: maxTokens,
           stream: true,
-        }),
+        }, mcpTools)),
         format: 'sse',
       }
     }
@@ -67,7 +77,7 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey ?? ''}`,
         },
-        body: JSON.stringify({
+        body: JSON.stringify(withTools(provider, {
           model,
           messages: [
             { role: 'system', content: systemPrompt },
@@ -76,7 +86,7 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
           temperature,
           max_tokens: maxTokens,
           stream: true,
-        }),
+        }, mcpTools)),
         format: 'sse',
       }
 
@@ -89,14 +99,14 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
           'anthropic-version': '2023-06-01',
           'anthropic-dangerous-direct-browser-access': 'true',
         },
-        body: JSON.stringify({
+        body: JSON.stringify(withTools(provider, {
           model,
           max_tokens: maxTokens,
           temperature,
           system: systemPrompt,
           messages: [{ role: 'user', content: userPrompt }],
           stream: true,
-        }),
+        }, mcpTools)),
         format: 'sse',
       }
 
@@ -104,14 +114,14 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
       return {
         url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey ?? ''}`,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: JSON.stringify(withTools(provider, {
           contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
           systemInstruction: { parts: [{ text: systemPrompt }] },
           generationConfig: {
             temperature,
             maxOutputTokens: maxTokens,
           },
-        }),
+        }, mcpTools)),
         format: 'sse',
       }
 
@@ -119,7 +129,7 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
       return {
         url: `${ollamaUrl ?? 'http://localhost:11434'}/api/chat`,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: JSON.stringify(withTools(provider, {
           model,
           messages: [
             { role: 'system', content: systemPrompt },
@@ -130,7 +140,7 @@ export function buildProviderRequest(request: StreamRequest): ProviderRequest {
             num_predict: maxTokens,
           },
           stream: true,
-        }),
+        }, mcpTools)),
         format: 'ollama',
       }
 
@@ -159,8 +169,21 @@ export function extractTextChunk(parsed: Record<string, unknown>, provider: Prov
     }
 
     default: {
-      const choices = parsed.choices as Array<{ delta?: { content?: string } }> | undefined
-      return choices?.[0]?.delta?.content ?? ''
+      const choices = parsed.choices as Array<{
+        delta?: {
+          content?: string
+          tool_calls?: Array<{ function?: { name?: string, arguments?: string } }>
+        }
+      }> | undefined
+      const delta = choices?.[0]?.delta
+      if (delta?.content) return delta.content
+      const call = delta?.tool_calls?.[0]?.function
+      if (call?.name) {
+        return JSON.stringify({
+          tool_calls: [{ function: { name: call.name, arguments: call.arguments ?? '{}' } }],
+        })
+      }
+      return ''
     }
   }
 }

@@ -11,6 +11,7 @@ describe('useI18n', () => {
     expect(t('nav.appName')).toBe('LLM Workbench')
     expect(t('skipToContent')).toBe('Skip to content')
     expect(t('nav.settings')).toBe('Settings')
+    expect(t('mcp.title')).toBe('MCP servers')
   })
 
   it('falls back to the key when a message is missing', () => {

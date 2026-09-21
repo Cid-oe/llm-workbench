@@ -25,6 +25,16 @@ describe('validateStreamRequest', () => {
     }
   })
 
+  it('accepts optional mcpTools', () => {
+    const result = validateStreamRequest({
+      ...valid,
+      mcpTools: [{ name: 'lookup', description: 'Look up', inputSchema: { type: 'object' } }],
+    })
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.value.mcpTools?.[0]?.name).toBe('lookup')
+    expect(validateStreamRequest({ ...valid, mcpTools: [{ name: '  ' }] }).ok).toBe(false)
+  })
+
   it('uses valibot safeParse under the hood without echoing apiKey in issues', () => {
     const parsed = v.safeParse(streamRequestSchema, { ...valid, apiKey: 'sk-super-secret', provider: 'nope' })
     expect(parsed.success).toBe(false)

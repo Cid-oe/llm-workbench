@@ -25,7 +25,7 @@ function addTool() {
           Tool mocks
         </h3>
         <p class="text-xs text-muted-foreground mt-0.5">
-          Register tool signatures locally. When a response looks like a tool call, simulate a JSON result and continue the turn.
+        Register tool signatures locally. When a response looks like a tool call, simulate a JSON result or run a live MCP tool from Settings.
         </p>
       </div>
       <UiButton size="sm" variant="outline" @click="addTool">

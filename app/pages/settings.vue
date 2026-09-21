@@ -8,8 +8,9 @@ definePageMeta({ layout: 'default' })
   <div class="space-y-6">
     <div>
       <h1 class="text-2xl font-bold">Settings</h1>
-      <p class="text-sm text-muted-foreground">Configure API keys and provider endpoints</p>
+      <p class="text-sm text-muted-foreground">Configure API keys, provider endpoints, and MCP servers</p>
     </div>
     <SettingsApiKeyManager />
+    <SettingsMcpServerManager />
   </div>
 </template>

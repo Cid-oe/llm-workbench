@@ -10,6 +10,7 @@ import {
 } from '~/lib/dataset'
 import { markInFlightAsCancelled, shouldPersistRunHistory } from '~/lib/runHistory'
 import { evaluateAssertions, summarizeResponses } from '~/lib/assertions'
+import { injectToolsIntoSystemPrompt } from '~/lib/mcp/signatures'
 import { buildToolFollowUpMessages, flattenMessagesForLegacyPrompt } from '~/lib/toolCall'
 import { PROVIDER_MODELS } from '~/lib/providerModels'
 import { buildMetrics, createInitialMetrics } from '~/lib/streamMetrics'
@@ -19,6 +20,7 @@ import type { ModelResponse, PromptVariables } from '~/types/llm'
 export function useCompareRunner() {
   const promptStore = usePromptStore()
   const providerStore = useProviderStore()
+  const mcpStore = useMcpStore()
   const { streamCompletion } = useLLMStream()
   const { estimateTokens, calculateCost } = useCostCalculator()
 
@@ -65,7 +67,12 @@ export function useCompareRunner() {
     let content = ''
     let status: ModelResponse['status'] = 'streaming'
     let errorMessage: string | undefined
-    const inputTokens = estimateTokens(prompts.systemPrompt + prompts.userPrompt)
+    const mcpTools = mcpStore.enabledTools
+    const promptsWithTools = {
+      systemPrompt: injectToolsIntoSystemPrompt(prompts.systemPrompt, mcpTools),
+      userPrompt: prompts.userPrompt,
+    }
+    const inputTokens = estimateTokens(promptsWithTools.systemPrompt + promptsWithTools.userPrompt)
     const baseMetrics = createInitialMetrics(
       inputTokens,
       calculateCost(PROVIDER_MODELS.find(m => m.id === slot.modelId), inputTokens, 0),
@@ -79,13 +86,14 @@ export function useCompareRunner() {
       {
         provider: slot.provider,
         model: slot.modelId,
-        systemPrompt: prompts.systemPrompt,
-        userPrompt: prompts.userPrompt,
+        systemPrompt: promptsWithTools.systemPrompt,
+        userPrompt: promptsWithTools.userPrompt,
         apiKey: providerStore.getApiKey(slot.provider),
         ollamaUrl: providerStore.ollamaUrl,
         lmStudioUrl: providerStore.lmStudioUrl,
         temperature: promptStore.generation.temperature,
         maxTokens: promptStore.generation.maxTokens,
+        mcpTools: mcpTools.length ? mcpTools : undefined,
       },
       {
         onChunk: (text) => {
@@ -212,6 +220,7 @@ export function useCompareRunner() {
     toolName: string
     mockResultJson: string
     assistantContent: string
+    mcpInspection?: ModelResponse['mcpInspection']
   }) {
     const slot = providerStore.selectedModels.find(s => s.slotId === payload.slotId)
     if (!slot || promptStore.isRunning) return
@@ -230,6 +239,10 @@ export function useCompareRunner() {
     await runSlotStream(slot, prompts)
     promptStore.setResponses(markInFlightAsCancelled(promptStore.responses))
 
+    if (payload.mcpInspection) {
+      promptStore.updateResponse(slot.slotId, { mcpInspection: payload.mcpInspection })
+    }
+
     if (promptStore.assertions.length) {
       const response = promptStore.responses.find(r => r.slotId === slot.slotId)
       if (response?.status === 'done') {
@@ -240,6 +253,26 @@ export function useCompareRunner() {
     }
 
     promptStore.isRunning = false
+  }
+
+  async function continueWithMcp(payload: {
+    slotId: string
+    toolName: string
+    argumentsJson: string
+    assistantContent: string
+  }) {
+    const inspection = await mcpStore.callEnabledTool(payload.toolName, payload.argumentsJson)
+    if (inspection.error) {
+      promptStore.updateResponse(payload.slotId, { mcpInspection: inspection })
+      return
+    }
+    await continueWithTool({
+      slotId: payload.slotId,
+      toolName: payload.toolName,
+      mockResultJson: inspection.resultJson,
+      assistantContent: payload.assistantContent,
+      mcpInspection: inspection,
+    })
   }
 
   async function runBulkDataset(payload: { rows: Record<string, string>[], mapping: ColumnMapping }) {
@@ -324,6 +357,7 @@ export function useCompareRunner() {
     canRun,
     runAll,
     continueWithTool,
+    continueWithMcp,
     runBulkDataset,
     stopAll,
     clearBulkResults,

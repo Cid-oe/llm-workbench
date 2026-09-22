@@ -25,7 +25,7 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
-    "@lucide/vue": "^1.45.0",
+    "@lucide/vue": "^1.47.0",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@pinia/nuxt": "^1.0.2",
     "@sentry/browser": "^10.75.0",
@@ -37,7 +37,7 @@
     "pinia-plugin-persistedstate": "^4.7.1",
     "tailwind-merge": "^3.7.0",
     "valibot": "^1.5.0",
-    "vue": "^3.5.42",
+    "vue": "^3.5.43",
     "vue-router": "^5.3.1"
   },
   "devDependencies": {

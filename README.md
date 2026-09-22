@@ -74,6 +74,9 @@ Open [http://localhost:3000](http://localhost:3000).
 | `NUXT_APP_BASE_URL` | `/` | Public path prefix. GitHub Pages uses `/llm-workbench/`. |
 | `NUXT_DEVTOOLS` | `false` | Enable Nuxt DevTools. Set `true` locally if you want the overlay. |
 | `CI` | _(unset)_ | Set automatically by GitHub Actions. Signals non-interactive CI to Node/Vitest/Playwright. Leave unset locally. |
+| `BASE` | _(unset)_ | CI-only base commit value used by the DCO check. Leave unset locally. |
+| `HEAD` | _(unset)_ | CI-only head commit value used by the DCO check. Leave unset locally. |
+| `GITHUB_ACTIONS` | _(unset)_ | Set automatically by GitHub Actions for CI-only behavior. Leave unset locally. |
 | `HOST` | `0.0.0.0` (Compose) | Bind address for the Nitro server in Docker. Documented commented in `.env.example`; Compose/Dockerfile set it. |
 | `PORT` | `3000` (Compose) | Listen port for the Nitro server in Docker. Documented commented in `.env.example`; Compose/Dockerfile set it. |
 | `NODE_ENV` | _(unset locally)_ | Docker sets `production`. Leave unset for `npm run dev`. |

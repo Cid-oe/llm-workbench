@@ -45,6 +45,7 @@ while (true) {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
+    // Documentation placeholder; not a credential
     Authorization: 'Bearer ${LM_STUDIO_PLACEHOLDER_KEY}',
   },
   body: JSON.stringify({

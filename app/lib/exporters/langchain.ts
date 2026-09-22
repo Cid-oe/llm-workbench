@@ -125,6 +125,7 @@ import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 
 const model = new ChatOpenAI({
   model: '${opts.model}',
+  // Documentation placeholder; not a credential
   apiKey: '${LM_STUDIO_PLACEHOLDER_KEY}',
   configuration: { baseURL: '${base}/v1' },
   temperature: ${temperature},
@@ -252,6 +253,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 model = ChatOpenAI(
     model="${opts.model}",
+    # Documentation placeholder; not a credential
     api_key="${LM_STUDIO_PLACEHOLDER_KEY}",
     base_url="${base}/v1",
     temperature=${temperature},

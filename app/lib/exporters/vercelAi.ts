@@ -117,6 +117,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 
 const lmstudio = createOpenAI({
   baseURL: '${base}/v1',
+  // Documentation placeholder; not a credential
   apiKey: '${LM_STUDIO_PLACEHOLDER_KEY}',
 });
 

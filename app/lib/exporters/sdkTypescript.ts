@@ -122,6 +122,7 @@ for await (const chunk of stream) {
 
 const client = new OpenAI({
   baseURL: '${base}/v1',
+  // Documentation placeholder; not a credential
   apiKey: '${LM_STUDIO_PLACEHOLDER_KEY}',
 });
 

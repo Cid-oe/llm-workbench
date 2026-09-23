@@ -128,6 +128,7 @@ for line in response.iter_lines():
 
 response = requests.post(
     "${url}",
+    # Documentation placeholder; not a credential
     headers={"Authorization": "Bearer ${LM_STUDIO_PLACEHOLDER_KEY}"},
     json={
         "model": "${opts.model}",

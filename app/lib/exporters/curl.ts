@@ -26,6 +26,7 @@ export function exportCurl(opts: ExportOptions): string {
     const url = getBaseUrl('lmstudio', opts.model, opts.lmStudioUrl)
     return `curl ${url} \\
   -H "Content-Type: application/json" \\
+  # Documentation placeholder; not a credential
   -H "Authorization: Bearer ${LM_STUDIO_PLACEHOLDER_KEY}" \\
   -d '${JSON.stringify({
     model: opts.model,

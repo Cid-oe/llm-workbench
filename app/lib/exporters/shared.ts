@@ -76,6 +76,7 @@ export function phpHeadersArray(provider: ProviderId): string {
   const lines = [`    'Content-Type: application/json'`]
 
   if (provider === 'lmstudio') {
+    // Documentation placeholder; not a credential
     lines.push(`    'Authorization: Bearer ${LM_STUDIO_PLACEHOLDER_KEY}'`)
   }
   else if (provider !== 'ollama') {

@@ -2,6 +2,8 @@ FROM node:24-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+# file:vendor/braces override must exist before npm ci resolves the lockfile
+COPY vendor ./vendor
 RUN npm ci
 
 COPY . .

@@ -22,7 +22,8 @@
     "check:headers": "node scripts/check-license-headers.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "audit:ci": "node scripts/check-npm-audit.mjs"
   },
   "dependencies": {
     "@lucide/vue": "^1.47.0",
@@ -51,12 +52,15 @@
     "@vue/test-utils": "^2.5.1",
     "eslint": "^10.11.0",
     "happy-dom": "^20.14.5",
-    "serve": "^14.2.6",
     "typescript": "~5.9.3",
     "vitest": "^5.0.0",
-    "vue-tsc": "^3.3.11"
+    "vue-tsc": "^3.3.11",
+    "braces": "file:vendor/braces"
   },
   "overrides": {
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "compression": "1.8.2",
+    "braces": "file:vendor/braces",
+    "node-forge": "https://codeload.github.com/digitalbazaar/forge/tar.gz/529a5b4f004595c8f8a75697eca958efe1a2f70d"
   }
 }
